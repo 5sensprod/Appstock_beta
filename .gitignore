@@ -21,6 +21,7 @@ backend/*.sqlite3
 # Fichiers et dossiers de Node.js (React)
 frontend/node_modules/
 frontend/build/
+frontend/dist/
 frontend/.env
 frontend/.DS_Store
 

@@ -1,8 +1,11 @@
 {
   "name": "appstock_beta",
   "version": "0.1.0",
+  "main": "main.js",
   "private": true,
   "homepage": "/",
+  "author": "Ton Nom",
+  "description": "Mon application Electron avec React et Flask",
   "dependencies": {
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -16,6 +19,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "electron": "electron .",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -38,12 +42,48 @@
     ]
   },
   "devDependencies": {
+    "electron": "^32.1.2",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "electron-builder": "^25.1.7",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-react": "^7.37.1",
     "eslint-plugin-react-hooks": "^4.6.0",
     "prettier": "^3.3.3"
+  },
+  "build": {
+    "appId": "com.example.monapp",
+    "productName": "MonApp",
+    "files": [
+      "build/**/*",
+      "main.js",
+      {
+        "from": "../backend/dist/app.exe",
+        "to": "resources/backend/dist/app.exe"
+      }
+    ],
+    "extraFiles": [
+      {
+        "from": "../backend/dist/app.exe",
+        "to": "resources/backend/dist/app.exe"
+      }
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MonApp"
+    },
+    "extends": null,
+    "win": {
+      "target": "nsis"
+    }
   }
 }

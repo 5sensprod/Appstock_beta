@@ -5,7 +5,7 @@ echo Démarrage du backend Flask...
 cd backend
 call .venv\Scripts\activate
 
-:: Lancer le serveur Flask dans une nouvelle fenêtre de commande
+:: Lancer le serveur Flask
 start cmd /k "python app.py"
 
 :: Revenir à la racine du projet pour démarrer le frontend
@@ -15,5 +15,8 @@ echo Démarrage du frontend React...
 cd frontend
 start cmd /k "npm start"
 
-echo Les serveurs Flask et React sont démarrés !
+echo Démarrage de l'application Electron...
+start cmd /k "npm run electron"
+
+echo Les serveurs Flask, React et l'application Electron sont démarrés !
 pause
