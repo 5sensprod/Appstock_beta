@@ -1,10 +1,11 @@
 @echo off
-echo Arrêt du serveur Flask et du serveur React...
+echo Arrêt du serveur Flask...
+:: Terminer le processus Flask
+taskkill /F /IM python.exe
 
-:: Arrêter le serveur Flask
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5000') do taskkill /PID %%a /F
-
-:: Arrêter le serveur React
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr :3000') do taskkill /PID %%a /F
+echo Arrêt du serveur React...
+:: Terminer le processus React
+taskkill /F /IM node.exe
 
 echo Les serveurs Flask et React ont été arrêtés.
+pause
