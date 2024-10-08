@@ -1,0 +1,9 @@
+{
+    "extends": [
+      "react-app",  // Les règles par défaut de Create React App
+      "plugin:prettier/recommended"  // Intégration avec Prettier
+    ],
+    "rules": {
+      // ajouter d'autres règles ici
+    }
+  }
