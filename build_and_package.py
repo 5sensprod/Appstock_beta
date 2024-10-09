@@ -14,7 +14,7 @@ def run_command(command, cwd=None):
 print("🛠️  Construction de l'application React...")
 run_command("npm run build", cwd="frontend")
 
-# 2. Déplacer le build de React vers le backend
+# 2. Copier le build de React vers le backend
 source_dir = "frontend/build"
 dest_dir = "backend/react_build"
 
@@ -27,10 +27,10 @@ if os.path.exists(dest_dir):
     print("📁 Suppression de l'ancien dossier react_build...")
     shutil.rmtree(dest_dir)
 
-# Déplacer le dossier build vers le backend et le renommer en react_build
-print("📦 Déplacement du dossier build de React vers backend/react_build...")
-shutil.move(source_dir, dest_dir)
-print("✅ Dossier de build déplacé avec succès.")
+# Copier le dossier build vers le backend et le renommer en react_build
+print("📦 Copie du dossier build de React vers backend/react_build...")
+shutil.copytree(source_dir, dest_dir)
+print("✅ Dossier de build copié avec succès.")
 
 # 3. Créer l'exécutable avec PyInstaller
 print("🚀 Création de l'exécutable avec PyInstaller...")
@@ -50,3 +50,9 @@ if os.path.exists(spec_file):
     os.remove(spec_file)
 
 print("✅ Création de l'exécutable terminée avec succès ! Vous pouvez trouver l'exécutable dans le dossier 'backend/dist'.")
+
+# 5. Construction de l'application Electron avec Electron-Builder
+print("⚡ Construction de l'application Electron avec Electron-Builder...")
+run_command('npx electron-builder', cwd="frontend")
+
+print("✅ Construction de l'application Electron terminée avec succès ! Vous pouvez trouver l'installateur dans le dossier 'frontend/dist'.")
