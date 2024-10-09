@@ -24,9 +24,12 @@ function App() {
           )
         })
     } else {
-      // Si on est dans un navigateur classique, utiliser une IP par défaut
-      setServerIp('192.168.1.11') // Remplacez cette adresse IP par celle de votre serveur Flask
-      console.log("Utilisation de l'IP par défaut pour le navigateur.")
+      // Si on est dans un navigateur classique, utiliser window.location.hostname
+      const ip = window.location.hostname
+      setServerIp(ip)
+      console.log(
+        `Utilisation de l'IP du serveur Flask depuis window.location.hostname : ${ip}`,
+      )
     }
   }, [])
 
