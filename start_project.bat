@@ -13,10 +13,9 @@ cd ..
 
 echo Démarrage du frontend React...
 cd frontend
-start cmd /k "npm start"
+start cmd /k "npm run electron-dev"
 
-echo Démarrage de l'application Electron...
-start cmd /k "npm run electron"
+
 
 echo Les serveurs Flask, React et l'application Electron sont démarrés !
 pause
