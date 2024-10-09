@@ -69,7 +69,7 @@
   },
   "build": {
     "appId": "com.example.monapp",
-    "productName": "MonApp",
+    "productName": "AppStock Beta",
     "files": [
       "build/**/*",
       "electron/**/*",
@@ -96,7 +96,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "MonApp"
+      "shortcutName": "AppStock Beta"
     },
     "extends": null,
     "win": {
