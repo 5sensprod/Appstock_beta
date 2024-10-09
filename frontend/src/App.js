@@ -9,7 +9,7 @@ function App() {
   const handlePrint = async () => {
     try {
       // Envoie une requête POST au serveur Flask pour imprimer et afficher le message sur l'écran LCD
-      const response = await axios.post('http://192.168.1.11:5000/print', {
+      const response = await axios.post('http://localhost:5000/print', {
         message,
       })
       alert(response.data.message) // Affiche une alerte en fonction de la réponse du serveur
