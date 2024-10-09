@@ -22,7 +22,12 @@
     "start-react": "react-scripts start",
     "start-flask": "node ../backend/start_flask.js",
     "start-electron": "cross-env NODE_ENV=development electron .",
-    "build": "react-scripts build",
+    "build": "npm run build-react && npm run copy-react-build && npm run build-pyinstaller && npm run clean-pyinstaller && npm run build-electron",
+    "build-react": "react-scripts build",
+    "copy-react-build": "node ./scripts/copy-react-build.js",
+    "build-pyinstaller": "call ../backend/.venv/Scripts/activate && cd ../backend && pyinstaller --onefile --noconsole --add-data \"react_build;react_build\" app.py && cd ../frontend",
+    "clean-pyinstaller": "rimraf ../backend/build ../backend/__pycache__ ../backend/app.spec",
+    "build-electron": "electron-builder",
     "electron": "electron .",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -58,7 +63,9 @@
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-react": "^7.37.1",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "prettier": "^3.3.3"
+    "fs-extra": "^11.2.0",
+    "prettier": "^3.3.3",
+    "rimraf": "^6.0.1"
   },
   "build": {
     "appId": "com.example.monapp",
@@ -69,14 +76,14 @@
       "main.js",
       "preload.js",
       {
-        "from": "../backend/dist/app.exe",
-        "to": "resources/backend/dist/app.exe"
+        "from": "../backend/dist/",
+        "to": "resources/backend/dist/"
       }
     ],
     "extraFiles": [
       {
-        "from": "../backend/dist/app.exe",
-        "to": "resources/backend/dist/app.exe"
+        "from": "../backend/dist/",
+        "to": "resources/backend/dist/"
       }
     ],
     "directories": {
