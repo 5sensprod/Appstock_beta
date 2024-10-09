@@ -1,9 +1,9 @@
-const { app, BrowserWindow, dialog } = require('electron')
+const { app, BrowserWindow, dialog, ipcMain } = require('electron')
 const path = require('path')
 const { spawn } = require('child_process')
 const treeKill = require('tree-kill')
 const net = require('net')
-const axios = require('axios') // Utiliser axios pour faire une requête HTTP
+const axios = require('axios')
 
 let flaskProcess = null // Variable pour stocker le processus Flask
 let flaskIpAddress = 'localhost' // Par défaut, utiliser localhost si l'IP n'est pas récupérée
@@ -30,7 +30,7 @@ function isPortInUse(port, callback) {
 
 // Fonction pour lancer le serveur Flask
 function startFlask() {
-  const flaskExecutablePath = path.join(__dirname, '../backend/dist/app.exe') // Assurez-vous que le chemin est correct
+  const flaskExecutablePath = path.join(__dirname, '../backend/dist/app.exe')
 
   flaskProcess = spawn(flaskExecutablePath, [], {
     stdio: 'ignore',
@@ -58,7 +58,7 @@ function stopFlask() {
       } else {
         console.log('Serveur Flask arrêté avec succès.')
       }
-      flaskProcess = null // Nettoyer la référence au processus
+      flaskProcess = null
     })
   }
 }
@@ -76,7 +76,6 @@ async function fetchLocalIp() {
     )
   }
 }
-
 // Fonction pour créer la fenêtre Electron
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -85,21 +84,29 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'), // Chemin vers preload.js
     },
   })
 
-  mainWindow.loadURL(`http://${flaskIpAddress}:5000`) // Utiliser l'IP dynamique du serveur Flask
+  // Charger l'URL du serveur Flask avec l'adresse IP récupérée
+  mainWindow.loadURL(`http://${flaskIpAddress}:5000`)
 
   mainWindow.on('closed', () => {
     // Ne rien mettre ici, la gestion se fait dans 'window-all-closed'
   })
 }
 
+// Gestionnaire IPC pour obtenir l'IP du serveur
+ipcMain.handle('get-server-ip', async () => {
+  await fetchLocalIp()
+  return flaskIpAddress
+})
+
 app.whenReady().then(async () => {
   await fetchLocalIp() // Récupérer l'IP locale du serveur Flask
   isPortInUse(5000, (inUse) => {
     if (!inUse) {
-      startFlask() // Démarrer Flask uniquement si le port 5000 n'est pas déjà utilisé
+      startFlask()
     } else {
       console.log(
         "Le port 5000 est déjà utilisé. Assurez-vous que le serveur Flask n'est pas déjà en cours d'exécution.",
@@ -109,18 +116,17 @@ app.whenReady().then(async () => {
   })
 })
 
-// Événement déclenché avant la fermeture complète de l'application Electron
 app.on('before-quit', (event) => {
-  event.preventDefault() // Annuler l'événement de fermeture par défaut pour s'assurer que Flask est arrêté d'abord
-  stopFlask() // Arrêter Flask avant que l'application Electron ne se ferme
+  event.preventDefault()
+  stopFlask()
 
   setTimeout(() => {
-    app.exit() // Quitter l'application Electron après avoir arrêté Flask
-  }, 2000) // Attendre quelques secondes pour s'assurer que le processus Flask est complètement arrêté
+    app.exit()
+  }, 2000)
 })
 
 app.on('window-all-closed', () => {
-  stopFlask() // Arrêter Flask lorsque toutes les fenêtres sont fermées
+  stopFlask()
   if (process.platform !== 'darwin') {
     app.quit()
   }

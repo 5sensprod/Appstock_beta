@@ -59,6 +59,7 @@
     "files": [
       "build/**/*",
       "main.js",
+      "preload.js",
       {
         "from": "../backend/dist/app.exe",
         "to": "resources/backend/dist/app.exe"

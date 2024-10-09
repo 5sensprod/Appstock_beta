@@ -9,7 +9,9 @@ import socket
 
 # Initialisation de l'application Flask
 app = Flask(__name__, static_folder='react_build', static_url_path='/')
-CORS(app)
+
+# Configuration de CORS pour permettre les requêtes depuis n'importe quelle origine
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 
 # Configuration de la journalisation
 logging.basicConfig(level=logging.INFO)

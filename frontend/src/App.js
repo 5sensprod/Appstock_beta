@@ -1,15 +1,40 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import './App.css'
 
 function App() {
   const [message, setMessage] = useState('') // État pour stocker le message
+  const [serverIp, setServerIp] = useState('localhost') // Par défaut, utiliser localhost
+
+  // Fonction pour récupérer l'IP dynamique si disponible
+  useEffect(() => {
+    // Vérifiez si l'application s'exécute dans Electron
+    if (window.api && typeof window.api.getServerIp === 'function') {
+      // Récupérer l'IP dynamique via le module preload d'Electron
+      window.api
+        .getServerIp()
+        .then((ip) => {
+          setServerIp(ip) // Mettre à jour l'IP si récupérée
+          console.log(`IP du serveur Flask récupérée : ${ip}`)
+        })
+        .catch((error) => {
+          console.error(
+            "Erreur lors de la récupération de l'IP via Electron :",
+            error,
+          )
+        })
+    } else {
+      // Si on est dans un navigateur classique, utiliser une IP par défaut
+      setServerIp('192.168.1.11') // Remplacez cette adresse IP par celle de votre serveur Flask
+      console.log("Utilisation de l'IP par défaut pour le navigateur.")
+    }
+  }, [])
 
   // Fonction pour gérer l'impression
   const handlePrint = async () => {
     try {
-      // Envoie une requête POST au serveur Flask pour imprimer et afficher le message sur l'écran LCD
-      const response = await axios.post('http://localhost:5000/print', {
+      // Utiliser l'IP dynamique ou par défaut pour faire la requête au serveur Flask
+      const response = await axios.post(`http://${serverIp}:5000/print`, {
         message,
       })
       alert(response.data.message) // Affiche une alerte en fonction de la réponse du serveur
