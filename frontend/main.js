@@ -3,8 +3,10 @@ const path = require('path')
 const { spawn } = require('child_process')
 const treeKill = require('tree-kill')
 const net = require('net')
+const axios = require('axios') // Utiliser axios pour faire une requête HTTP
 
 let flaskProcess = null // Variable pour stocker le processus Flask
+let flaskIpAddress = 'localhost' // Par défaut, utiliser localhost si l'IP n'est pas récupérée
 
 // Fonction pour vérifier si le port 5000 est déjà utilisé
 function isPortInUse(port, callback) {
@@ -61,6 +63,20 @@ function stopFlask() {
   }
 }
 
+// Fonction pour récupérer dynamiquement l'adresse IP locale du serveur Flask
+async function fetchLocalIp() {
+  try {
+    const response = await axios.get('http://127.0.0.1:5000/get_local_ip')
+    flaskIpAddress = response.data.local_ip
+    console.log(`IP locale du serveur Flask : ${flaskIpAddress}`)
+  } catch (error) {
+    console.error(
+      "Impossible de récupérer l'IP locale du serveur Flask :",
+      error,
+    )
+  }
+}
+
 // Fonction pour créer la fenêtre Electron
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -72,14 +88,15 @@ function createWindow() {
     },
   })
 
-  mainWindow.loadURL('http://localhost:5000') // Assurez-vous que Flask tourne sur ce port
+  mainWindow.loadURL(`http://${flaskIpAddress}:5000`) // Utiliser l'IP dynamique du serveur Flask
 
   mainWindow.on('closed', () => {
     // Ne rien mettre ici, la gestion se fait dans 'window-all-closed'
   })
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await fetchLocalIp() // Récupérer l'IP locale du serveur Flask
   isPortInUse(5000, (inUse) => {
     if (!inUse) {
       startFlask() // Démarrer Flask uniquement si le port 5000 n'est pas déjà utilisé

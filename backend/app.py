@@ -5,6 +5,7 @@ import serial
 import logging
 import os
 import sys
+import socket
 
 # Initialisation de l'application Flask
 app = Flask(__name__, static_folder='react_build', static_url_path='/')
@@ -66,6 +67,13 @@ def serve_react_app(path):
     else:
         return send_from_directory(app.static_folder, 'index.html')
 
+# Nouvelle route pour obtenir l'adresse IP locale du serveur Flask
+@app.route('/get_local_ip', methods=['GET'])
+def get_local_ip():
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+    return jsonify({"local_ip": local_ip})
+
 # Fonction pour arrêter le serveur
 def shutdown_server():
     logging.info('Arrêt du serveur Flask via os._exit(0)')
@@ -85,4 +93,4 @@ def shutdown():
 
 # Lancement de l'application Flask
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
+    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
