@@ -2,7 +2,9 @@
 const { BrowserWindow } = require('electron')
 const path = require('path')
 
-function createWindow(flaskIpAddress) {
+function createWindow() {
+  const isDev = process.env.NODE_ENV === 'development'
+
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
@@ -10,14 +12,13 @@ function createWindow(flaskIpAddress) {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, '../preload.js'),
+      webSecurity: !isDev, // Désactiver la sécurité web en développement
     },
   })
 
-  mainWindow.loadURL(`http://${flaskIpAddress}:5000`)
+  const startUrl = isDev ? 'http://localhost:3000' : `http://localhost:5000`
 
-  mainWindow.on('closed', () => {
-    // Ne rien mettre ici, la gestion se fait dans 'window-all-closed'
-  })
+  mainWindow.loadURL(startUrl)
 }
 
 module.exports = {

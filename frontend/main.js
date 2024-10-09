@@ -1,4 +1,3 @@
-// main.js
 const { app, BrowserWindow } = require('electron')
 const {
   isPortInUse,
@@ -9,19 +8,34 @@ const {
 } = require('./electron/flask')
 const { createWindow } = require('./electron/window')
 require('./electron/ipcHandlers') // Pour enregistrer les gestionnaires IPC
+const path = require('path')
+const isDev = process.env.NODE_ENV === 'development'
+
+if (isDev) {
+  require('electron-reload')(path.join(__dirname, '.'), {
+    electron: path.join(__dirname, 'node_modules', '.bin', 'electron'),
+    awaitWriteFinish: true,
+  })
+}
 
 app.whenReady().then(async () => {
-  await fetchLocalIp() // Récupérer l'IP locale du serveur Flask
-  const inUse = await isPortInUse(5000)
-  if (!inUse) {
-    startFlask()
+  if (!isDev) {
+    // En production, démarrer Flask
+    await fetchLocalIp()
+    const inUse = await isPortInUse(5000)
+    if (!inUse) {
+      startFlask()
+    } else {
+      console.log(
+        "Le port 5000 est déjà utilisé. Assurez-vous que le serveur Flask n'est pas déjà en cours d'exécution.",
+      )
+    }
+    // Attendre que Flask soit démarré avant de créer la fenêtre Electron
+    setTimeout(() => createWindow(), 5000)
   } else {
-    console.log(
-      "Le port 5000 est déjà utilisé. Assurez-vous que le serveur Flask n'est pas déjà en cours d'exécution.",
-    )
+    // En développement, créer la fenêtre immédiatement
+    createWindow()
   }
-  // Attendre que Flask soit démarré avant de créer la fenêtre Electron
-  setTimeout(() => createWindow(getFlaskIpAddress()), 5000)
 })
 
 app.on('before-quit', (event) => {

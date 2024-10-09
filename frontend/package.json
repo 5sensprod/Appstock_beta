@@ -18,12 +18,16 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "concurrently \"npm run start-react\" \"npm run start-flask\" \"npm run start-electron\"",
+    "start-react": "react-scripts start",
+    "start-flask": "node ../backend/start_flask.js",
+    "start-electron": "cross-env NODE_ENV=development electron .",
     "build": "react-scripts build",
     "electron": "electron .",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
+  "proxy": "http://localhost:5000",
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -44,8 +48,11 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "concurrently": "^9.0.1",
+    "cross-env": "^7.0.3",
     "electron": "^32.1.2",
     "electron-builder": "^25.1.7",
+    "electron-reload": "^2.0.0-alpha.1",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
