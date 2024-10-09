@@ -4,40 +4,51 @@ import './App.css'
 
 function App() {
   const [message, setMessage] = useState('') // État pour stocker le message
-  const [serverIp, setServerIp] = useState('localhost') // Par défaut, utiliser localhost
+  const [serverIp, setServerIp] = useState('') // État pour stocker l'IP du serveur
 
   // Fonction pour récupérer l'IP dynamique si disponible
   useEffect(() => {
-    // Vérifiez si l'application s'exécute dans Electron
-    if (window.api && typeof window.api.getServerIp === 'function') {
-      // Récupérer l'IP dynamique via le module preload d'Electron
-      window.api
-        .getServerIp()
-        .then((ip) => {
-          setServerIp(ip) // Mettre à jour l'IP si récupérée
-          console.log(`IP du serveur Flask récupérée : ${ip}`)
-        })
-        .catch((error) => {
-          console.error(
-            "Erreur lors de la récupération de l'IP via Electron :",
-            error,
-          )
-        })
-    } else {
-      // Si on est dans un navigateur classique, utiliser window.location.hostname
-      const ip = window.location.hostname
-      setServerIp(ip)
+    if (process.env.NODE_ENV === 'development') {
+      // En développement, pas besoin de serverIp
       console.log(
-        `Utilisation de l'IP du serveur Flask depuis window.location.hostname : ${ip}`,
+        'Mode développement : utilisation du proxy pour les appels API.',
       )
+    } else {
+      // En production ou en mode Electron, on utilise la logique existante
+      if (window.api && typeof window.api.getServerIp === 'function') {
+        // Récupérer l'IP dynamique via le module preload d'Electron
+        window.api
+          .getServerIp()
+          .then((ip) => {
+            setServerIp(ip) // Mettre à jour l'IP si récupérée
+            console.log(`IP du serveur Flask récupérée : ${ip}`)
+          })
+          .catch((error) => {
+            console.error(
+              "Erreur lors de la récupération de l'IP via Electron :",
+              error,
+            )
+          })
+      } else {
+        // Si on est dans un navigateur classique, utiliser window.location.hostname
+        const ip = window.location.hostname
+        setServerIp(ip)
+        console.log(
+          `Utilisation de l'IP du serveur Flask depuis window.location.hostname : ${ip}`,
+        )
+      }
     }
   }, [])
 
   // Fonction pour gérer l'impression
   const handlePrint = async () => {
     try {
-      // Utiliser l'IP dynamique ou par défaut pour faire la requête au serveur Flask
-      const response = await axios.post(`http://${serverIp}:5000/print`, {
+      let url = '/print' // Par défaut, utiliser le chemin relatif
+      if (process.env.NODE_ENV !== 'development') {
+        // En production ou en mode Electron, utiliser serverIp
+        url = `http://${serverIp}:5000/print`
+      }
+      const response = await axios.post(url, {
         message,
       })
       alert(response.data.message) // Affiche une alerte en fonction de la réponse du serveur
@@ -49,7 +60,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>POSes Printer App</h1>
+        <h1>POS Pinter App</h1>
         <input
           type="text"
           value={message}
