@@ -1,41 +1,45 @@
-# Fichiers et dossiers de l'environnement virtuel Python
+# Ignorer les environnements virtuels Python
 backend/.venv/
-backend/__pycache__/
+backend/venv/
+*.env
+
+# Ignorer les fichiers compilés Python
 *.pyc
 *.pyo
 *.pyd
-*.env
+backend/__pycache__/
+backend/**/__pycache__/
 
-# Fichiers générés par PyInstaller
+# Ignorer les fichiers générés par PyInstaller ou les builds
 backend/build/
-backend/react_build/
 backend/dist/
+backend/react_build/
 backend/*.spec
 
-# Configuration des logs et autres fichiers temporaires de Python
+# Ignorer les logs et fichiers temporaires de Python
 backend/*.log
 backend/*.sqlite3
-*.egg-info/
-*.eggs/
+backend/*.egg-info/
+backend/*.eggs/
 
-# Fichiers et dossiers de Node.js (React)
+# Ignorer les dossiers et fichiers de Node.js (React)
 frontend/node_modules/
 frontend/build/
 frontend/dist/
 frontend/.env
 frontend/.DS_Store
 
-# Logs et fichiers temporaires
+# Ignorer les logs et fichiers temporaires de Node.js
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Configuration de l'éditeur et de l'IDE
+# Ignorer les configurations des éditeurs et IDE
 .vscode/
 .idea/
 *.sublime-workspace
 *.sublime-project
 
-# Fichiers système
+# Ignorer les fichiers système
 Thumbs.db
 .DS_Store

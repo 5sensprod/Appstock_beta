@@ -3,7 +3,7 @@ from flask import Flask, send_from_directory, jsonify  # Ajout de jsonify ici
 from flask_cors import CORS
 import logging
 import os
-from routes import main_bp  # Importer le Blueprint
+from routes import main_bp
 import socket
 
 # Initialisation de l'application Flask

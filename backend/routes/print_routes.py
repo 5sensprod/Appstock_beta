@@ -2,7 +2,7 @@
 from flask import request, jsonify
 import win32print
 import logging
-from . import main_bp
+from .main_bp import main_bp
 from utils.lcd import display_on_lcd
 
 @main_bp.route('/print', methods=['POST'])

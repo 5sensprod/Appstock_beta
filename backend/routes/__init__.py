@@ -1,10 +1,7 @@
-# routes/__init__.py
-from flask import Blueprint
+from .main_bp import main_bp
 
-main_bp = Blueprint('main', __name__)
+# Importer les modules de routes pour enregistrer les routes avec le Blueprint
+from . import print_routes
+from . import shutdown_routes
 
-from . import print_routes, shutdown_routes
-
-# Utilisation des modules pour éviter le warning
-_ = print_routes
-_ = shutdown_routes
+__all__ = ['main_bp']

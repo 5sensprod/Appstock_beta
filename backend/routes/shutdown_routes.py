@@ -2,7 +2,7 @@
 from flask import request
 import logging
 import os
-from . import main_bp
+from .main_bp import main_bp
 from config import SECRET_TOKEN
 
 def shutdown_server():
