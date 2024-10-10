@@ -1,13 +1,20 @@
-# app.py
-from flask import Flask, send_from_directory, jsonify  # Ajout de jsonify ici
+# backend/app.py
+from flask import Flask
 from flask_cors import CORS
 import logging
 import os
-from routes import main_bp
-import socket
+from config import Config  # Import de la configuration pour des paramètres centralisés
+from db import db  # Import de la base de données
+from routes import main_bp  # Import du Blueprint principal
 
 # Initialisation de l'application Flask
 app = Flask(__name__, static_folder='react_build', static_url_path='/')
+
+# Chargement de la configuration de l'application depuis config.py
+app.config.from_object(Config)
+
+# Initialisation de la base de données avec l'application
+db.init_app(app)
 
 # Configuration de CORS pour permettre les requêtes depuis n'importe quelle origine
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
@@ -15,31 +22,12 @@ CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 # Configuration de la journalisation
 logging.basicConfig(level=logging.INFO)
 
-# Enregistrement du Blueprint
+# Enregistrement du Blueprint principal
 app.register_blueprint(main_bp)
 
-# Route pour servir l'application React
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_react_app(path):
-    if path and os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
-    else:
-        return send_from_directory(app.static_folder, 'index.html')
-
-# Nouvelle route pour obtenir l'adresse IP locale du serveur Flask
-@app.route('/get_local_ip', methods=['GET'])
-def get_local_ip():
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('8.8.8.8', 80))
-        local_ip = s.getsockname()[0]
-    except Exception as e:
-        logging.error(f"Erreur lors de l'obtention de l'adresse IP locale : {e}")
-        local_ip = '127.0.0.1'
-    finally:
-        s.close()
-    return jsonify({"local_ip": local_ip})
+# Création des tables de la base de données si elles n'existent pas encore
+with app.app_context():
+    db.create_all()
 
 # Lancement de l'application Flask
 if __name__ == '__main__':

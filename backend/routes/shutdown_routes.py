@@ -1,9 +1,9 @@
-# routes/shutdown_routes.py
-from flask import request
+# backend/routes/shutdown_routes.py
+from flask import request, jsonify
 import logging
 import os
 from .main_bp import main_bp
-from config import SECRET_TOKEN
+from config import Config
 
 def shutdown_server():
     logging.info('Arrêt du serveur Flask via os._exit(0)')
@@ -12,10 +12,11 @@ def shutdown_server():
 @main_bp.route('/shutdown', methods=['POST'])
 def shutdown():
     token = request.headers.get('Authorization')
-    logging.info(f"Requête de shutdown reçue avec le token: {token}")
-    if token == SECRET_TOKEN:
+    logging.info(f"Requête de shutdown reçue avec le token : {token}")
+    if token == Config.SECRET_TOKEN:
         logging.info("Token valide, arrêt du serveur en cours...")
-        return shutdown_server()
+        shutdown_server()
+        return jsonify({'message': 'Arrêt du serveur initié.'}), 200
     else:
         logging.warning('Tentative d\'arrêt non autorisée.')
-        return 'Non autorisé.', 401
+        return jsonify({'error': 'Non autorisé.'}), 401
