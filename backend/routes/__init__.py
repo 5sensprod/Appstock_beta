@@ -5,5 +5,7 @@ from .main_bp import main_bp
 from . import main_routes
 from . import print_routes
 from . import shutdown_routes
+from . import product_routes
+from . import network_routes
 
 __all__ = ['main_bp']
