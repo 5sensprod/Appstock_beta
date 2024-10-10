@@ -1,11 +1,10 @@
-import json
-from flask import jsonify, request, current_app  # Ajout de current_app pour manipuler les WebSockets
+from flask import jsonify, request, current_app
 from .main_bp import main_bp
 from db import db
 from models import Product
+from sockets import broadcast_message  # Importation depuis le module sockets
 
 # Route pour ajouter un produit (CREATE)
-@main_bp.route('/products', methods=['POST'])
 @main_bp.route('/products', methods=['POST'])
 def add_product():
     data = request.json
@@ -18,12 +17,7 @@ def add_product():
 
     # Envoi de la notification WebSocket pour l'ajout de produit
     message = {'event': 'product_added', 'product': new_product.to_dict()}
-    with current_app.app_context():
-        for ws in current_app.config['active_websockets']:
-            try:
-                ws.send(json.dumps(message))  # Utiliser json.dumps pour convertir en JSON
-            except Exception as e:
-                current_app.logger.error(f'Erreur lors de l\'envoi de l\'événement WebSocket : {e}')
+    broadcast_message(message)  # Utilisation de la fonction centralisée pour diffuser le message
 
     return jsonify(new_product.to_dict()), 201
 
@@ -48,12 +42,7 @@ def update_product(product_id):
 
     # Envoi de la notification WebSocket pour la mise à jour du produit
     message = {'event': 'product_updated', 'product': product.to_dict()}
-    with current_app.app_context():
-        for ws in current_app.config['active_websockets']:
-            try:
-                ws.send(str(message))
-            except Exception as e:
-                current_app.logger.error(f'Erreur lors de l\'envoi de l\'événement WebSocket : {e}')
+    broadcast_message(message)
 
     return jsonify(product.to_dict()), 200
 
@@ -66,11 +55,6 @@ def delete_product(product_id):
 
     # Envoi de la notification WebSocket pour la suppression du produit
     message = {'event': 'product_deleted', 'product_id': product_id}
-    with current_app.app_context():
-        for ws in current_app.config['active_websockets']:
-            try:
-                ws.send(str(message))
-            except Exception as e:
-                current_app.logger.error(f'Erreur lors de l\'envoi de l\'événement WebSocket : {e}')
+    broadcast_message(message)
 
     return jsonify({'message': 'Product deleted successfully'}), 200

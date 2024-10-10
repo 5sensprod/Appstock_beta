@@ -34,6 +34,45 @@ export const ProductProvider = ({ children }) => {
     }
 
     loadProducts()
+
+    // Connexion au WebSocket
+    const socket = new WebSocket('ws://localhost:5000/ws')
+
+    // Gérer la connexion ouverte
+    socket.onopen = () => {
+      console.log('Connexion WebSocket ouverte dans React')
+    }
+
+    // Gérer les messages reçus depuis le WebSocket
+    socket.onmessage = (event) => {
+      const message = JSON.parse(event.data)
+      console.log('Message WebSocket reçu :', message)
+
+      // Mettre à jour l'état des produits en fonction du message reçu
+      if (message.event === 'product_added') {
+        setProducts((prevProducts) => [...prevProducts, message.product])
+      } else if (message.event === 'product_updated') {
+        setProducts((prevProducts) =>
+          prevProducts.map((product) =>
+            product.id === message.product.id ? message.product : product,
+          ),
+        )
+      } else if (message.event === 'product_deleted') {
+        setProducts((prevProducts) =>
+          prevProducts.filter((product) => product.id !== message.product_id),
+        )
+      }
+    }
+
+    // Gérer les erreurs WebSocket
+    socket.onerror = (error) => {
+      console.error('Erreur WebSocket:', error)
+    }
+
+    // Fermer la connexion WebSocket proprement lors du démontage du composant
+    return () => {
+      socket.close()
+    }
   }, [])
 
   // Fonction pour ajouter un produit et mettre à jour la liste des produits
