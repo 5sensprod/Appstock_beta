@@ -1,7 +1,8 @@
 // frontend/src/components/Products/ProductList.jsx
 import React, { useEffect, useState } from 'react'
 import { fetchProducts } from '../../services/productService'
-import './ProductList.css' // Nous allons ajouter du style pour rendre la liste plus jolie
+import ProductForm from './ProductForm'
+import './ProductList.css'
 
 const ProductList = () => {
   const [products, setProducts] = useState([])
@@ -25,6 +26,10 @@ const ProductList = () => {
     loadProducts()
   }, [])
 
+  const handleProductAdded = (newProduct) => {
+    setProducts((prevProducts) => [...prevProducts, newProduct])
+  }
+
   if (loading) {
     return <div>Chargement des produits...</div>
   }
@@ -36,8 +41,9 @@ const ProductList = () => {
   return (
     <div className="product-list">
       <h2>Liste des Produits</h2>
+      <ProductForm onProductAdded={handleProductAdded} />
       {products.length === 0 ? (
-        <p>Aucun produit trouvé.</p>
+        <p className="no-data-message">Aucune donnée actuellement.</p>
       ) : (
         <ul>
           {products.map((product) => (
