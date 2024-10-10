@@ -1,4 +1,3 @@
-// frontend/main.js
 const { app, BrowserWindow } = require('electron')
 const {
   isPortInUse,
@@ -7,6 +6,7 @@ const {
   fetchLocalIp,
 } = require('./electron/flask')
 const { createWindow } = require('./electron/window')
+const { createCustomMenu } = require('./electron/menu') // Importer le menu personnalisé
 const { waitForServer } = require('./electron/serverUtils') // Importer la fonction waitForServer
 require('./electron/ipcHandlers') // Pour enregistrer les gestionnaires IPC
 const path = require('path')
@@ -36,10 +36,12 @@ app.whenReady().then(async () => {
     }
     // Utiliser waitForServer pour vérifier si le serveur est prêt avant de créer la fenêtre Electron
     waitForServer(() => {
+      createCustomMenu() // Créer et appliquer le menu personnalisé
       mainWindow = createWindow()
     })
   } else {
     // En développement, créer la fenêtre immédiatement
+    createCustomMenu() // Créer et appliquer le menu personnalisé
     mainWindow = createWindow()
   }
 
