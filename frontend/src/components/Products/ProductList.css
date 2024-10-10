@@ -1,0 +1,43 @@
+/* frontend/src/components/Products/ProductList.css */
+
+.product-list {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.product-list h2 {
+  margin-bottom: 15px;
+}
+
+.product-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.product-item:last-child {
+  border-bottom: none;
+}
+
+.product-name {
+  font-weight: bold;
+}
+
+.product-price {
+  color: green;
+}
+
+.product-stock {
+  font-size: 0.9em;
+  color: gray;
+}
+
+.error-message {
+  color: red;
+  font-weight: bold;
+  margin-top: 20px;
+}
