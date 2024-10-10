@@ -1,34 +1,10 @@
-// frontend/src/components/Products/ProductList.jsx
-import React, { useEffect, useState } from 'react'
-import { fetchProducts } from '../../services/productService'
+import React from 'react'
+import { useProductContext } from '../../context/ProductContext'
 import ProductForm from './ProductForm'
 import './ProductList.css'
 
 const ProductList = () => {
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        const data = await fetchProducts()
-        setProducts(data)
-      } catch (error) {
-        setError(
-          'Erreur lors de la récupération des produits. Veuillez réessayer plus tard.',
-        )
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadProducts()
-  }, [])
-
-  const handleProductAdded = (newProduct) => {
-    setProducts((prevProducts) => [...prevProducts, newProduct])
-  }
+  const { products, loading, error } = useProductContext()
 
   if (loading) {
     return <div>Chargement des produits...</div>
@@ -41,7 +17,7 @@ const ProductList = () => {
   return (
     <div className="product-list">
       <h2>Liste des Produits</h2>
-      <ProductForm onProductAdded={handleProductAdded} />
+      <ProductForm />
       {products.length === 0 ? (
         <p className="no-data-message">Aucune donnée actuellement.</p>
       ) : (

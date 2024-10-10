@@ -1,9 +1,9 @@
-// frontend/src/components/Products/ProductForm.jsx
 import React, { useState } from 'react'
-import { addProduct } from '../../services/productService'
+import { useProductContext } from '../../context/ProductContext'
 import './ProductForm.css'
 
-const ProductForm = ({ onProductAdded }) => {
+const ProductForm = () => {
+  const { handleAddProduct } = useProductContext()
   const [name, setName] = useState('')
   const [price, setPrice] = useState('')
   const [stock, setStock] = useState('')
@@ -17,19 +17,19 @@ const ProductForm = ({ onProductAdded }) => {
       return
     }
 
+    const newProduct = {
+      name,
+      price: parseFloat(price),
+      stock: parseInt(stock),
+    }
+
     try {
-      const newProduct = {
-        name,
-        price: parseFloat(price),
-        stock: parseInt(stock),
-      }
-      await addProduct(newProduct)
-      onProductAdded(newProduct) // Rafraîchir la liste des produits après l'ajout
+      await handleAddProduct(newProduct)
       setName('')
       setPrice('')
       setStock('')
       setError(null)
-    } catch (error) {
+    } catch {
       setError("Erreur lors de l'ajout du produit. Veuillez réessayer.")
     }
   }
