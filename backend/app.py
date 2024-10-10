@@ -6,6 +6,7 @@ import os
 from config import Config  # Import de la configuration pour des paramètres centralisés
 from db import db  # Import de la base de données
 from routes import main_bp  # Import du Blueprint principal
+from db_initializer import init_demo_products  # Import de la logique d'initialisation des données
 
 # Initialisation de l'application Flask
 app = Flask(__name__, static_folder='react_build', static_url_path='/')
@@ -25,9 +26,10 @@ logging.basicConfig(level=logging.INFO)
 # Enregistrement du Blueprint principal
 app.register_blueprint(main_bp)
 
-# Création des tables de la base de données si elles n'existent pas encore
+# Création des tables de la base de données et ajout des produits de démonstration si nécessaire
 with app.app_context():
     db.create_all()
+    init_demo_products(app)  # Appel de l'initialisation des produits de démonstration
 
 # Lancement de l'application Flask
 if __name__ == '__main__':
