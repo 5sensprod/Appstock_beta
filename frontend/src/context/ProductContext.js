@@ -1,5 +1,7 @@
+// frontend/src/context/ProductContext.js
 import React, { createContext, useState, useEffect, useContext } from 'react'
 import { fetchProducts, addProduct } from '../services/productService'
+import { connectWebSocket, closeWebSocket } from '../services/websocketService' // Import du service WebSocket
 
 // Création du contexte pour les produits
 const ProductContext = createContext()
@@ -35,17 +37,8 @@ export const ProductProvider = ({ children }) => {
 
     loadProducts()
 
-    // Connexion au WebSocket
-    const socket = new WebSocket('ws://localhost:5000/ws')
-
-    // Gérer la connexion ouverte
-    socket.onopen = () => {
-      console.log('Connexion WebSocket ouverte dans React')
-    }
-
-    // Gérer les messages reçus depuis le WebSocket
-    socket.onmessage = (event) => {
-      const message = JSON.parse(event.data)
+    // Connexion au WebSocket via le service
+    connectWebSocket((message) => {
       console.log('Message WebSocket reçu :', message)
 
       // Mettre à jour l'état des produits en fonction du message reçu
@@ -62,16 +55,11 @@ export const ProductProvider = ({ children }) => {
           prevProducts.filter((product) => product.id !== message.product_id),
         )
       }
-    }
-
-    // Gérer les erreurs WebSocket
-    socket.onerror = (error) => {
-      console.error('Erreur WebSocket:', error)
-    }
+    })
 
     // Fermer la connexion WebSocket proprement lors du démontage du composant
     return () => {
-      socket.close()
+      closeWebSocket()
     }
   }, [])
 
