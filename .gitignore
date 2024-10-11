@@ -26,6 +26,8 @@ backend/*.eggs/
 frontend/node_modules/
 frontend/build/
 frontend/dist/
+frontend/out/
+
 frontend/.env
 frontend/.DS_Store
 
@@ -43,3 +45,8 @@ yarn-error.log*
 # Ignorer les fichiers système
 Thumbs.db
 .DS_Store
+
+# Ignorer les fichiers de configuration et logs de Next.js
+.next/
+.next/cache/
+.next/static/

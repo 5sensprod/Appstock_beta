@@ -1,11 +1,11 @@
+// pages/index.js
 import React from 'react'
-import Header from './components/Header'
-import PrintManager from './components/PrintManager'
-import ProductList from './components/Products/ProductList'
-import { ProductProvider } from './context/ProductContext'
-import './App.css'
+import Header from '../components/Header'
+import PrintManager from '../components/PrintManager'
+import ProductList from '../components/Products/ProductList'
+import { ProductProvider } from '../context/ProductContext'
 
-function App() {
+export default function Home() {
   return (
     <ProductProvider>
       <div className="App">
@@ -20,5 +20,3 @@ function App() {
     </ProductProvider>
   )
 }
-
-export default App

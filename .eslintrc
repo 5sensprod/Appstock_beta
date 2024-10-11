@@ -1,9 +1,9 @@
 {
-    "extends": [
-      "react-app",  // Les règles par défaut de Create React App
-      "plugin:prettier/recommended"  // Intégration avec Prettier
-    ],
-    "rules": {
-      // ajouter d'autres règles ici
-    }
+  "extends": [
+    "next/core-web-vitals",  // Les règles recommandées pour Next.js
+    "plugin:prettier/recommended"  // Intégration avec Prettier
+  ],
+  "rules": {
+    // ajouter d'autres règles ici si nécessaire
   }
+}

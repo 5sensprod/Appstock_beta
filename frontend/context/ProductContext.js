@@ -1,7 +1,7 @@
 // frontend/src/context/ProductContext.js
 import React, { createContext, useState, useEffect, useContext } from 'react'
 import { fetchProducts, addProduct } from '../services/productService'
-import { connectWebSocket, closeWebSocket } from '../services/websocketService' // Import du service WebSocket
+import { connectWebSocket, closeWebSocket } from '../services/websocketService'
 
 // Création du contexte pour les produits
 const ProductContext = createContext()
@@ -63,11 +63,11 @@ export const ProductProvider = ({ children }) => {
     }
   }, [])
 
-  // Fonction pour ajouter un produit et mettre à jour la liste des produits
+  // Fonction pour ajouter un produit sans mettre à jour immédiatement la liste des produits
   const handleAddProduct = async (newProduct) => {
     try {
-      const addedProduct = await addProduct(newProduct)
-      setProducts((prevProducts) => [...prevProducts, addedProduct])
+      await addProduct(newProduct)
+      // La mise à jour de la liste des produits se fera via le WebSocket, pas directement ici
     } catch (error) {
       setError("Erreur lors de l'ajout du produit. Veuillez réessayer.")
     }

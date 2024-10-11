@@ -7,30 +7,26 @@
   "author": "Ton Nom",
   "description": "Mon application Electron avec React et Flask",
   "dependencies": {
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.7",
+    "next": "^14.2.15",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-scripts": "5.0.1",
-    "tree-kill": "^1.2.2",
-    "web-vitals": "^2.1.4"
+    "tree-kill": "^1.2.2"
   },
   "scripts": {
-    "start": "concurrently \"npm run start-react\" \"npm run start-flask\" \"npm run start-electron\"",
-    "start-react": "react-scripts start",
+    "start": "concurrently \"npm run start-next\" \"npm run start-flask\" \"npm run start-electron\"",
+    "start-next": "next dev",
     "start-flask": "node ../backend/start_flask.js",
     "start-electron": "cross-env NODE_ENV=development electron .",
-    "build": "npm run build-react && npm run copy-react-build && npm run build-pyinstaller && npm run clean-pyinstaller && npm run build-electron",
-    "build-react": "react-scripts build",
-    "copy-react-build": "node ./scripts_package/copy-build.js",
+    "build": "npm run build-next && npm run copy-next-build && npm run build-pyinstaller && npm run clean-pyinstaller && npm run build-electron",
+    "build-next": "next build",
+    "copy-next-build": "node ./scripts_package/copy-build.js",
     "build-pyinstaller": "call ../backend/.venv/Scripts/activate && cd ../backend && pyinstaller --onefile --noconsole --add-data \"react_build;react_build\" app.py && cd ../frontend",
     "clean-pyinstaller": "rimraf ../backend/build ../backend/__pycache__ ../backend/app.spec ../backend/utils/__pycache__ ../backend/routes/__pycache__",
     "build-electron": "electron-builder",
     "electron": "electron .",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "test": "next test",
+    "eject": "next eject"
   },
   "proxy": "http://localhost:5000",
   "eslintConfig": {
@@ -59,10 +55,9 @@
     "electron-builder": "^25.1.7",
     "electron-reload": "^2.0.0-alpha.1",
     "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.15",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
-    "eslint-plugin-react": "^7.37.1",
-    "eslint-plugin-react-hooks": "^4.6.0",
     "fs-extra": "^11.2.0",
     "prettier": "^3.3.3",
     "rimraf": "^6.0.1"
@@ -72,7 +67,7 @@
     "productName": "AppStock Beta",
     "compression": "maximum",
     "files": [
-      "build/**/*",
+      "out/**/*",
       "electron/**/*",
       "main.js",
       "preload.js",

@@ -1,6 +1,6 @@
-/* frontend/src/components/Products/ProductForm.css */
+/* ProductForm.module.css */
 
-.product-form {
+.productForm {
   margin: 20px 0;
   padding: 15px;
   background-color: #f0f0f0;
@@ -8,11 +8,11 @@
   border-radius: 8px;
 }
 
-.product-form h3 {
+.heading {
   margin-bottom: 10px;
 }
 
-.product-form input {
+.input {
   display: block;
   width: 100%;
   padding: 10px;
@@ -21,7 +21,7 @@
   border-radius: 4px;
 }
 
-.product-form button {
+.button {
   padding: 10px 15px;
   background-color: #28a745;
   color: white;
@@ -31,11 +31,11 @@
   margin-top: 10px;
 }
 
-.product-form button:hover {
+.button:hover {
   background-color: #218838;
 }
 
-.error-message {
+.errorMessage {
   color: red;
   font-weight: bold;
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useProductContext } from '../../context/ProductContext'
-import './ProductForm.css'
+import styles from './ProductForm.module.css'
 
 const ProductForm = () => {
   const { handleAddProduct } = useProductContext()
@@ -35,28 +35,33 @@ const ProductForm = () => {
   }
 
   return (
-    <form className="product-form" onSubmit={handleSubmit}>
-      <h3>Ajouter un nouveau produit</h3>
-      {error && <p className="error-message">{error}</p>}
+    <form className={styles.productForm} onSubmit={handleSubmit}>
+      <h3 className={styles.heading}>Ajouter un nouveau produit</h3>
+      {error && <p className={styles.errorMessage}>{error}</p>}
       <input
         type="text"
         placeholder="Nom du produit"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        className={styles.input}
       />
       <input
         type="number"
         placeholder="Prix du produit"
         value={price}
         onChange={(e) => setPrice(e.target.value)}
+        className={styles.input}
       />
       <input
         type="number"
         placeholder="Stock"
         value={stock}
         onChange={(e) => setStock(e.target.value)}
+        className={styles.input}
       />
-      <button type="submit">Ajouter</button>
+      <button type="submit" className={styles.button}>
+        Ajouter
+      </button>
     </form>
   )
 }
