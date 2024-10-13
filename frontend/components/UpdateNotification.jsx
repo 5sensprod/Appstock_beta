@@ -5,24 +5,38 @@ function UpdateNotification() {
   const [updateDownloaded, setUpdateDownloaded] = useState(false)
 
   useEffect(() => {
-    // Écouter les événements depuis Electron via la fenêtre
-    window.api.onUpdateAvailable(() => {
-      setUpdateAvailable(true)
-    })
+    // Vérifier si on est bien dans Electron (pas dans le navigateur ou côté serveur)
+    if (typeof window !== 'undefined' && window.api) {
+      console.log('window.api est défini, accès à Electron API')
 
-    window.api.onUpdateDownloaded(() => {
-      setUpdateDownloaded(true)
-    })
+      // Écouter les événements depuis Electron via la fenêtre
+      window.api.onUpdateAvailable(() => {
+        console.log('Mise à jour disponible détectée')
+        setUpdateAvailable(true)
+      })
 
-    // Nettoyage des listeners lors du démontage du composant
+      window.api.onUpdateDownloaded(() => {
+        console.log('Mise à jour téléchargée détectée')
+        setUpdateDownloaded(true)
+      })
+    } else {
+      console.warn("window.api n'est pas défini, vérifiez preload.js")
+    }
+
     return () => {
-      window.api.onUpdateAvailable(() => {})
-      window.api.onUpdateDownloaded(() => {})
+      if (typeof window !== 'undefined' && window.api) {
+        console.log('Nettoyage des événements')
+        window.api.onUpdateAvailable(() => {})
+        window.api.onUpdateDownloaded(() => {})
+      }
     }
   }, [])
 
   const installUpdate = () => {
-    window.api.installUpdate() // Demande d'installation de la mise à jour
+    if (typeof window !== 'undefined' && window.api) {
+      console.log('Installation de la mise à jour demandée')
+      window.api.installUpdate()
+    }
   }
 
   return (
@@ -30,7 +44,7 @@ function UpdateNotification() {
       {updateAvailable && (
         <div className="mb-4 rounded border border-yellow-400 bg-yellow-100 px-4 py-3 text-yellow-700 shadow-lg">
           <p className="font-bold">Mise à jour disponible</p>
-          <p>Le téléchargement est en cours...</p>
+          <p>Le téléchargement de la mise à jour est en cours...</p>
         </div>
       )}
       {updateDownloaded && (

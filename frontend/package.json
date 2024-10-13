@@ -1,6 +1,6 @@
 {
   "name": "appstock_beta",
-  "version": "0.2.0",
+  "version": "0.2.6",
   "main": "main.js",
   "private": true,
   "homepage": "/",
@@ -8,16 +8,17 @@
   "description": "Appstock",
   "dependencies": {
     "axios": "^1.7.7",
-    "tree-kill": "^1.2.2",
     "dotenv": "^16.4.5",
-    "electron-updater": "^6.3.9"
+    "electron-log": "^5.2.0",
+    "electron-updater": "^6.3.9",
+    "tree-kill": "^1.2.2"
   },
   "scripts": {
     "start": "concurrently \"npm run start-next\" \"npm run start-flask\" \"npm run start-electron\"",
     "start-next": "next dev",
     "start-flask": "node ../backend/start_flask.js",
     "start-electron": "cross-env NODE_ENV=development electron .",
-    "build": "npm run build-next && npm run copy-next-build && npm run build-pyinstaller && npm run clean-pyinstaller && npm run build-electron && electron-builder --publish onTag",
+    "build": "npm run build-next && npm run copy-next-build && npm run build-pyinstaller && npm run clean-pyinstaller && npm run build-electron && electron-builder --publish always",
     "build-next": "next build",
     "copy-next-build": "node ./scripts_package/copy-build.js",
     "build-pyinstaller": "call ../backend/.venv/Scripts/activate && cd ../backend && pyinstaller --onefile --noconsole --add-data \"react_build;react_build\" app.py && cd ../frontend",
@@ -92,7 +93,8 @@
       {
         "provider": "github",
         "owner": "5sensprod",
-        "repo": "Appstock_beta"
+        "repo": "Appstock_beta",
+        "releaseType": "release"
       }
     ],
     "nsis": {

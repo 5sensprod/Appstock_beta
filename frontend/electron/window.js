@@ -17,8 +17,10 @@ function createWindow() {
   })
 
   const startUrl = isDev ? 'http://localhost:3000' : `http://localhost:5000`
-
   mainWindow.loadURL(startUrl)
+
+  // Retourner mainWindow pour s'assurer qu'il est bien capturé dans main.js
+  return mainWindow
 }
 
 module.exports = {
