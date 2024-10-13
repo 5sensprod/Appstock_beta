@@ -35,7 +35,7 @@ function startFlask() {
   const flaskExecutablePath = path.join(__dirname, '../../backend/dist/app.exe')
 
   flaskProcess = spawn(flaskExecutablePath, [], {
-    stdio: 'ignore',
+    stdio: 'ignore'
   })
 
   flaskProcess.on('error', (error) => {
@@ -68,10 +68,7 @@ async function fetchLocalIp() {
     flaskIpAddress = response.data.local_ip
     console.log(`IP locale du serveur Flask : ${flaskIpAddress}`)
   } catch (error) {
-    console.error(
-      "Impossible de récupérer l'IP locale du serveur Flask :",
-      error,
-    )
+    console.error("Impossible de récupérer l'IP locale du serveur Flask :", error)
   }
 }
 
@@ -81,5 +78,5 @@ module.exports = {
   startFlask,
   stopFlask,
   fetchLocalIp,
-  getFlaskIpAddress: () => flaskIpAddress,
+  getFlaskIpAddress: () => flaskIpAddress
 }

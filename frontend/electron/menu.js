@@ -5,7 +5,7 @@ function createCustomMenu() {
   const template = [
     {
       label: 'Fichier',
-      submenu: [{ label: 'Quitter', role: 'quit' }],
+      submenu: [{ label: 'Quitter', role: 'quit' }]
     },
     {
       label: 'Édition',
@@ -16,8 +16,8 @@ function createCustomMenu() {
         { label: 'Couper', role: 'cut' },
         { label: 'Copier', role: 'copy' },
         { label: 'Coller', role: 'paste' },
-        { label: 'Tout sélectionner', role: 'selectAll' },
-      ],
+        { label: 'Tout sélectionner', role: 'selectAll' }
+      ]
     },
     {
       label: 'Affichage',
@@ -30,15 +30,15 @@ function createCustomMenu() {
         { label: 'Zoom arrière', role: 'zoomOut' },
         { label: 'Réinitialiser le zoom', role: 'resetZoom' },
         { type: 'separator' },
-        { label: 'Mode plein écran', role: 'togglefullscreen' },
-      ],
+        { label: 'Mode plein écran', role: 'togglefullscreen' }
+      ]
     },
     {
       label: 'Fenêtre',
       submenu: [
         { label: 'Minimiser', role: 'minimize' },
-        { label: 'Fermer', role: 'close' },
-      ],
+        { label: 'Fermer', role: 'close' }
+      ]
     },
     {
       label: 'Aide',
@@ -47,11 +47,11 @@ function createCustomMenu() {
           label: 'Documentation',
           click: () => {
             /* Lancer la documentation */
-          },
+          }
         },
-        { label: 'À propos', role: 'about' },
-      ],
-    },
+        { label: 'À propos', role: 'about' }
+      ]
+    }
   ]
 
   const menu = Menu.buildFromTemplate(template)
@@ -59,5 +59,5 @@ function createCustomMenu() {
 }
 
 module.exports = {
-  createCustomMenu,
+  createCustomMenu
 }

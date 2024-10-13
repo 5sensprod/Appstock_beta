@@ -12,8 +12,8 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, '../preload.js'),
-      webSecurity: !isDev, // Désactiver la sécurité web en développement
-    },
+      webSecurity: !isDev // Désactiver la sécurité web en développement
+    }
   })
 
   const startUrl = isDev ? 'http://localhost:3000' : `http://localhost:5000`
@@ -22,5 +22,5 @@ function createWindow() {
 }
 
 module.exports = {
-  createWindow,
+  createWindow
 }

@@ -20,7 +20,7 @@ const ProductForm = () => {
     const newProduct = {
       name,
       price: parseFloat(price),
-      stock: parseInt(stock),
+      stock: parseInt(stock)
     }
 
     try {

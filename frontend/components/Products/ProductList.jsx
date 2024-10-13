@@ -26,9 +26,7 @@ const ProductList = () => {
             <li key={product.id} className={styles.productItem}>
               <span className={styles.productName}>{product.name}</span>
               <span className={styles.productPrice}>{product.price}€</span>
-              <span className={styles.productStock}>
-                Stock: {product.stock}
-              </span>
+              <span className={styles.productStock}>Stock: {product.stock}</span>
             </li>
           ))}
         </ul>

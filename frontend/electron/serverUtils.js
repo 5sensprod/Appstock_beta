@@ -23,5 +23,5 @@ const waitForServer = async (callback) => {
 
 module.exports = {
   checkServerReady,
-  waitForServer,
+  waitForServer
 }

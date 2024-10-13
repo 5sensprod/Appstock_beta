@@ -27,9 +27,7 @@ export const ProductProvider = ({ children }) => {
         const data = await fetchProducts()
         setProducts(data)
       } catch (error) {
-        setError(
-          'Erreur lors de la récupération des produits. Veuillez réessayer plus tard.',
-        )
+        setError('Erreur lors de la récupération des produits. Veuillez réessayer plus tard.')
       } finally {
         setLoading(false)
       }
@@ -47,12 +45,12 @@ export const ProductProvider = ({ children }) => {
       } else if (message.event === 'product_updated') {
         setProducts((prevProducts) =>
           prevProducts.map((product) =>
-            product.id === message.product.id ? message.product : product,
-          ),
+            product.id === message.product.id ? message.product : product
+          )
         )
       } else if (message.event === 'product_deleted') {
         setProducts((prevProducts) =>
-          prevProducts.filter((product) => product.id !== message.product_id),
+          prevProducts.filter((product) => product.id !== message.product_id)
         )
       }
     })
@@ -74,9 +72,7 @@ export const ProductProvider = ({ children }) => {
   }
 
   return (
-    <ProductContext.Provider
-      value={{ products, loading, error, handleAddProduct }}
-    >
+    <ProductContext.Provider value={{ products, loading, error, handleAddProduct }}>
       {children}
     </ProductContext.Provider>
   )
