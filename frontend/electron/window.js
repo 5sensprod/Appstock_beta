@@ -1,4 +1,3 @@
-// electron/window.js
 const { BrowserWindow } = require('electron')
 const path = require('path')
 
@@ -19,8 +18,10 @@ function createWindow() {
   const startUrl = isDev ? 'http://localhost:3000' : `http://localhost:5000`
   mainWindow.loadURL(startUrl)
 
-  // Retourner mainWindow pour s'assurer qu'il est bien capturé dans main.js
-  return mainWindow
+  // En production, retourner mainWindow, mais pas en développement
+  if (!isDev) {
+    return mainWindow
+  }
 }
 
 module.exports = {
