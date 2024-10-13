@@ -1,9 +1,9 @@
-// pages/index.js
 import React from 'react'
 import Header from '../components/Header'
 import PrintManager from '../components/PrintManager'
 import ProductList from '../components/Products/ProductList'
 import { ProductProvider } from '../context/ProductContext'
+import UpdateNotification from '../components/UpdateNotification' // Importer le nouveau composant
 
 export default function Home() {
   return (
@@ -18,6 +18,8 @@ export default function Home() {
         <main>
           <ProductList />
         </main>
+        {/* Inclure le composant UpdateNotification */}
+        <UpdateNotification />
       </div>
     </ProductProvider>
   )

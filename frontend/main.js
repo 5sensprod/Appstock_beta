@@ -1,11 +1,16 @@
-const { app, BrowserWindow } = require('electron')
+require('dotenv').config() // Charger dotenv
+
+const { app, BrowserWindow, ipcMain } = require('electron')
 const { isPortInUse, startFlask, stopFlask, fetchLocalIp } = require('./electron/flask')
 const { createWindow } = require('./electron/window')
-const { createCustomMenu } = require('./electron/menu') // Importer le menu personnalisé
-const { waitForServer } = require('./electron/serverUtils') // Importer la fonction waitForServer
-require('./electron/ipcHandlers') // Pour enregistrer les gestionnaires IPC
+const { createCustomMenu } = require('./electron/menu')
+const { waitForServer } = require('./electron/serverUtils')
+const { autoUpdater } = require('electron-updater')
+require('./electron/ipcHandlers')
 const path = require('path')
 const isDev = process.env.NODE_ENV === 'development'
+
+let mainWindow
 
 if (isDev) {
   require('electron-reload')(path.join(__dirname, '.'), {
@@ -13,9 +18,6 @@ if (isDev) {
     awaitWriteFinish: true
   })
 }
-
-// Déclare la variable mainWindow dans la portée globale
-let mainWindow
 
 app.whenReady().then(async () => {
   if (!isDev) {
@@ -29,10 +31,14 @@ app.whenReady().then(async () => {
         "Le port 5000 est déjà utilisé. Assurez-vous que le serveur Flask n'est pas déjà en cours d'exécution."
       )
     }
+
     // Utiliser waitForServer pour vérifier si le serveur est prêt avant de créer la fenêtre Electron
     waitForServer(() => {
       createCustomMenu() // Créer et appliquer le menu personnalisé
       mainWindow = createWindow()
+
+      // Vérifier les mises à jour et notifier l'utilisateur
+      autoUpdater.checkForUpdatesAndNotify()
     })
   } else {
     // En développement, créer la fenêtre immédiatement
@@ -68,4 +74,18 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow()
   }
+})
+
+// Gérer les événements de mise à jour pour informer l'utilisateur
+autoUpdater.on('update-available', () => {
+  mainWindow.webContents.send('update_available')
+})
+
+autoUpdater.on('update-downloaded', () => {
+  mainWindow.webContents.send('update_downloaded')
+})
+
+// Gérer la commande pour installer la mise à jour
+ipcMain.on('install_update', () => {
+  autoUpdater.quitAndInstall()
 })
