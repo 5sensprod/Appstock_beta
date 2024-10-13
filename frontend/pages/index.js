@@ -10,7 +10,9 @@ export default function Home() {
     <ProductProvider>
       <div className="App">
         <div className="App-header">
-          <Header />
+          <div className="mb-10">
+            <Header />
+          </div>
           <PrintManager />
         </div>
         <main>
