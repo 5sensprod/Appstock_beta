@@ -1,0 +1,20 @@
+{
+  "extends": [
+    "react-app",
+    "plugin:tailwindcss/recommended",
+    "plugin:prettier/recommended"
+  ],
+  "plugins": [
+    "tailwindcss",
+    "prettier"
+  ],
+  "rules": {
+    "prettier/prettier": ["warn", { "semi": false, "endOfLine": "auto" }],  // Moins strict sur les points-virgules et les fins de ligne
+    "tailwindcss/classnames-order": "warn",  // Garder les avertissements sur l'ordre des classes Tailwind
+    "react/jsx-indent": ["warn", 2],  // Assouplir l'indentation JSX à 2 espaces
+    "no-console": "off",  // Autoriser les console.log
+    "react/jsx-props-no-spreading": "off",  // Autoriser l'utilisation du spread dans les props
+    "react/prop-types": "off",  // Désactiver la vérification des types des props si vous n'utilisez pas PropTypes
+    "react/react-in-jsx-scope": "off"  // Désactiver l'erreur "React must be in scope" pour React 17+
+  }
+}
