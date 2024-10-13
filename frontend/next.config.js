@@ -4,8 +4,8 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    unoptimized: true, // Optionnel si tu n'utilises pas d'optimisation d'images
-  },
+    unoptimized: true // Optionnel si tu n'utilises pas d'optimisation d'images
+  }
 }
 
 module.exports = nextConfig

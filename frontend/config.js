@@ -12,7 +12,7 @@ const config = {
   apiBaseUrl:
     process.env.NODE_ENV === 'development'
       ? 'http://localhost:5000' // URL du serveur Flask en développement
-      : getApiBaseUrl(), // Utiliser la fonction pour obtenir l'URL en production
+      : getApiBaseUrl() // Utiliser la fonction pour obtenir l'URL en production
 }
 
 export default config

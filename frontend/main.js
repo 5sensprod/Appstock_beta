@@ -1,10 +1,5 @@
 const { app, BrowserWindow } = require('electron')
-const {
-  isPortInUse,
-  startFlask,
-  stopFlask,
-  fetchLocalIp,
-} = require('./electron/flask')
+const { isPortInUse, startFlask, stopFlask, fetchLocalIp } = require('./electron/flask')
 const { createWindow } = require('./electron/window')
 const { createCustomMenu } = require('./electron/menu') // Importer le menu personnalisé
 const { waitForServer } = require('./electron/serverUtils') // Importer la fonction waitForServer
@@ -15,7 +10,7 @@ const isDev = process.env.NODE_ENV === 'development'
 if (isDev) {
   require('electron-reload')(path.join(__dirname, '.'), {
     electron: path.join(__dirname, 'node_modules', '.bin', 'electron'),
-    awaitWriteFinish: true,
+    awaitWriteFinish: true
   })
 }
 
@@ -31,7 +26,7 @@ app.whenReady().then(async () => {
       startFlask()
     } else {
       console.log(
-        "Le port 5000 est déjà utilisé. Assurez-vous que le serveur Flask n'est pas déjà en cours d'exécution.",
+        "Le port 5000 est déjà utilisé. Assurez-vous que le serveur Flask n'est pas déjà en cours d'exécution."
       )
     }
     // Utiliser waitForServer pour vérifier si le serveur est prêt avant de créer la fenêtre Electron
