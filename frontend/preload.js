@@ -4,20 +4,14 @@ console.log('preload.js chargé avec succès')
 
 // Exposer les méthodes à l'interface utilisateur via window.api
 contextBridge.exposeInMainWorld('api', {
-  getServerIp: () => {
-    console.log('getServerIp appelé')
-    return ipcRenderer.invoke('get-server-ip')
-  },
-  onUpdateAvailable: (callback) => {
-    console.log('onUpdateAvailable exposé')
-    ipcRenderer.on('update_available', callback)
-  },
-  onUpdateDownloaded: (callback) => {
-    console.log('onUpdateDownloaded exposé')
-    ipcRenderer.on('update_downloaded', callback)
-  },
-  installUpdate: () => {
-    console.log('installUpdate appelé')
-    ipcRenderer.send('install_update')
-  }
+  getServerIp: () => ipcRenderer.invoke('get-server-ip'),
+
+  // Gestionnaires d'événements pour les mises à jour
+  onUpdateAvailable: (callback) => ipcRenderer.on('update_available', callback),
+  onUpdateDownloaded: (callback) => ipcRenderer.on('update_downloaded', callback),
+  onDownloadProgress: (callback) =>
+    ipcRenderer.on('download-progress', (event, progressObj) => {
+      callback(progressObj) // Transférer l'objet de progression au frontend
+    }),
+  installUpdate: () => ipcRenderer.send('install_update')
 })

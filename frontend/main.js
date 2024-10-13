@@ -152,10 +152,12 @@ autoUpdater.on('error', (err) => {
 })
 
 autoUpdater.on('download-progress', (progressObj) => {
-  let log_message = 'Vitesse de téléchargement: ' + progressObj.bytesPerSecond
-  log_message += ' - Téléchargé ' + progressObj.percent + '%'
-  log_message += ' (' + progressObj.transferred + '/' + progressObj.total + ')'
-  log.info(log_message)
+  if (mainWindow && mainWindow.webContents) {
+    // Envoyer l'événement de progression au frontend
+    mainWindow.webContents.send('download-progress', progressObj)
+  } else {
+    log.error('mainWindow ou mainWindow.webContents est indéfini.')
+  }
 })
 
 autoUpdater.on('update-downloaded', () => {
