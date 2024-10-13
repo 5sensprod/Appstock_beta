@@ -16,8 +16,8 @@ const PrintManager = () => {
   }
 
   return (
-    <div className="mx-auto w-full max-w-md rounded-md bg-gray-900 p-6 shadow-md">
-      <h2 className="mb-4 text-center text-2xl font-semibold text-white">Gérer l'impression</h2>
+    <div className="mx-auto w-full max-w-md rounded-md p-6 shadow-md">
+      <h2 className="mb-4 text-center text-2xl font-semibold">Gérer l'impression</h2>
       <TextInput value={message} onChange={setMessage} />
       <div className="mt-4 text-center">
         <PrintButton onClick={handlePrint} />

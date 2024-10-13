@@ -1,32 +1,38 @@
 import React from 'react'
 import { useProductContext } from '../../context/ProductContext'
 import ProductForm from './ProductForm'
-import styles from './ProductList.module.css'
 
 const ProductList = () => {
   const { products, loading, error } = useProductContext()
 
   if (loading) {
-    return <div>Chargement des produits...</div>
+    return <div className="py-4 text-center">Chargement des produits...</div>
   }
 
   if (error) {
-    return <div className={styles.errorMessage}>{error}</div>
+    return <div className="text-center font-semibold text-red-500">{error}</div>
   }
 
   return (
-    <div className={styles.productList}>
-      <h2 className={styles.heading}>Liste des Produits</h2>
+    <div className="rounded bg-white p-6 shadow-md dark:bg-gray-900">
+      <h2 className="mb-6 text-center text-2xl font-bold text-black dark:text-white">
+        Liste des Produits
+      </h2>
       <ProductForm />
       {products.length === 0 ? (
-        <p className={styles.noDataMessage}>Aucune donnée actuellement.</p>
+        <p className="mt-4 text-center text-gray-600 dark:text-gray-300">
+          Aucune donnée actuellement.
+        </p>
       ) : (
-        <ul>
+        <ul className="mt-6 space-y-4">
           {products.map((product) => (
-            <li key={product.id} className={styles.productItem}>
-              <span className={styles.productName}>{product.name}</span>
-              <span className={styles.productPrice}>{product.price}€</span>
-              <span className={styles.productStock}>Stock: {product.stock}</span>
+            <li
+              key={product.id}
+              className="flex items-center justify-between rounded border border-gray-300 p-4 dark:border-gray-700"
+            >
+              <span className="font-semibold text-black dark:text-white">{product.name}</span>
+              <span className="text-black dark:text-white">{product.price}€</span>
+              <span className="text-gray-600 dark:text-gray-400">Stock: {product.stock}</span>
             </li>
           ))}
         </ul>

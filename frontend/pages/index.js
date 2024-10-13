@@ -1,25 +1,21 @@
 import React from 'react'
-import Header from '../components/Header'
-import PrintManager from '../components/PrintManager'
-import ProductList from '../components/Products/ProductList'
-import { ProductProvider } from '../context/ProductContext'
-import UpdateNotification from '../components/UpdateNotification' // Importer le nouveau composant
+import Header from '../components/Header' // Import du composant Header
+import PrintManager from '../components/PrintManager' // Import du PrintManager
+import ProductList from '../components/Products/ProductList' // Import du ProductList
+import { ProductProvider } from '../context/ProductContext' // Import du ProductProvider
+import UpdateNotification from '../components/UpdateNotification' // Import du UpdateNotification
 
 export default function Home() {
   return (
     <ProductProvider>
-      <div className="App">
-        <div className="App-header">
-          <div className="mb-10">
-            <Header />
-          </div>
-          <PrintManager />
-        </div>
+      <div>
+        <Header /> {/* Réintégration du Header */}
+        <h1 className="py-6 text-center text-4xl">Bienvenue sur la page d'accueil</h1>
+        <PrintManager /> {/* Réintégration de PrintManager */}
         <main>
-          <ProductList />
+          <ProductList /> {/* Réintégration du ProductList */}
         </main>
-        {/* Inclure le composant UpdateNotification */}
-        <UpdateNotification />
+        <UpdateNotification /> {/* Réintégration du UpdateNotification */}
       </div>
     </ProductProvider>
   )
