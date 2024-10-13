@@ -1,43 +1,42 @@
 import '../styles/global.css' // Importer les styles globaux
-import { ThemeProvider, useTheme } from '../context/ThemeContext' // Importer le contexte du thème
 import { useEffect } from 'react'
+import Navbar from '../components/Navbar' // Importer la Navbar
+import {
+  ThemeProvider,
+  useTheme
+} from '../context/ThemeContext' // Importer le contexte du thème
 
 function MyApp({ Component, pageProps }) {
   return (
     <ThemeProvider>
-      {/* Fournisseur global */}
       <ThemeWrapper>
-        <Component {...pageProps} /> {/* Rendu des pages */}
+        <Component {...pageProps} />
       </ThemeWrapper>
     </ThemeProvider>
   )
 }
 
 function ThemeWrapper({ children }) {
-  const { isDarkMode, toggleDarkMode } = useTheme() // Récupération de isDarkMode et toggleDarkMode
+  const { isDarkMode } = useTheme() // Utilisation du contexte du thème
 
   // Appliquer dynamiquement la classe 'dark' sur l'élément <html>
   useEffect(() => {
     if (isDarkMode) {
-      document.documentElement.classList.add('dark') // Ajouter la classe 'dark' à <html>
+      document.documentElement.classList.add(
+        'dark'
+      ) // Ajouter la classe 'dark' à <html>
     } else {
-      document.documentElement.classList.remove('dark') // Retirer la classe 'dark' de <html>
+      document.documentElement.classList.remove(
+        'dark'
+      ) // Retirer la classe 'dark' de <html>
     }
   }, [isDarkMode])
 
   return (
-    <div className="bg-light-background text-light-text dark:bg-dark-background dark:text-dark-text flex min-h-screen flex-col items-center justify-center transition-colors duration-500">
-      {/* Conteneur centré verticalement et horizontalement avec flex */}
-      <div className="w-full max-w-screen-xl px-4">
-        {' '}
-        {/* Ajuste la largeur */}
-        <button
-          onClick={toggleDarkMode} // Bascule entre le mode clair et sombre
-          className="mx-auto my-6 block rounded bg-blue-500 p-2 text-white"
-        >
-          Toggle {isDarkMode ? 'Light' : 'Dark'} Mode
-        </button>
-        {children} {/* Contenu de la page */}
+    <div className="bg-light-background text-light-text dark:bg-dark-background dark:text-dark-text min-h-screen text-center transition-colors duration-500">
+      <Navbar /> {/* Inclure la navbar */}
+      <div className="mx-auto mt-8 w-full max-w-screen-lg px-4">
+        {children}
       </div>
     </div>
   )

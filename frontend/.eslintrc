@@ -8,11 +8,9 @@
     "prettier"
   ],
   "rules": {
-    "prettier/prettier": ["warn", { "semi": false, "endOfLine": "auto" }],
     "tailwindcss/classnames-order": "warn",
     "tailwindcss/no-custom-classname": "off",
     "react/jsx-indent": ["warn", 2],
-    "no-console": "off",
-    "react/jsx-props-no-spreading": "off"
+    "no-console": "off"
   }
 }
