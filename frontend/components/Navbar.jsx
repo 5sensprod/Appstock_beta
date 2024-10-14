@@ -3,14 +3,16 @@ import {
   SunIcon,
   MoonIcon
 } from '@heroicons/react/24/solid' // Importer les icônes de Heroicons v2
+import WelcomeMessage from './WelcomeMessage'
 
 const Navbar = () => {
   const { isDarkMode, toggleDarkMode } =
     useTheme() // Utilisation du contexte global du thème
 
   return (
-    <nav className="mx-auto flex w-full max-w-screen-xl items-center justify-end p-4">
-      {/* Toggle Switch */}
+    <nav className=" text-light-text dark:text-dark-text flex w-full items-center justify-between p-4">
+      <WelcomeMessage />{' '}
+      {/* Message de bienvenue */}
       <div className="flex items-center">
         <label className="relative inline-flex cursor-pointer items-center">
           <input

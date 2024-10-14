@@ -1,16 +1,19 @@
-# backend/app.py
 from flask import Flask
 from flask_cors import CORS
-import logging
 import os
+import logging
 from config import Config
 from db import db
-from routes import main_bp
-from db_initializer import init_demo_products
-from sockets.websocket_routes import sock  # Import du sock configuré
+from routes import main_bp  # Import du blueprint principal pour toutes les routes
+from db_initializer import init_demo_products  # Pour initialiser la base de données avec des produits démo
+from sockets.websocket_routes import sock  # Import du sock configuré pour les WebSockets
+from werkzeug.security import generate_password_hash  # Si nécessaire, l'importer ici
 
 # Initialisation de l'application Flask
 app = Flask(__name__, static_folder='react_build', static_url_path='/')
+
+# Ajout de la clé secrète pour la gestion des sessions
+app.secret_key = os.environ.get('SECRET_KEY', 'supersecretkey')  # Définit une clé secrète sécurisée
 
 # Chargement de la configuration de l'application depuis config.py
 app.config.from_object(Config)
@@ -18,25 +21,22 @@ app.config.from_object(Config)
 # Initialisation de la base de données avec l'application
 db.init_app(app)
 
-# Initialisation de Flask-Sock pour les WebSockets avec l'application
+# Initialisation de Flask-Sock pour les WebSockets
 sock.init_app(app)
 
 # Configuration de CORS pour permettre les requêtes depuis n'importe quelle origine
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 
-# Configuration de la journalisation
-logging.basicConfig(level=logging.INFO)
-
-# Enregistrement du Blueprint principal
+# Enregistrement du blueprint principal, qui inclut toutes les routes
 app.register_blueprint(main_bp)
 
 # Gestionnaire centralisé des connexions WebSocket
 app.config['active_websockets'] = set()
 
-# Création des tables de la base de données et ajout des produits de démonstration si nécessaire
+# Initialisation de la base de données et création de l'utilisateur admin et des produits démo
 with app.app_context():
-    db.create_all()
-    init_demo_products(app)
+    db.create_all()  # Création des tables
+    init_demo_products(app)  # Ajout des produits démo
 
 # Lancement de l'application Flask
 if __name__ == '__main__':

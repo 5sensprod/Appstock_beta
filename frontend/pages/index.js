@@ -1,22 +1,13 @@
-import React from 'react'
-import Header from '../components/Header' // Import du composant Header
-import PrintManager from '../components/PrintManager' // Import du PrintManager
-import ProductList from '../components/Products/ProductList' // Import du ProductList
-import { ProductProvider } from '../context/ProductContext' // Import du ProductProvider
-import UpdateNotification from '../components/UpdateNotification' // Import du UpdateNotification
+import { useEffect } from 'react'
+import { useRouter } from 'next/router'
 
-export default function Home() {
-  return (
-    <ProductProvider>
-      <div>
-        <Header /> {/* Réintégration du Header */}
-        <h1 className="py-6 text-center text-4xl">Bienvenue sur la page d'accueil</h1>
-        <PrintManager /> {/* Réintégration de PrintManager */}
-        <main>
-          <ProductList /> {/* Réintégration du ProductList */}
-        </main>
-        <UpdateNotification /> {/* Réintégration du UpdateNotification */}
-      </div>
-    </ProductProvider>
-  )
+export default function Index() {
+  const router = useRouter()
+
+  useEffect(() => {
+    // Redirige automatiquement vers /login dès l'accès à la page /
+    router.push('/login')
+  }, [router])
+
+  return null // Ne rien afficher car la redirection est immédiate
 }

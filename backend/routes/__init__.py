@@ -1,6 +1,9 @@
 # backend/routes/__init__.py
 from .main_bp import main_bp
 
+
+from . import auth_routes
+from . import session_routes
 # Importation des modules de routes pour enregistrer les routes avec le Blueprint
 from . import main_routes
 from . import print_routes
