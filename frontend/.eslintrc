@@ -8,8 +8,8 @@
     "prettier"
   ],
   "rules": {
-    "tailwindcss/classnames-order": "warn",
-    "tailwindcss/no-custom-classname": "off",
+    "tailwindcss/classnames-order": "off",
+    "tailwindcss/no-custom-classname": "off",  // Avertissement
     "react/jsx-indent": ["warn", 2],
     "no-console": "off"
   }

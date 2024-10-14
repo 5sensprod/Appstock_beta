@@ -8,7 +8,8 @@ const PrintManager = () => {
 
   const handlePrint = async () => {
     try {
-      const responseMessage = await printMessage(message)
+      const responseMessage =
+        await printMessage(message)
       alert(responseMessage) // Affiche une alerte avec le message de réponse du serveur
     } catch (error) {
       alert(error.message) // Affiche une alerte en cas d'erreur
@@ -17,8 +18,13 @@ const PrintManager = () => {
 
   return (
     <div className="mx-auto w-full max-w-md rounded-md p-6 shadow-md">
-      <h2 className="mb-4 text-center text-2xl font-semibold">Gérer l'impression</h2>
-      <TextInput value={message} onChange={setMessage} />
+      <h2 className="mb-4 text-center text-2xl font-semibold">
+        Gérer l'impression
+      </h2>
+      <TextInput
+        value={message}
+        onChange={setMessage}
+      />
       <div className="mt-4 text-center">
         <PrintButton onClick={handlePrint} />
       </div>

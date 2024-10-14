@@ -10,7 +10,7 @@ const Navbar = () => {
     useTheme() // Utilisation du contexte global du thème
 
   return (
-    <nav className=" text-light-text dark:text-dark-text flex w-full items-center justify-between p-4">
+    <nav className="flex w-full items-center justify-between p-4 text-light-text dark:text-dark-text">
       <WelcomeMessage />{' '}
       {/* Message de bienvenue */}
       <div className="flex items-center">
@@ -22,13 +22,13 @@ const Navbar = () => {
             onChange={toggleDarkMode} // Bascule entre clair/sombre
           />
           {/* Fond du toggle switch */}
-          <div className="bg-toggle-light  dark:bg-toggle-dark h-6 w-11 rounded-full transition-colors duration-500"></div>
+          <div className="h-6 w-11 rounded-full bg-toggle-light transition-colors duration-500 dark:bg-toggle-dark"></div>
           {/* Icône du toggle */}
           <div className="absolute left-1 top-1 flex size-4 items-center justify-center transition-transform duration-300 peer-checked:translate-x-5">
             {isDarkMode ? (
-              <MoonIcon className="text-light-text size-4" />
+              <MoonIcon className="size-4 text-light-text" />
             ) : (
-              <SunIcon className="text-dark-text size-4" />
+              <SunIcon className="size-4 text-dark-text" />
             )}
           </div>
         </label>
