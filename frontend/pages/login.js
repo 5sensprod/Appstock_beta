@@ -1,37 +1,36 @@
-import { useState, useContext } from 'react'
+// pages/login.js
+import { useState } from 'react'
 import { useRouter } from 'next/router'
-import { UserContext } from '../context/UserContext'
+import useAuth from '../hooks/useAuth'
+import NumericKeypad from '../components/NumericKeypad'
 
 const Login = () => {
   const [username, setUsername] =
-    useState('admin') // Ajout de l'état pour le nom d'utilisateur
+    useState('admin')
   const [pin, setPin] = useState('')
   const [error, setError] = useState(null)
-  const { handleLogin } = useContext(UserContext) // Utilisation de la fonction handleLogin du contexte
+  const { handleLogin } = useAuth()
   const router = useRouter()
 
-  // Fonction pour ajouter un chiffre au champ PIN
   const appendPin = (number) => {
     if (pin.length < 4) {
       setPin((prevPin) => prevPin + number)
     }
   }
 
-  // Fonction pour effacer le PIN
   const clearPin = () => {
     setPin('')
   }
 
-  // Gestion de la soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
       const data = await handleLogin(
         username,
         pin
-      ) // Utilisation de l'état `username`
+      )
       if (data.success) {
-        router.push('/home') // Redirection vers /home après succès
+        router.push('/home')
       } else {
         setError(
           'Échec de la connexion : Nom ou code PIN incorrect'
@@ -67,10 +66,10 @@ const Login = () => {
             </label>
             <input
               type="text"
-              value={username} // Utilisation de l'état `username`
+              value={username}
               onChange={(e) =>
                 setUsername(e.target.value)
-              } // Permettre à l'utilisateur de changer le nom d'utilisateur
+              }
               className="mt-1 w-full rounded-md border bg-light-background p-2 text-light-text dark:bg-dark-background dark:text-dark-text"
             />
           </div>
@@ -88,42 +87,17 @@ const Login = () => {
             />
           </div>
 
-          <div className="mt-4 grid grid-cols-3 gap-4">
-            {[
-              '1',
-              '2',
-              '3',
-              '4',
-              '5',
-              '6',
-              '7',
-              '8',
-              '9',
-              '0'
-            ].map((number) => (
-              <button
-                key={number}
-                type="button"
-                className="rounded-md p-4"
-                onClick={() => appendPin(number)}
-              >
-                {number}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="col-span-2 rounded-md p-4"
-              onClick={clearPin}
-            >
-              Effacer
-            </button>
-            <button
-              type="submit"
-              className="col-span-1 rounded-md bg-blue-500 p-4 text-white"
-            >
-              Valider
-            </button>
-          </div>
+          <NumericKeypad
+            appendPin={appendPin}
+            clearPin={clearPin}
+          />
+
+          <button
+            type="submit"
+            className="w-full rounded-md bg-blue-500 p-4 text-white"
+          >
+            Valider
+          </button>
         </form>
       </div>
     </div>

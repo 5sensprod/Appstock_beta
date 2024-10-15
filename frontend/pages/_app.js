@@ -1,9 +1,10 @@
-import '../styles/global.css' // Importer les styles globaux
-import Navbar from '../components/Navbar'
+// pages/_app.js
+import '../styles/global.css'
 import { ThemeProvider } from '../context/ThemeContext'
 import { UserProvider } from '../context/UserContext'
 import AuthChecker from '../components/AuthChecker'
 import ThemeWrapper from '../components/ThemeWrapper'
+import Navbar from '../components/Navbar'
 
 function MyApp({ Component, pageProps }) {
   return (
@@ -11,10 +12,8 @@ function MyApp({ Component, pageProps }) {
       <UserProvider>
         <ThemeWrapper>
           <AuthChecker>
-            <Navbar />{' '}
-            {/* Navbar est affichée une seule fois */}
-            <Component {...pageProps} />{' '}
-            {/* Affiche la page courante */}
+            <Navbar />
+            <Component {...pageProps} />
           </AuthChecker>
         </ThemeWrapper>
       </UserProvider>
