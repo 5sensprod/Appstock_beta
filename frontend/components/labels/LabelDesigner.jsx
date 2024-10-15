@@ -189,11 +189,11 @@ const LayoutGrid = ({ labelConfig }) => {
           const label =
             document.createElement('div')
           label.className =
-            'absolute border border-gray-300 bg-gray-200 opacity-20'
-          label.style.width = `${((labelWidth / pageWidth) * 100).toFixed(2)}%`
-          label.style.height = `${((labelHeight / pageHeight) * 100).toFixed(2)}%`
-          label.style.left = `${(((offsetLeft + col * (labelWidth + spacingHorizontal)) / pageWidth) * 100).toFixed(2)}%`
-          label.style.top = `${(((offsetTop + row * (labelHeight + spacingVertical)) / pageHeight) * 100).toFixed(2)}%`
+            'absolute border border-gray-300 bg-gray-400'
+          label.style.width = `${(labelWidth / pageWidth) * 100}%`
+          label.style.height = `${(labelHeight / pageHeight) * 100}%`
+          label.style.left = `${((offsetLeft + col * (labelWidth + spacingHorizontal)) / pageWidth) * 100}%`
+          label.style.top = `${((offsetTop + row * (labelHeight + spacingVertical)) / pageHeight) * 100}%`
           gridContainer.appendChild(label)
         }
       }
@@ -205,7 +205,7 @@ const LayoutGrid = ({ labelConfig }) => {
   }, [updateGrid])
 
   return (
-    <div className="relative w-full border-2 border-black bg-light-background pb-[141.4%] dark:bg-dark-background">
+    <div className="relative w-full border-2 border-gray-300 bg-light-background pb-[141.4%] shadow-xl dark:bg-dark-background">
       <div
         id="gridContainer"
         className="absolute left-0 top-0 size-full"
