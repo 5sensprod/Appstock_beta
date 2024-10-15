@@ -22,7 +22,7 @@
     "start-electron": "cross-env NODE_ENV=development electron .",
     "build": "npm run build-next && npm run build-pyinstaller && npm run clean-pyinstaller && npm run build-electron",
     "build-next": "next build",
-    "build-pyinstaller": "call ../backend/.venv/Scripts/activate && cd ../backend && pyinstaller --noconfirm --clean pyinstaller_config.spec && cd ../frontend",
+    "build-pyinstaller": "call ../backend/.venv/Scripts/activate && cd ../backend && pyinstaller --noconfirm --clean --onefile app.py && cd ../frontend",
     "clean-pyinstaller": "rimraf ../backend/build ../backend/__pycache__ ../backend/utils/__pycache__ ../backend/routes/__pycache__",
     "build-electron": "electron-builder",
     "test": "next test",
@@ -78,8 +78,8 @@
     ],
     "extraResources": [
       {
-        "from": "../backend/dist/app",
-        "to": "backend/dist/app"
+        "from": "../backend/dist/app.exe",
+        "to": "backend/app.exe"
       },
       {
         "from": "out",

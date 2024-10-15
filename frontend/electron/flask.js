@@ -37,22 +37,29 @@ function isPortInUse(port) {
 
 // Fonction pour lancer le serveur Flask
 function startFlask() {
-  const flaskExecutablePath = path.join(
-    __dirname,
-    '../../backend/dist/app/app.exe'
-  ) // Modifier pour correspondre au bon chemin
+  const flaskExecutablePath =
+    process.env.NODE_ENV === 'development'
+      ? path.join(
+          __dirname,
+          '../../backend/dist/app.exe'
+        ) // Chemin en développement
+      : path.join(
+          process.resourcesPath,
+          'backend',
+          'app.exe'
+        ) // Chemin en production (après empaquetage)
 
   console.log(
     `Démarrage de Flask à partir de ${flaskExecutablePath}...`
   )
 
   flaskProcess = spawn(flaskExecutablePath, [], {
-    cwd: path.join(
-      __dirname,
-      '../../backend/dist/app'
-    ), // Changer le répertoire de travail vers le bon dossier dist/app
-    stdio: 'ignore' // Ignore les sorties de Flask pour éviter de surcharger la console
+    cwd: path.dirname(flaskExecutablePath), // Répertoire de travail de l'exécutable
+    detached: true, // Pour exécuter Flask en arrière-plan
+    stdio: 'ignore' // Ignore les sorties du processus pour éviter de surcharger la console
   })
+
+  flaskProcess.unref() // Détacher le processus pour qu'il fonctionne en arrière-plan
 
   flaskProcess.on('error', (error) => {
     console.error(
@@ -64,16 +71,6 @@ function startFlask() {
     console.log(
       `Le processus Flask s'est terminé avec le code ${code}`
     )
-  })
-
-  flaskProcess.on('exit', (code) => {
-    console.log(
-      `Le serveur Flask s'est arrêté avec le code ${code}`
-    )
-  })
-
-  flaskProcess.on('disconnect', () => {
-    console.log("Flask s'est déconnecté.")
   })
 }
 
