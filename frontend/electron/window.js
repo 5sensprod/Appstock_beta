@@ -2,7 +2,8 @@ const { BrowserWindow } = require('electron')
 const path = require('path')
 
 function createWindow() {
-  const isDev = process.env.NODE_ENV === 'development'
+  const isDev =
+    process.env.NODE_ENV === 'development'
 
   const mainWindow = new BrowserWindow({
     width: 800,
@@ -10,18 +11,21 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, '../preload.js'),
+      preload: path.join(
+        __dirname,
+        '../preload.js'
+      ),
       webSecurity: !isDev // Désactiver la sécurité web en développement
     }
   })
 
-  const startUrl = isDev ? 'http://localhost:3000' : `http://localhost:5000`
+  // Charger l'URL en fonction de l'environnement
+  const startUrl = isDev
+    ? 'http://localhost:3000' // Utilise Next.js en mode développement
+    : `http://localhost:3000` // En production, Express servira les fichiers statiques
   mainWindow.loadURL(startUrl)
 
-  // En production, retourner mainWindow, mais pas en développement
-  if (!isDev) {
-    return mainWindow
-  }
+  return mainWindow
 }
 
 module.exports = {

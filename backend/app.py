@@ -10,7 +10,7 @@ from sockets.websocket_routes import sock  # Import du sock configuré pour les 
 from werkzeug.security import generate_password_hash  # Si nécessaire, l'importer ici
 
 # Initialisation de l'application Flask
-app = Flask(__name__, static_folder='react_build', static_url_path='/')
+app = Flask(__name__)
 
 # Ajout de la clé secrète pour la gestion des sessions
 app.secret_key = os.environ.get('SECRET_KEY', 'supersecretkey')  # Définit une clé secrète sécurisée
