@@ -19,11 +19,11 @@
     "start-next": "next dev",
     "start-flask": "node ../backend/start_flask.js",
     "start-electron": "cross-env NODE_ENV=development electron .",
-    "build": "npm run build-next && npm run copy-next-build && npm run build-pyinstaller && npm run clean-pyinstaller && npm run build-electron && electron-builder --publish always",
+    "build": "npm run build-next && npm run copy-next-build && npm run build-pyinstaller && npm run clean-pyinstaller && npm run build-electron",
     "build-next": "next build",
     "copy-next-build": "node ./scripts_package/copy-build.js",
-    "build-pyinstaller": "call ../backend/.venv/Scripts/activate && cd ../backend && pyinstaller --onefile --noconsole --add-data \"react_build;react_build\" app.py && cd ../frontend",
-    "clean-pyinstaller": "rimraf ../backend/build ../backend/__pycache__ ../backend/app.spec ../backend/utils/__pycache__ ../backend/routes/__pycache__",
+    "build-pyinstaller": "call ../backend/.venv/Scripts/activate && cd ../backend && pyinstaller --noconfirm --clean pyinstaller_config.spec && cd ../frontend",
+    "clean-pyinstaller": "rimraf ../backend/build ../backend/__pycache__ ../backend/utils/__pycache__ ../backend/routes/__pycache__",
     "build-electron": "electron-builder",
     "electron": "electron .",
     "test": "next test",
@@ -70,21 +70,24 @@
   "build": {
     "appId": "com.example.appstock_beta",
     "productName": "AppStock Beta",
-    "compression": "maximum",
     "files": [
       "out/**/*",
       "electron/**/*",
       "main.js",
-      "preload.js",
-      {
-        "from": "../backend/dist/",
-        "to": "resources/backend/dist/"
-      }
+      "preload.js"
     ],
-    "extraFiles": [
+    "extraResources": [
       {
-        "from": "../backend/dist/",
-        "to": "resources/backend/dist/"
+        "from": "../backend/dist/app",
+        "to": "backend/dist/app",
+        "filter": [
+          "**/*",
+          "!react_build/**/*"
+        ]
+      },
+      {
+        "from": "out",
+        "to": "backend/dist/app/_internal/react_build"
       }
     ],
     "directories": {

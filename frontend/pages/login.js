@@ -71,7 +71,7 @@ const Login = () => {
               onChange={(e) =>
                 setUsername(e.target.value)
               } // Permettre à l'utilisateur de changer le nom d'utilisateur
-              className="bg-light-background text-light-text dark:bg-dark-background dark:text-dark-text mt-1 w-full rounded-md border p-2"
+              className="mt-1 w-full rounded-md border bg-light-background p-2 text-light-text dark:bg-dark-background dark:text-dark-text"
             />
           </div>
 
@@ -82,7 +82,7 @@ const Login = () => {
             <input
               type="password"
               value={pin}
-              className="bg-light-background text-light-text dark:bg-dark-background dark:text-dark-text mt-1 w-full rounded-md border p-2"
+              className="mt-1 w-full rounded-md border bg-light-background p-2 text-light-text dark:bg-dark-background dark:text-dark-text"
               placeholder="****"
               readOnly
             />
