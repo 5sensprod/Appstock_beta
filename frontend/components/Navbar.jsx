@@ -6,23 +6,21 @@ import {
 } from '@heroicons/react/24/solid' // Importer les icônes de Heroicons v2
 import WelcomeMessage from './WelcomeMessage'
 import { UserContext } from '../context/UserContext'
+import Link from 'next/link' // Importer le composant Link de Next.js
 
 const Navbar = () => {
   const { isDarkMode, toggleDarkMode } =
     useTheme() // Utilisation du contexte global du thème
-
   const { isAuthenticated, handleLogout } =
     useContext(UserContext)
 
   const onLogout = async () => {
     await handleLogout()
-    // Vous pouvez ajouter une redirection ici si nécessaire
-    // router.push('/login'); // Optionnel si AuthChecker gère déjà la redirection
   }
 
   return (
     <nav className="flex w-full items-center justify-between p-4 text-light-text dark:text-dark-text">
-      <WelcomeMessage />{' '}
+      <WelcomeMessage />
       {isAuthenticated && (
         <button
           onClick={onLogout}
@@ -31,7 +29,21 @@ const Navbar = () => {
           Déconnexion
         </button>
       )}
-      {/* Message de bienvenue */}
+
+      {/* Lien vers la page Labels */}
+      <Link
+        href="/labels"
+        className="text-blue-500 hover:underline"
+      >
+        Etiquettes
+      </Link>
+      <Link
+        href="/home"
+        className="text-blue-500 hover:underline"
+      >
+        Maison
+      </Link>
+
       <div className="flex items-center">
         <label className="relative inline-flex cursor-pointer items-center">
           <input
