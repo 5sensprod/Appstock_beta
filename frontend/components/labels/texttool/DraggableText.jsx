@@ -1,4 +1,3 @@
-// frontend/components/labels/texttool/DraggableText.jsx
 import React, {
   useRef,
   useEffect,
@@ -7,15 +6,21 @@ import React, {
 
 const DraggableText = ({
   textStyle,
-  textOptionsVisible
+  textOptionsVisible,
+  content,
+  zoomLevel
 }) => {
   const textElementRef = useRef(null)
-  const [text, setText] = useState('Texte')
+  const [text, setText] = useState(
+    content || 'Texte'
+  )
 
   useEffect(() => {
     const textElement = textElementRef.current
+    const parentElement =
+      textElement.parentElement
 
-    if (textElement) {
+    if (textElement && parentElement) {
       let isDragging = false
       let startX, startY
 
@@ -28,8 +33,44 @@ const DraggableText = ({
 
       const drag = (e) => {
         if (isDragging) {
-          textElement.style.left = `${e.clientX - startX}px`
-          textElement.style.top = `${e.clientY - startY}px`
+          const parentRect =
+            parentElement.getBoundingClientRect()
+          const textRect =
+            textElement.getBoundingClientRect()
+
+          // Calcul de la nouvelle position en fonction de la souris
+          const newLeft = e.clientX - startX
+          const newTop = e.clientY - startY
+
+          // Ajuster les dimensions de parentRect et textRect en fonction du zoomLevel
+          const scale = zoomLevel / 100
+
+          const visibleParentWidth =
+            parentRect.width / scale // Largeur visible du parent
+          const visibleParentHeight =
+            parentRect.height / scale // Hauteur visible du parent
+
+          // Contraindre les positions pour permettre à l'élément de se déplacer jusqu'aux bords du canevas visible
+          const constrainedLeft = Math.max(
+            0,
+            Math.min(
+              newLeft,
+              visibleParentWidth -
+                textRect.width / scale
+            )
+          )
+          const constrainedTop = Math.max(
+            0,
+            Math.min(
+              newTop,
+              visibleParentHeight -
+                textRect.height / scale
+            )
+          )
+
+          // Appliquer les nouvelles positions ajustées
+          textElement.style.left = `${constrainedLeft}px`
+          textElement.style.top = `${constrainedTop}px`
         }
       }
 
@@ -37,6 +78,7 @@ const DraggableText = ({
         isDragging = false
       }
 
+      // Ajouter les écouteurs pour gérer le glisser-déposer
       textElement.addEventListener(
         'mousedown',
         startDragging
@@ -47,6 +89,7 @@ const DraggableText = ({
         stopDragging
       )
 
+      // Nettoyer les écouteurs
       return () => {
         textElement.removeEventListener(
           'mousedown',
@@ -62,7 +105,7 @@ const DraggableText = ({
         )
       }
     }
-  }, [])
+  }, [zoomLevel])
 
   const handleInput = (e) => {
     setText(e.target.textContent)
@@ -78,7 +121,9 @@ const DraggableText = ({
         ...textStyle,
         display: textOptionsVisible
           ? 'block'
-          : 'none'
+          : 'none',
+        position: 'absolute',
+        fontSize: `${parseFloat(textStyle.fontSize) * (zoomLevel / 100)}px` // Faire évoluer la taille du texte avec le zoom
       }}
       dangerouslySetInnerHTML={{ __html: text }}
     />

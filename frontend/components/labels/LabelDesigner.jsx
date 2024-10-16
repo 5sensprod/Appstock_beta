@@ -1,4 +1,3 @@
-// frontend/components/labels/LabelDesigner.jsx
 import React, { useState } from 'react'
 import LabelPreview from './LabelPreview'
 import ZoomControls from './ZoomControls'
@@ -23,10 +22,30 @@ const LabelDesigner = () => {
     color: '#000000',
     textAlign: 'left'
   })
+
   const [
     textOptionsVisible,
     setTextOptionsVisible
   ] = useState(false)
+
+  // État pour gérer les éléments texte ajoutés
+  const [textElements, setTextElements] =
+    useState([])
+
+  // Fonction pour ajouter un nouvel élément texte
+  const addTextElement = () => {
+    setTextElements([
+      ...textElements,
+      {
+        id: Date.now(), // Identifiant unique
+        style: {
+          ...textStyle,
+          position: { top: 0, left: 0 }
+        }, // On peut personnaliser davantage
+        content: 'Nouveau texte'
+      }
+    ])
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col rounded-lg bg-light-background p-6 shadow-lg dark:bg-dark-background lg:flex-row">
@@ -38,6 +57,7 @@ const LabelDesigner = () => {
         <LabelPreview
           labelConfig={labelConfig}
           zoomLevel={zoomLevel}
+          textElements={textElements} // On passe les éléments texte ici
           textStyle={textStyle}
           textOptionsVisible={textOptionsVisible}
         />
@@ -46,6 +66,7 @@ const LabelDesigner = () => {
           setZoomLevel={setZoomLevel}
         />
         <TextTool
+          addTextElement={addTextElement} // On passe la fonction ici
           textStyle={textStyle}
           setTextStyle={setTextStyle}
           textOptionsVisible={textOptionsVisible}

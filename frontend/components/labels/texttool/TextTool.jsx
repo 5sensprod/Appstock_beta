@@ -1,14 +1,13 @@
-// frontend/components/labels/texttool/TextTool.jsx
 import React, { useState } from 'react'
 import TextToolButton from './TextToolButton'
-import DraggableText from './DraggableText'
 import TextOptionsPanel from './TextOptionsPanel'
 
-const TextTool = () => {
-  const [
-    textOptionsVisible,
-    setTextOptionsVisible
-  ] = useState(false)
+const TextTool = ({
+  addTextElement,
+  textOptionsVisible,
+  setTextOptionsVisible
+}) => {
+  // État pour gérer le style du texte
   const [textStyle, setTextStyle] = useState({
     fontFamily: 'Arial',
     fontSize: '16px',
@@ -16,22 +15,27 @@ const TextTool = () => {
     textAlign: 'left'
   })
 
+  // Fonction qui gère l'ajout d'un texte avec les styles actuels
+  const handleAddTextElement = () => {
+    addTextElement(textStyle) // Passer le style actuel lors de l'ajout du texte
+  }
+
   return (
     <div>
+      {/* Bouton pour ajouter un nouvel élément texte */}
       <TextToolButton
         textOptionsVisible={textOptionsVisible}
         setTextOptionsVisible={
           setTextOptionsVisible
         }
+        addTextElement={handleAddTextElement}
       />
-      <DraggableText
-        textStyle={textStyle}
-        textOptionsVisible={textOptionsVisible}
-      />
+
+      {/* Panneau pour les options de style du texte */}
       {textOptionsVisible && (
         <TextOptionsPanel
           textStyle={textStyle}
-          setTextStyle={setTextStyle}
+          setTextStyle={setTextStyle} // Mise à jour du style à travers le panneau
         />
       )}
     </div>
