@@ -5,8 +5,9 @@ import React, {
 } from 'react'
 import * as fabric from 'fabric'
 import styles from './FabricDesigner.module.css'
+import ColorPicker from './texttool/ColorPicker'
 
-export default function App() {
+export default function FabricDesigner() {
   const canvasRef = useRef(null)
   const [canvas, setCanvas] = useState(null)
   const [zoomLevel, setZoomLevel] = useState(1)
@@ -14,6 +15,10 @@ export default function App() {
     width: 600,
     height: 350
   })
+  const [selectedColor, setSelectedColor] =
+    useState('#000000') // Couleur par défaut
+  const [selectedObject, setSelectedObject] =
+    useState(null) // Objet sélectionné
 
   useEffect(() => {
     const fabricCanvas = new fabric.Canvas(
@@ -30,6 +35,7 @@ export default function App() {
     }
   }, [canvasSize.width, canvasSize.height])
 
+  // Restriction du mouvement et du redimensionnement des objets
   useEffect(() => {
     if (canvas) {
       const restrictObjectMovement = (e) => {
@@ -86,9 +92,61 @@ export default function App() {
     }
   }, [canvas])
 
+  // Mettre à jour selectedObject en fonction des événements de sélection
+  useEffect(() => {
+    if (canvas) {
+      const updateSelectedObject = () => {
+        const activeObject =
+          canvas.getActiveObject()
+        setSelectedObject(activeObject)
+        if (activeObject && activeObject.fill) {
+          setSelectedColor(activeObject.fill) // Mettre à jour le ColorPicker avec la couleur de l'objet
+        }
+      }
+
+      canvas.on(
+        'selection:created',
+        updateSelectedObject
+      )
+      canvas.on(
+        'selection:updated',
+        updateSelectedObject
+      )
+      canvas.on('selection:cleared', () => {
+        setSelectedObject(null)
+        setSelectedColor('#000000') // Remettre à la couleur par défaut
+      })
+
+      // Nettoyage des événements
+      return () => {
+        canvas.off(
+          'selection:created',
+          updateSelectedObject
+        )
+        canvas.off(
+          'selection:updated',
+          updateSelectedObject
+        )
+        canvas.off('selection:cleared')
+      }
+    }
+  }, [canvas])
+
+  // Mettre à jour la couleur de l'objet sélectionné lorsque selectedColor change
+  useEffect(() => {
+    if (
+      selectedObject &&
+      'set' in selectedObject
+    ) {
+      selectedObject.set('fill', selectedColor) // Met à jour la couleur de l'objet
+      canvas.renderAll()
+    }
+  }, [selectedColor, selectedObject, canvas])
+
+  // Fonction pour ajuster le zoom
   const handleZoomChange = (e) => {
     const newZoom = parseFloat(e.target.value)
-    const scaleFactor = newZoom / zoomLevel // Calcul du facteur d'échelle
+    const scaleFactor = newZoom / zoomLevel
     setZoomLevel(newZoom)
 
     if (canvas) {
@@ -167,16 +225,17 @@ export default function App() {
 
   const onAddText = () => {
     if (canvas) {
-      const itext = new fabric.IText(
+      const text = new fabric.IText(
         'Votre texte ici',
         {
           left: 150,
           top: 150,
           fontSize: 30,
-          fill: 'black'
+          fill: selectedColor // Utilise la couleur sélectionnée
         }
       )
-      canvas.add(itext)
+      canvas.add(text)
+      canvas.setActiveObject(text) // Sélectionne automatiquement le texte ajouté
       canvas.renderAll()
     }
   }
@@ -204,6 +263,12 @@ export default function App() {
       >
         Ajouter du texte
       </button>
+      <ColorPicker
+        color={selectedColor}
+        setTextStyle={(color) =>
+          setSelectedColor(color)
+        }
+      />
 
       {/* Contrôle du zoom */}
       <div className={styles.zoomControl}>

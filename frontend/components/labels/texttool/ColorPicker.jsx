@@ -1,4 +1,3 @@
-// frontend/components/labels/texttool/ColorPicker.jsx
 import React from 'react'
 
 const ColorPicker = ({ color, setTextStyle }) => {
@@ -6,13 +5,10 @@ const ColorPicker = ({ color, setTextStyle }) => {
     <div className="textTool mb-2">
       <input
         type="color"
-        value={color}
+        value={color} // La couleur actuelle de l'objet sélectionné
         onChange={(e) =>
-          setTextStyle((prev) => ({
-            ...prev,
-            color: e.target.value
-          }))
-        }
+          setTextStyle(e.target.value)
+        } // Mettre à jour la couleur
       />
     </div>
   )
