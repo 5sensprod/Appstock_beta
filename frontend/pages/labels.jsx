@@ -1,5 +1,6 @@
 import React from 'react'
-import LabelDesigner from '../components/labels/LabelDesigner' // Import du composant LabelDesigner
+// import LabelDesigner from '../components/labels/LabelDesigner'
+import FabricDesigner from '../components/labels/FabricDesigner'
 
 const Labels = () => {
   return (
@@ -12,7 +13,8 @@ const Labels = () => {
       </p>
 
       {/* Intégration du composant LabelDesigner */}
-      <LabelDesigner />
+      {/* <LabelDesigner /> */}
+      <FabricDesigner />
     </div>
   )
 }

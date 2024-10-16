@@ -19,25 +19,27 @@ export const UserProvider = ({ children }) => {
 
   // Fonction pour vérifier la session au démarrage de l'application
   useEffect(() => {
-    const fetchSession = async () => {
-      try {
-        const data = await checkSession() // Utilisation de checkSession depuis authService
-        if (data.authenticated) {
-          setUsername('admin') // Utiliser data.username si disponible
-          setIsAuthenticated(true)
+    if (!isAuthenticated && isLoading) {
+      // Ne faire la requête que si non authentifié et en phase de chargement
+      const fetchSession = async () => {
+        try {
+          const data = await checkSession()
+          if (data.authenticated) {
+            setUsername('admin') // Utilisez `data.username` si disponible dans la réponse
+            setIsAuthenticated(true)
+          }
+        } catch (err) {
+          console.error(
+            'Erreur lors de la vérification de la session',
+            err
+          )
+        } finally {
+          setIsLoading(false)
         }
-      } catch (err) {
-        console.error(
-          'Erreur lors de la vérification de la session',
-          err
-        )
-      } finally {
-        setIsLoading(false) // La session est vérifiée, qu'elle soit réussie ou non
       }
+      fetchSession()
     }
-
-    fetchSession()
-  }, [])
+  }, [isAuthenticated, isLoading])
 
   // Fonction pour gérer la connexion
   const handleLogin = async (username, pin) => {

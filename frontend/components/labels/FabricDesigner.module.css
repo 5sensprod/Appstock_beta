@@ -1,0 +1,36 @@
+/* frontend/components/labels/FabricDesigner.module.css */
+
+.app {
+  text-align: center;
+}
+
+.button {
+  margin-right: 10px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: #0056b3;
+}
+
+.zoomControl {
+  margin: 20px 0;
+}
+
+.canvasContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.sampleCanvas {
+  border: 1px solid black;
+}
+
+/* Si tu veux appliquer des styles globaux, utilise des classes dans le style global */
