@@ -4,12 +4,13 @@ import React, {
   useState
 } from 'react'
 import * as fabric from 'fabric'
+import styles from './FabricDesigner.module.css'
 
 export default function App() {
   const canvasRef = useRef(null)
   const [canvas, setCanvas] = useState(null)
   const [zoomLevel, setZoomLevel] = useState(1)
-  const [canvasSize, setCanvasSize] = useState({
+  const [canvasSize] = useState({
     width: 600,
     height: 350
   })
@@ -27,7 +28,7 @@ export default function App() {
     return () => {
       fabricCanvas.dispose()
     }
-  }, [])
+  }, [canvasSize.width, canvasSize.height])
 
   useEffect(() => {
     if (canvas) {
@@ -121,6 +122,9 @@ export default function App() {
         radius: 50,
         fill: 'blue',
         left: 100,
+        stroke: '#aaf',
+        strokeWidth: 5,
+        strokeUniform: true,
         top: 100
       })
       canvas.add(circle)
@@ -161,19 +165,48 @@ export default function App() {
     }
   }
 
+  const onAddText = () => {
+    if (canvas) {
+      const itext = new fabric.IText(
+        'Votre texte ici',
+        {
+          left: 150,
+          top: 150,
+          fontSize: 30,
+          fill: 'black'
+        }
+      )
+      canvas.add(itext)
+      canvas.renderAll()
+    }
+  }
+
   return (
-    <div className="App">
+    <div className={styles.app}>
       <h1>
         FabricJS avec zoom et redimensionnement
       </h1>
-      <button onClick={onAddCircle}>
+      <button
+        onClick={onAddCircle}
+        className={styles.button}
+      >
         Ajouter un cercle
       </button>
-      <button onClick={onAddRectangle}>
+      <button
+        onClick={onAddRectangle}
+        className={styles.button}
+      >
         Ajouter un rectangle
       </button>
+      <button
+        onClick={onAddText}
+        className={styles.button}
+      >
+        Ajouter du texte
+      </button>
 
-      <div className="zoom-control">
+      {/* Contrôle du zoom */}
+      <div className={styles.zoomControl}>
         <label htmlFor="zoom">
           Zoom: {zoomLevel}x
         </label>
@@ -188,11 +221,11 @@ export default function App() {
         />
       </div>
 
-      <div className="canvas-container">
+      {/* Conteneur du canevas */}
+      <div className={styles.canvasContainer}>
         <canvas
           ref={canvasRef}
-          className="sample-canvas"
-          style={{ border: '1px solid #000' }}
+          className={styles.sampleCanvas}
         />
       </div>
     </div>
