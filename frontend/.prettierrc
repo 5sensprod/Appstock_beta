@@ -4,6 +4,6 @@
   "singleQuote": true,
   "tabWidth": 2,
   "trailingComma": "none",
-  "printWidth": 50,
+  "printWidth": 100,
   "endOfLine": "auto"
 }

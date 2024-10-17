@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useEffect,
-  useRef,
-  useState,
-  useContext
-} from 'react'
+import React, { createContext, useEffect, useRef, useState, useContext } from 'react'
 import * as fabric from 'fabric'
 
 const CanvasContext = createContext()
@@ -16,29 +10,51 @@ const CanvasProvider = ({ children }) => {
   const canvasRef = useRef(null)
   const [canvas, setCanvas] = useState(null)
   const [zoomLevel, setZoomLevel] = useState(1)
-  const [canvasSize] = useState({
+  // Taille du canevas
+  const [canvasSize, setCanvasSize] = useState({
     width: 600,
     height: 350
   })
-  const [selectedColor, setSelectedColor] =
-    useState('#000000') // Couleur par défaut
-  const [selectedObject, setSelectedObject] =
-    useState(null) // Objet sélectionné
+
+  // Configuration des labels
+  const [labelConfig, setLabelConfig] = useState({
+    offsetTop: 10,
+    offsetLeft: 10,
+    spacingVertical: 5,
+    spacingHorizontal: 5
+  })
+
+  const [selectedColor, setSelectedColor] = useState('#000000') // Couleur sélectionnée par l'utilisateur
+  const [selectedObject, setSelectedObject] = useState(null) // Objet sélectionné sur le canevas
+
+  // Fonction pour mettre à jour la taille du canevas
+  const updateCanvasSize = (newSize) => {
+    setCanvasSize((prevSize) => ({
+      ...prevSize,
+      ...newSize
+    }))
+  }
 
   useEffect(() => {
-    const fabricCanvas = new fabric.Canvas(
-      canvasRef.current,
-      {
-        width: canvasSize.width,
-        height: canvasSize.height
-      }
-    )
-    setCanvas(fabricCanvas)
-
-    return () => {
-      fabricCanvas.dispose()
+    if (!canvas) {
+      // Créer l'instance de Fabric.js uniquement si elle n'a pas été créée
+      const fabricCanvas = new fabric.Canvas(canvasRef.current, {
+        width: 600, // Valeurs initiales, ne surveille pas canvasSize ici
+        height: 350,
+        preserveObjectStacking: true // Préserver l'ordre des objets
+      })
+      setCanvas(fabricCanvas)
     }
-  }, [canvasSize.width, canvasSize.height])
+  }, [canvas]) // Créer le canevas une seule fois
+
+  useEffect(() => {
+    if (canvas) {
+      // Vérifier que le canevas est bien initialisé avant de changer la taille
+      canvas.setWidth(canvasSize.width)
+      canvas.setHeight(canvasSize.height)
+      canvas.renderAll() // Re-render après la modification de la taille
+    }
+  }, [canvasSize.width, canvasSize.height, canvas])
 
   // Restriction du mouvement et du redimensionnement des objets
   useEffect(() => {
@@ -62,38 +78,20 @@ const CanvasProvider = ({ children }) => {
         }
 
         // Limite droite
-        if (
-          boundingRect.left + boundingRect.width >
-          canvasWidth
-        ) {
-          obj.left -=
-            boundingRect.left +
-            boundingRect.width -
-            canvasWidth
+        if (boundingRect.left + boundingRect.width > canvasWidth) {
+          obj.left -= boundingRect.left + boundingRect.width - canvasWidth
         }
 
         // Limite inférieure
-        if (
-          boundingRect.top + boundingRect.height >
-          canvasHeight
-        ) {
-          obj.top -=
-            boundingRect.top +
-            boundingRect.height -
-            canvasHeight
+        if (boundingRect.top + boundingRect.height > canvasHeight) {
+          obj.top -= boundingRect.top + boundingRect.height - canvasHeight
         }
 
         obj.setCoords()
       }
 
-      canvas.on(
-        'object:moving',
-        restrictObjectMovement
-      )
-      canvas.on(
-        'object:scaling',
-        restrictObjectMovement
-      )
+      canvas.on('object:moving', restrictObjectMovement)
+      canvas.on('object:scaling', restrictObjectMovement)
     }
   }, [canvas])
 
@@ -101,22 +99,15 @@ const CanvasProvider = ({ children }) => {
   useEffect(() => {
     if (canvas) {
       const updateSelectedObject = () => {
-        const activeObject =
-          canvas.getActiveObject()
+        const activeObject = canvas.getActiveObject()
         setSelectedObject(activeObject)
         if (activeObject && activeObject.fill) {
           setSelectedColor(activeObject.fill) // Mettre à jour le ColorPicker avec la couleur de l'objet
         }
       }
 
-      canvas.on(
-        'selection:created',
-        updateSelectedObject
-      )
-      canvas.on(
-        'selection:updated',
-        updateSelectedObject
-      )
+      canvas.on('selection:created', updateSelectedObject)
+      canvas.on('selection:updated', updateSelectedObject)
       canvas.on('selection:cleared', () => {
         setSelectedObject(null)
         setSelectedColor('#000000') // Remettre à la couleur par défaut
@@ -124,14 +115,8 @@ const CanvasProvider = ({ children }) => {
 
       // Nettoyage des événements
       return () => {
-        canvas.off(
-          'selection:created',
-          updateSelectedObject
-        )
-        canvas.off(
-          'selection:updated',
-          updateSelectedObject
-        )
+        canvas.off('selection:created', updateSelectedObject)
+        canvas.off('selection:updated', updateSelectedObject)
         canvas.off('selection:cleared')
       }
     }
@@ -139,10 +124,7 @@ const CanvasProvider = ({ children }) => {
 
   // Mettre à jour la couleur de l'objet sélectionné lorsque selectedColor change
   useEffect(() => {
-    if (
-      selectedObject &&
-      'set' in selectedObject
-    ) {
+    if (selectedObject && 'set' in selectedObject) {
       selectedObject.set('fill', selectedColor) // Met à jour la couleur de l'objet
       canvas.renderAll()
     }
@@ -157,8 +139,7 @@ const CanvasProvider = ({ children }) => {
     if (canvas) {
       // Ajuster la taille du canevas
       const newWidth = canvasSize.width * newZoom
-      const newHeight =
-        canvasSize.height * newZoom
+      const newHeight = canvasSize.height * newZoom
       canvas.setWidth(newWidth)
       canvas.setHeight(newHeight)
 
@@ -180,10 +161,7 @@ const CanvasProvider = ({ children }) => {
   }
 
   // Fonction utilitaire pour la mise à l'échelle et le positionnement
-  const scaleAndPositionObject = (
-    object,
-    zoomLevel
-  ) => {
+  const scaleAndPositionObject = (object, zoomLevel) => {
     object.scaleX = object.scaleX * zoomLevel
     object.scaleY = object.scaleY * zoomLevel
     object.left = object.left * zoomLevel
@@ -231,15 +209,12 @@ const CanvasProvider = ({ children }) => {
 
   const onAddText = () => {
     if (canvas) {
-      const text = new fabric.IText(
-        'Votre texte ici',
-        {
-          left: 150,
-          top: 150,
-          fontSize: 30,
-          fill: selectedColor // Utilise la couleur sélectionnée
-        }
-      )
+      const text = new fabric.IText('Votre texte ici', {
+        left: 150,
+        top: 150,
+        fontSize: 30,
+        fill: selectedColor // Utilise la couleur sélectionnée
+      })
       canvas.add(text)
 
       // Utiliser la fonction factorisée pour l'échelle et le positionnement
@@ -256,6 +231,9 @@ const CanvasProvider = ({ children }) => {
     zoomLevel,
     setZoomLevel,
     canvasSize,
+    updateCanvasSize,
+    labelConfig,
+    setLabelConfig,
     selectedColor,
     setSelectedColor,
     selectedObject,
@@ -266,15 +244,7 @@ const CanvasProvider = ({ children }) => {
     onAddText
   }
 
-  return (
-    <CanvasContext.Provider value={value}>
-      {children}
-    </CanvasContext.Provider>
-  )
+  return <CanvasContext.Provider value={value}>{children}</CanvasContext.Provider>
 }
 
-export {
-  CanvasContext,
-  CanvasProvider,
-  useCanvas
-}
+export { CanvasContext, CanvasProvider, useCanvas }
