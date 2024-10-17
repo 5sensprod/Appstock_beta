@@ -13,11 +13,6 @@ const CanvasProvider = ({ children }) => {
   const canvasRef = useRef(null)
   const [canvas, setCanvas] = useState(null)
   const [zoomLevel, setZoomLevel] = useState(1)
-  // Taille du canevas
-  // const [canvasSize, setCanvasSize] = useState({
-  //   width: 600,
-  //   height: 350
-  // })
 
   // Configuration des labels (la source de vérité est en millimètres)
   const [labelConfig, setLabelConfig] = useState({
@@ -39,11 +34,25 @@ const CanvasProvider = ({ children }) => {
       ...newSize // Mise à jour des dimensions en millimètres
     }))
 
-    // Si le canevas existe, met à jour sa taille en pixels
+    // Réinitialiser le niveau de zoom à 1
+    setZoomLevel(1)
+
     if (canvas) {
+      // Réinitialiser la taille du canevas à 100% (zoom = 1)
       canvas.setWidth(mmToPx(newSize.labelWidth || labelConfig.labelWidth))
       canvas.setHeight(mmToPx(newSize.labelHeight || labelConfig.labelHeight))
-      canvas.renderAll()
+
+      // Remettre à l'échelle les objets pour qu'ils s'ajustent au zoom = 1
+      canvas.getObjects().forEach((obj) => {
+        obj.scaleX = obj.scaleX / zoomLevel // Réduire la taille d'origine
+        obj.scaleY = obj.scaleY / zoomLevel
+        obj.left = obj.left / zoomLevel // Réajuster la position d'origine
+        obj.top = obj.top / zoomLevel
+
+        obj.setCoords()
+      })
+
+      canvas.renderAll() // Redessiner le canevas
     }
   }
 
@@ -177,60 +186,56 @@ const CanvasProvider = ({ children }) => {
     object.setCoords() // Met à jour les coordonnées après redimensionnement
   }
 
-  const onAddCircle = () => {
+  const addObjectToCanvas = (object) => {
     if (canvas) {
-      const circle = new fabric.Circle({
-        radius: 50,
-        fill: 'blue',
-        left: 100,
-        stroke: '#aaf',
-        strokeWidth: 5,
-        strokeUniform: true,
-        top: 100
+      const centerX = mmToPx(labelConfig.labelWidth / 2) // Centre du canevas (X)
+      const centerY = mmToPx(labelConfig.labelHeight / 2) // Centre du canevas (Y)
+
+      // Positionner l'objet au centre du canevas
+      object.set({
+        left: centerX - (object.width || 0) / 2, // Centrer horizontalement
+        top: centerY - (object.height || 0) / 2 // Centrer verticalement
       })
-      canvas.add(circle)
 
-      // Utiliser la fonction factorisée pour l'échelle et le positionnement
-      scaleAndPositionObject(circle, zoomLevel)
-
-      canvas.renderAll()
+      canvas.add(object) // Ajouter l'objet au canevas
+      scaleAndPositionObject(object, zoomLevel) // Appliquer le zoom
+      canvas.renderAll() // Redessiner le canevas
     }
+  }
+
+  const onAddCircle = () => {
+    const circleRadius = labelConfig.labelWidth / 2 // Taille proportionnelle à l'étiquette
+    const circle = new fabric.Circle({
+      radius: circleRadius,
+      fill: 'blue',
+      stroke: '#aaf',
+      strokeWidth: 2,
+      strokeUniform: true
+    })
+
+    addObjectToCanvas(circle) // Utiliser la fonction factorisée
   }
 
   const onAddRectangle = () => {
-    if (canvas) {
-      const rectangle = new fabric.Rect({
-        width: 100,
-        height: 50,
-        fill: 'green',
-        left: 200,
-        top: 100
-      })
-      canvas.add(rectangle)
+    const rectWidth = labelConfig.labelWidth / 1.5
+    const rectHeight = labelConfig.labelHeight / 1.5
+    const rectangle = new fabric.Rect({
+      width: rectWidth,
+      height: rectHeight,
+      fill: 'green'
+    })
 
-      // Utiliser la fonction factorisée pour l'échelle et le positionnement
-      scaleAndPositionObject(rectangle, zoomLevel)
-
-      canvas.renderAll()
-    }
+    addObjectToCanvas(rectangle) // Utiliser la fonction factorisée
   }
 
   const onAddText = () => {
-    if (canvas) {
-      const text = new fabric.IText('Votre texte ici', {
-        left: 150,
-        top: 150,
-        fontSize: 30,
-        fill: selectedColor // Utilise la couleur sélectionnée
-      })
-      canvas.add(text)
+    const fontSize = labelConfig.labelWidth / 5 // Taille de la police proportionnelle à la largeur de l'étiquette
+    const text = new fabric.IText('Votre texte ici', {
+      fontSize: fontSize,
+      fill: selectedColor // Utilise la couleur sélectionnée
+    })
 
-      // Utiliser la fonction factorisée pour l'échelle et le positionnement
-      scaleAndPositionObject(text, zoomLevel)
-
-      canvas.setActiveObject(text) // Sélectionne automatiquement le texte ajouté
-      canvas.renderAll()
-    }
+    addObjectToCanvas(text) // Utiliser la fonction factorisée
   }
 
   const value = {
@@ -238,7 +243,6 @@ const CanvasProvider = ({ children }) => {
     canvas,
     zoomLevel,
     setZoomLevel,
-    // canvasSize,
     updateCanvasSize,
     labelConfig,
     setLabelConfig,
