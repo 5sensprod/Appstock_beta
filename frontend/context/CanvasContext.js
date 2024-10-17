@@ -119,94 +119,71 @@ const CanvasProvider = ({ children }) => {
 
   useEffect(() => {
     if (!canvas) {
-      // Créer l'instance de Fabric.js uniquement si elle n'a pas été créée
       const fabricCanvas = new fabric.Canvas(canvasRef.current, {
-        width: mmToPx(labelConfig.labelWidth), // Convertir mm en pixels
-        height: mmToPx(labelConfig.labelHeight), // Convertir mm en pixels
-        preserveObjectStacking: true // Préserver l'ordre des objets
+        width: mmToPx(labelConfig.labelWidth),
+        height: mmToPx(labelConfig.labelHeight),
+        preserveObjectStacking: true
       })
       setCanvas(fabricCanvas)
     } else {
-      // Si le canevas existe déjà, ajuster sa taille
       canvas.setWidth(mmToPx(labelConfig.labelWidth))
       canvas.setHeight(mmToPx(labelConfig.labelHeight))
-      canvas.renderAll() // Re-render après la modification de la taille
+      canvas.renderAll()
     }
   }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
 
-  // Restriction du mouvement et du redimensionnement des objets
+  // Fonction centralisée pour la gestion des événements
+  const setupCanvasEventListeners = (canvas, setSelectedObject, setSelectedColor) => {
+    const updateSelectedObject = () => {
+      const activeObject = canvas.getActiveObject()
+      setSelectedObject(activeObject)
+      if (activeObject && activeObject.fill) {
+        setSelectedColor(activeObject.fill)
+      }
+    }
+
+    const restrictObjectMovement = (e) => {
+      const obj = e.target
+      obj.setCoords()
+      const boundingRect = obj.getBoundingRect()
+      const canvasWidth = canvas.getWidth()
+      const canvasHeight = canvas.getHeight()
+
+      if (boundingRect.left < 0) obj.left -= boundingRect.left
+      if (boundingRect.top < 0) obj.top -= boundingRect.top
+      if (boundingRect.left + boundingRect.width > canvasWidth)
+        obj.left -= boundingRect.left + boundingRect.width - canvasWidth
+      if (boundingRect.top + boundingRect.height > canvasHeight)
+        obj.top -= boundingRect.top + boundingRect.height - canvasHeight
+
+      obj.setCoords()
+    }
+
+    canvas.on('selection:created', updateSelectedObject)
+    canvas.on('selection:updated', updateSelectedObject)
+    canvas.on('selection:cleared', () => {
+      setSelectedObject(null)
+      setSelectedColor('#000000')
+    })
+
+    canvas.on('object:moving', restrictObjectMovement)
+    canvas.on('object:scaling', restrictObjectMovement)
+
+    return () => {
+      canvas.off('selection:created', updateSelectedObject)
+      canvas.off('selection:updated', updateSelectedObject)
+      canvas.off('selection:cleared')
+      canvas.off('object:moving', restrictObjectMovement)
+      canvas.off('object:scaling', restrictObjectMovement)
+    }
+  }
+
   useEffect(() => {
     if (canvas) {
-      const restrictObjectMovement = (e) => {
-        const obj = e.target
-        obj.setCoords()
-        const boundingRect = obj.getBoundingRect()
-
-        const canvasWidth = canvas.getWidth()
-        const canvasHeight = canvas.getHeight()
-
-        // Limite gauche
-        if (boundingRect.left < 0) {
-          obj.left -= boundingRect.left
-        }
-
-        // Limite supérieure
-        if (boundingRect.top < 0) {
-          obj.top -= boundingRect.top
-        }
-
-        // Limite droite
-        if (boundingRect.left + boundingRect.width > canvasWidth) {
-          obj.left -= boundingRect.left + boundingRect.width - canvasWidth
-        }
-
-        // Limite inférieure
-        if (boundingRect.top + boundingRect.height > canvasHeight) {
-          obj.top -= boundingRect.top + boundingRect.height - canvasHeight
-        }
-
-        obj.setCoords()
-      }
-
-      canvas.on('object:moving', restrictObjectMovement)
-      canvas.on('object:scaling', restrictObjectMovement)
+      const cleanup = setupCanvasEventListeners(canvas, setSelectedObject, setSelectedColor)
+      return cleanup
     }
   }, [canvas])
-
-  // Mettre à jour selectedObject en fonction des événements de sélection
-  useEffect(() => {
-    if (canvas) {
-      const updateSelectedObject = () => {
-        const activeObject = canvas.getActiveObject()
-        setSelectedObject(activeObject)
-        if (activeObject && activeObject.fill) {
-          setSelectedColor(activeObject.fill) // Mettre à jour le ColorPicker avec la couleur de l'objet
-        }
-      }
-
-      canvas.on('selection:created', updateSelectedObject)
-      canvas.on('selection:updated', updateSelectedObject)
-      canvas.on('selection:cleared', () => {
-        setSelectedObject(null)
-        setSelectedColor('#000000') // Remettre à la couleur par défaut
-      })
-
-      // Nettoyage des événements
-      return () => {
-        canvas.off('selection:created', updateSelectedObject)
-        canvas.off('selection:updated', updateSelectedObject)
-        canvas.off('selection:cleared')
-      }
-    }
-  }, [canvas])
-
-  // Mettre à jour la couleur de l'objet sélectionné lorsque selectedColor change
-  useEffect(() => {
-    if (selectedObject && 'set' in selectedObject) {
-      selectedObject.set('fill', selectedColor) // Met à jour la couleur de l'objet
-      canvas.renderAll()
-    }
-  }, [selectedColor, selectedObject, canvas])
 
   // Fonction pour ajuster le zoom
   const handleZoomChange = (e) => {
