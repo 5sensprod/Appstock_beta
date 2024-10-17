@@ -38,21 +38,82 @@ const CanvasProvider = ({ children }) => {
     setZoomLevel(1)
 
     if (canvas) {
-      // Réinitialiser la taille du canevas à 100% (zoom = 1)
-      canvas.setWidth(mmToPx(newSize.labelWidth || labelConfig.labelWidth))
-      canvas.setHeight(mmToPx(newSize.labelHeight || labelConfig.labelHeight))
+      const newWidthPx = mmToPx(newSize.labelWidth || labelConfig.labelWidth)
+      const newHeightPx = mmToPx(newSize.labelHeight || labelConfig.labelHeight)
 
-      // Remettre à l'échelle les objets pour qu'ils s'ajustent au zoom = 1
-      canvas.getObjects().forEach((obj) => {
-        obj.scaleX = obj.scaleX / zoomLevel // Réduire la taille d'origine
-        obj.scaleY = obj.scaleY / zoomLevel
-        obj.left = obj.left / zoomLevel // Réajuster la position d'origine
-        obj.top = obj.top / zoomLevel
-
-        obj.setCoords()
+      // Animer la taille du canevas
+      fabric.util.animate({
+        startValue: canvas.getWidth(),
+        endValue: newWidthPx,
+        duration: 500, // Durée de l'animation en ms
+        onChange: (value) => {
+          canvas.setWidth(value)
+          canvas.renderAll() // Redessiner le canevas à chaque étape de l'animation
+        }
       })
 
-      canvas.renderAll() // Redessiner le canevas
+      fabric.util.animate({
+        startValue: canvas.getHeight(),
+        endValue: newHeightPx,
+        duration: 500, // Durée de l'animation en ms
+        onChange: (value) => {
+          canvas.setHeight(value)
+          canvas.renderAll()
+        }
+      })
+
+      // Remettre à l'échelle les objets avec animation
+      canvas.getObjects().forEach((obj) => {
+        const originalScaleX = obj.scaleX / zoomLevel // Échelle d'origine
+        const originalScaleY = obj.scaleY / zoomLevel
+        const originalLeft = obj.left / zoomLevel
+        const originalTop = obj.top / zoomLevel
+
+        fabric.util.animate({
+          startValue: obj.scaleX,
+          endValue: originalScaleX,
+          duration: 500,
+          onChange: (value) => {
+            obj.scaleX = value
+            obj.setCoords() // Met à jour les coordonnées
+            canvas.renderAll() // Redessiner
+          }
+        })
+
+        fabric.util.animate({
+          startValue: obj.scaleY,
+          endValue: originalScaleY,
+          duration: 500,
+          onChange: (value) => {
+            obj.scaleY = value
+            obj.setCoords()
+            canvas.renderAll()
+          }
+        })
+
+        // Animation de la position (left et top)
+        fabric.util.animate({
+          startValue: obj.left,
+          endValue: originalLeft,
+          duration: 500,
+          onChange: (value) => {
+            obj.left = value
+            obj.setCoords()
+            canvas.renderAll()
+          }
+        })
+
+        fabric.util.animate({
+          startValue: obj.top,
+          endValue: originalTop,
+          duration: 500,
+          onChange: (value) => {
+            obj.top = value
+            obj.setCoords()
+            canvas.renderAll()
+          }
+        })
+      })
     }
   }
 
@@ -204,7 +265,12 @@ const CanvasProvider = ({ children }) => {
   }
 
   const onAddCircle = () => {
-    const circleRadius = labelConfig.labelWidth / 2 // Taille proportionnelle à l'étiquette
+    // Get the minimum value between labelWidth and labelHeight
+    const minDimension = Math.min(labelConfig.labelWidth, labelConfig.labelHeight)
+
+    // Calculate the circle radius based on the smallest dimension
+    const circleRadius = minDimension / 2.5
+
     const circle = new fabric.Circle({
       radius: circleRadius,
       fill: 'blue',
@@ -213,12 +279,12 @@ const CanvasProvider = ({ children }) => {
       strokeUniform: true
     })
 
-    addObjectToCanvas(circle) // Utiliser la fonction factorisée
+    addObjectToCanvas(circle) // Use the refactored function
   }
 
   const onAddRectangle = () => {
-    const rectWidth = labelConfig.labelWidth / 1.5
-    const rectHeight = labelConfig.labelHeight / 1.5
+    const rectWidth = labelConfig.labelWidth / 1.1
+    const rectHeight = labelConfig.labelHeight / 1.1
     const rectangle = new fabric.Rect({
       width: rectWidth,
       height: rectHeight,

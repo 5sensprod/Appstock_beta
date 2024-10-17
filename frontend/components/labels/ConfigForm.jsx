@@ -50,6 +50,8 @@ const ConfigForm = () => {
             value={input.value}
             onChange={handleInputChange}
             step="0.1"
+            min="0"
+            max={input.id === 'labelWidth' ? 210 : input.id === 'labelHeight' ? 297 : undefined}
           />
         </div>
       ))}
