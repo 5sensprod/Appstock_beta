@@ -1,13 +1,13 @@
 import React from 'react'
+import { HexColorPicker } from 'react-colorful'
 
 const ColorPicker = ({ color, setTextStyle }) => {
   return (
     <div className="textTool mb-2">
-      <input
-        type="color"
-        value={color} // La couleur actuelle de l'objet sélectionné
-        onChange={(e) =>
-          setTextStyle(e.target.value)
+      <HexColorPicker
+        color={color} // La couleur actuelle de l'objet sélectionné
+        onChange={(newColor) =>
+          setTextStyle(newColor)
         } // Mettre à jour la couleur
       />
     </div>

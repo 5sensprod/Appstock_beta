@@ -1,6 +1,6 @@
 import React from 'react'
-// import LabelDesigner from '../components/labels/LabelDesigner'
 import FabricDesigner from '../components/labels/FabricDesigner'
+import { CanvasProvider } from '../context/CanvasContext'
 
 const Labels = () => {
   return (
@@ -11,10 +11,9 @@ const Labels = () => {
       <p className="mb-4">
         Ici, vous pouvez gérer vos labels.
       </p>
-
-      {/* Intégration du composant LabelDesigner */}
-      {/* <LabelDesigner /> */}
-      <FabricDesigner />
+      <CanvasProvider>
+        <FabricDesigner />
+      </CanvasProvider>
     </div>
   )
 }
