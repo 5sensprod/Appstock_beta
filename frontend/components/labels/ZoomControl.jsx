@@ -1,10 +1,12 @@
 import React from 'react'
-import styles from './FabricDesigner.module.css'
+// import styles from './FabricDesigner.module.css'
 
 export default function ZoomControl({ zoomLevel, handleZoomChange }) {
   return (
-    <div className={styles.zoomControl}>
-      <label htmlFor="zoom">Zoom: {zoomLevel.toFixed(2)}x</label>
+    <div className="p-4">
+      <label htmlFor="zoom" className="mb-2 block">
+        Zoom: {zoomLevel.toFixed(2)}x
+      </label>
       <input
         type="range"
         id="zoom"

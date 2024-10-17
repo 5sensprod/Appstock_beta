@@ -20,9 +20,7 @@ export default function FabricDesigner() {
 
   return (
     <div className={styles.app}>
-      <h1>
-        FabricJS avec zoom et redimensionnement
-      </h1>
+      <h1>FabricJS avec zoom et redimensionnement</h1>
 
       {/* Section pour ajouter des formes et du texte */}
       <ShapeButtons
@@ -32,18 +30,10 @@ export default function FabricDesigner() {
       />
 
       {/* Sélecteur de couleur */}
-      <ColorPicker
-        color={selectedColor}
-        setTextStyle={(color) =>
-          setSelectedColor(color)
-        }
-      />
+      <ColorPicker color={selectedColor} setTextStyle={(color) => setSelectedColor(color)} />
 
       {/* Contrôle de zoom */}
-      <ZoomControl
-        zoomLevel={zoomLevel}
-        handleZoomChange={handleZoomChange}
-      />
+      <ZoomControl zoomLevel={zoomLevel} handleZoomChange={handleZoomChange} />
 
       {/* Conteneur du canevas */}
       <CanvasControl canvasRef={canvasRef} />
