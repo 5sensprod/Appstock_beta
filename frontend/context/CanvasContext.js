@@ -1,5 +1,6 @@
 import React, { createContext, useEffect, useRef, useState, useContext } from 'react'
 import * as fabric from 'fabric'
+import useUpdateCanvasSize from '../hooks/useUpdateCanvasSize'
 
 const CanvasContext = createContext()
 
@@ -28,94 +29,7 @@ const CanvasProvider = ({ children }) => {
   const [selectedObject, setSelectedObject] = useState(null) // Objet sélectionné sur le canevas
 
   // Fonction pour mettre à jour la taille du canevas (gérée en mm dans ConfigForm)
-  const updateCanvasSize = (newSize) => {
-    setLabelConfig((prevConfig) => ({
-      ...prevConfig,
-      ...newSize // Mise à jour des dimensions en millimètres
-    }))
-
-    // Réinitialiser le niveau de zoom à 1
-    setZoomLevel(1)
-
-    if (canvas) {
-      const newWidthPx = mmToPx(newSize.labelWidth || labelConfig.labelWidth)
-      const newHeightPx = mmToPx(newSize.labelHeight || labelConfig.labelHeight)
-
-      // Animer la taille du canevas
-      fabric.util.animate({
-        startValue: canvas.getWidth(),
-        endValue: newWidthPx,
-        duration: 500, // Durée de l'animation en ms
-        onChange: (value) => {
-          canvas.setWidth(value)
-          canvas.renderAll() // Redessiner le canevas à chaque étape de l'animation
-        }
-      })
-
-      fabric.util.animate({
-        startValue: canvas.getHeight(),
-        endValue: newHeightPx,
-        duration: 500, // Durée de l'animation en ms
-        onChange: (value) => {
-          canvas.setHeight(value)
-          canvas.renderAll()
-        }
-      })
-
-      // Remettre à l'échelle les objets avec animation
-      canvas.getObjects().forEach((obj) => {
-        const originalScaleX = obj.scaleX / zoomLevel // Échelle d'origine
-        const originalScaleY = obj.scaleY / zoomLevel
-        const originalLeft = obj.left / zoomLevel
-        const originalTop = obj.top / zoomLevel
-
-        fabric.util.animate({
-          startValue: obj.scaleX,
-          endValue: originalScaleX,
-          duration: 500,
-          onChange: (value) => {
-            obj.scaleX = value
-            obj.setCoords() // Met à jour les coordonnées
-            canvas.renderAll() // Redessiner
-          }
-        })
-
-        fabric.util.animate({
-          startValue: obj.scaleY,
-          endValue: originalScaleY,
-          duration: 500,
-          onChange: (value) => {
-            obj.scaleY = value
-            obj.setCoords()
-            canvas.renderAll()
-          }
-        })
-
-        // Animation de la position (left et top)
-        fabric.util.animate({
-          startValue: obj.left,
-          endValue: originalLeft,
-          duration: 500,
-          onChange: (value) => {
-            obj.left = value
-            obj.setCoords()
-            canvas.renderAll()
-          }
-        })
-
-        fabric.util.animate({
-          startValue: obj.top,
-          endValue: originalTop,
-          duration: 500,
-          onChange: (value) => {
-            obj.top = value
-            obj.setCoords()
-            canvas.renderAll()
-          }
-        })
-      })
-    }
-  }
+  const updateCanvasSize = useUpdateCanvasSize(canvas, labelConfig, zoomLevel, setZoomLevel)
 
   useEffect(() => {
     if (!canvas) {
