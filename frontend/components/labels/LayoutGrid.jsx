@@ -2,20 +2,19 @@ import React, { useEffect, useCallback } from 'react'
 import { useCanvas } from '../../context/CanvasContext' // Import du contexte
 
 const LayoutGrid = () => {
-  const { canvasSize, labelConfig } = useCanvas() // Récupère canvasSize et labelConfig ici
+  const { labelConfig } = useCanvas() // Récupère labelConfig ici
 
   const updateGrid = useCallback(() => {
-    const { offsetTop, offsetLeft, spacingVertical, spacingHorizontal } = labelConfig
+    const { labelWidth, labelHeight, offsetTop, offsetLeft, spacingVertical, spacingHorizontal } =
+      labelConfig
 
-    const pageWidth = 210
-    const pageHeight = 297
-
-    const labelWidth = canvasSize.width
-    const labelHeight = canvasSize.height
+    const pageWidth = 210 // A4 en mm
+    const pageHeight = 297 // A4 en mm
 
     const availableWidth = pageWidth - offsetLeft
     const availableHeight = pageHeight - offsetTop
 
+    // Calcul du nombre d'étiquettes par ligne et colonne
     const labelsPerRow = Math.floor(
       (availableWidth + spacingHorizontal) / (labelWidth + spacingHorizontal)
     )
@@ -39,7 +38,7 @@ const LayoutGrid = () => {
         }
       }
     }
-  }, [labelConfig, canvasSize])
+  }, [labelConfig])
 
   useEffect(() => {
     updateGrid()

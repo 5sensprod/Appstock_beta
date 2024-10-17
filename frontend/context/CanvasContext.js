@@ -6,55 +6,63 @@ const CanvasContext = createContext()
 // Hook personnalisé pour utiliser le contexte facilement
 const useCanvas = () => useContext(CanvasContext)
 
+// Conversion millimètres en pixels
+const mmToPx = (mm) => (mm / 25.4) * 72
+
 const CanvasProvider = ({ children }) => {
   const canvasRef = useRef(null)
   const [canvas, setCanvas] = useState(null)
   const [zoomLevel, setZoomLevel] = useState(1)
   // Taille du canevas
-  const [canvasSize, setCanvasSize] = useState({
-    width: 600,
-    height: 350
-  })
+  // const [canvasSize, setCanvasSize] = useState({
+  //   width: 600,
+  //   height: 350
+  // })
 
-  // Configuration des labels
+  // Configuration des labels (la source de vérité est en millimètres)
   const [labelConfig, setLabelConfig] = useState({
-    offsetTop: 10,
-    offsetLeft: 10,
-    spacingVertical: 5,
-    spacingHorizontal: 5
+    labelWidth: 48.5, // Largeur par défaut en mm
+    labelHeight: 25.5, // Hauteur par défaut en mm
+    offsetTop: 22,
+    offsetLeft: 8,
+    spacingVertical: 0,
+    spacingHorizontal: 0
   })
 
   const [selectedColor, setSelectedColor] = useState('#000000') // Couleur sélectionnée par l'utilisateur
   const [selectedObject, setSelectedObject] = useState(null) // Objet sélectionné sur le canevas
 
-  // Fonction pour mettre à jour la taille du canevas
+  // Fonction pour mettre à jour la taille du canevas (gérée en mm dans ConfigForm)
   const updateCanvasSize = (newSize) => {
-    setCanvasSize((prevSize) => ({
-      ...prevSize,
-      ...newSize
+    setLabelConfig((prevConfig) => ({
+      ...prevConfig,
+      ...newSize // Mise à jour des dimensions en millimètres
     }))
+
+    // Si le canevas existe, met à jour sa taille en pixels
+    if (canvas) {
+      canvas.setWidth(mmToPx(newSize.labelWidth || labelConfig.labelWidth))
+      canvas.setHeight(mmToPx(newSize.labelHeight || labelConfig.labelHeight))
+      canvas.renderAll()
+    }
   }
 
   useEffect(() => {
     if (!canvas) {
       // Créer l'instance de Fabric.js uniquement si elle n'a pas été créée
       const fabricCanvas = new fabric.Canvas(canvasRef.current, {
-        width: 600, // Valeurs initiales, ne surveille pas canvasSize ici
-        height: 350,
+        width: mmToPx(labelConfig.labelWidth), // Convertir mm en pixels
+        height: mmToPx(labelConfig.labelHeight), // Convertir mm en pixels
         preserveObjectStacking: true // Préserver l'ordre des objets
       })
       setCanvas(fabricCanvas)
-    }
-  }, [canvas]) // Créer le canevas une seule fois
-
-  useEffect(() => {
-    if (canvas) {
-      // Vérifier que le canevas est bien initialisé avant de changer la taille
-      canvas.setWidth(canvasSize.width)
-      canvas.setHeight(canvasSize.height)
+    } else {
+      // Si le canevas existe déjà, ajuster sa taille
+      canvas.setWidth(mmToPx(labelConfig.labelWidth))
+      canvas.setHeight(mmToPx(labelConfig.labelHeight))
       canvas.renderAll() // Re-render après la modification de la taille
     }
-  }, [canvasSize.width, canvasSize.height, canvas])
+  }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
 
   // Restriction du mouvement et du redimensionnement des objets
   useEffect(() => {
@@ -133,19 +141,19 @@ const CanvasProvider = ({ children }) => {
   // Fonction pour ajuster le zoom
   const handleZoomChange = (e) => {
     const newZoom = parseFloat(e.target.value)
-    const scaleFactor = newZoom / zoomLevel
+    const scaleFactor = newZoom / zoomLevel // Facteur d'échelle basé sur le zoom
     setZoomLevel(newZoom)
 
     if (canvas) {
       // Ajuster la taille du canevas
-      const newWidth = canvasSize.width * newZoom
-      const newHeight = canvasSize.height * newZoom
+      const newWidth = mmToPx(labelConfig.labelWidth) * newZoom // Convertir les dimensions en mm -> pixels
+      const newHeight = mmToPx(labelConfig.labelHeight) * newZoom // Convertir les dimensions en mm -> pixels
       canvas.setWidth(newWidth)
       canvas.setHeight(newHeight)
 
-      // Mettre à l'échelle tous les objets
+      // Mettre à l'échelle tous les objets présents sur le canevas
       canvas.getObjects().forEach((obj) => {
-        // Mettre à l'échelle l'objet
+        // Mise à l'échelle de l'objet
         obj.scaleX = obj.scaleX * scaleFactor
         obj.scaleY = obj.scaleY * scaleFactor
 
@@ -153,10 +161,10 @@ const CanvasProvider = ({ children }) => {
         obj.left = obj.left * scaleFactor
         obj.top = obj.top * scaleFactor
 
-        obj.setCoords()
+        obj.setCoords() // Mettre à jour les coordonnées après redimensionnement
       })
 
-      canvas.renderAll()
+      canvas.renderAll() // Redessiner le canevas avec les nouvelles dimensions
     }
   }
 
@@ -230,7 +238,7 @@ const CanvasProvider = ({ children }) => {
     canvas,
     zoomLevel,
     setZoomLevel,
-    canvasSize,
+    // canvasSize,
     updateCanvasSize,
     labelConfig,
     setLabelConfig,
