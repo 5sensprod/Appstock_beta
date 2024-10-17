@@ -2,11 +2,15 @@ import React, {
   createContext,
   useEffect,
   useRef,
-  useState
+  useState,
+  useContext
 } from 'react'
 import * as fabric from 'fabric'
 
 const CanvasContext = createContext()
+
+// Hook personnalisé pour utiliser le contexte facilement
+const useCanvas = () => useContext(CanvasContext)
 
 const CanvasProvider = ({ children }) => {
   const canvasRef = useRef(null)
@@ -269,4 +273,8 @@ const CanvasProvider = ({ children }) => {
   )
 }
 
-export { CanvasContext, CanvasProvider }
+export {
+  CanvasContext,
+  CanvasProvider,
+  useCanvas
+}

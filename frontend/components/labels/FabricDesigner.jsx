@@ -1,7 +1,7 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import styles from './FabricDesigner.module.css'
 import ColorPicker from './texttool/ColorPicker'
-import { CanvasContext } from '../../context/CanvasContext'
+import { useCanvas } from '../../context/CanvasContext'
 
 export default function FabricDesigner() {
   const {
@@ -13,7 +13,7 @@ export default function FabricDesigner() {
     onAddText,
     selectedColor,
     setSelectedColor
-  } = useContext(CanvasContext)
+  } = useCanvas()
 
   return (
     <div className={styles.app}>
