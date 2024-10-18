@@ -1,15 +1,34 @@
+/**
+ * Hook personnalisé pour gérer la mise à jour des dimensions du canevas.
+ * Ce hook permet de redimensionner le canevas et de réajuster les objets avec animation,
+ * tout en mettant à jour la configuration des étiquettes (labelConfig).
+ *
+ * @param {fabric.Canvas} canvas - Instance de Fabric.js du canevas
+ * @param {Object} labelConfig - Configuration actuelle des dimensions de l'étiquette
+ * @param {number} zoomLevel - Niveau de zoom actuel
+ * @param {Function} setZoomLevel - Fonction pour réinitialiser le niveau de zoom
+ * @param {Function} setLabelConfig - Fonction pour mettre à jour la configuration des étiquettes
+ */
+
 import { useCallback } from 'react'
 import * as fabric from 'fabric'
 
-const mmToPx = (mm) => (mm / 25.4) * 72 // Conversion millimètres en pixels
+// Conversion mm -> pixels
+const mmToPx = (mm) => (mm / 25.4) * 72
 
-const useUpdateCanvasSize = (canvas, labelConfig, zoomLevel, setZoomLevel) => {
+const useUpdateCanvasSize = (canvas, labelConfig, zoomLevel, setZoomLevel, setLabelConfig) => {
   const updateCanvasSize = useCallback(
     (newSize) => {
       if (!canvas) return
 
       const newWidthPx = mmToPx(newSize.labelWidth || labelConfig.labelWidth)
       const newHeightPx = mmToPx(newSize.labelHeight || labelConfig.labelHeight)
+
+      // Mise à jour de la configuration du label
+      setLabelConfig((prevConfig) => ({
+        ...prevConfig,
+        ...newSize
+      }))
 
       // Réinitialiser le niveau de zoom à 1
       setZoomLevel(1)
@@ -87,7 +106,7 @@ const useUpdateCanvasSize = (canvas, labelConfig, zoomLevel, setZoomLevel) => {
         })
       })
     },
-    [canvas, labelConfig, zoomLevel, setZoomLevel]
+    [canvas, labelConfig, zoomLevel, setZoomLevel, setLabelConfig]
   )
 
   return updateCanvasSize

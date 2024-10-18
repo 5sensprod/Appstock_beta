@@ -1,5 +1,9 @@
 import React, { createContext, useEffect, useRef, useState, useContext } from 'react'
 import * as fabric from 'fabric'
+import useCanvasZoom from '../hooks/useCanvasZoom'
+import useUpdateCanvasSize from '../hooks/useUpdateCanvasSize'
+import useCanvasEvents from '../hooks/useCanvasEvents'
+import useSelectedObject from '../hooks/useSelectedObject'
 
 const CanvasContext = createContext()
 
@@ -24,219 +28,40 @@ const CanvasProvider = ({ children }) => {
     spacingHorizontal: 0
   })
 
+  const updateCanvasSize = useUpdateCanvasSize(
+    canvas,
+    labelConfig,
+    zoomLevel,
+    setZoomLevel,
+    setLabelConfig
+  )
+
+  const handleZoomChange = useCanvasZoom(canvas, zoomLevel, setZoomLevel, labelConfig)
+
   const [selectedColor, setSelectedColor] = useState('#000000') // Couleur sélectionnée par l'utilisateur
   const [selectedObject, setSelectedObject] = useState(null) // Objet sélectionné sur le canevas
 
-  // Fonction pour mettre à jour la taille du canevas (gérée en mm dans ConfigForm)
-  const updateCanvasSize = (newSize) => {
-    setLabelConfig((prevConfig) => ({
-      ...prevConfig,
-      ...newSize // Mise à jour des dimensions en millimètres
-    }))
-
-    // Réinitialiser le niveau de zoom à 1
-    setZoomLevel(1)
-
-    if (canvas) {
-      const newWidthPx = mmToPx(newSize.labelWidth || labelConfig.labelWidth)
-      const newHeightPx = mmToPx(newSize.labelHeight || labelConfig.labelHeight)
-
-      // Animer la taille du canevas
-      fabric.util.animate({
-        startValue: canvas.getWidth(),
-        endValue: newWidthPx,
-        duration: 500, // Durée de l'animation en ms
-        onChange: (value) => {
-          canvas.setWidth(value)
-          canvas.renderAll() // Redessiner le canevas à chaque étape de l'animation
-        }
-      })
-
-      fabric.util.animate({
-        startValue: canvas.getHeight(),
-        endValue: newHeightPx,
-        duration: 500, // Durée de l'animation en ms
-        onChange: (value) => {
-          canvas.setHeight(value)
-          canvas.renderAll()
-        }
-      })
-
-      // Remettre à l'échelle les objets avec animation
-      canvas.getObjects().forEach((obj) => {
-        const originalScaleX = obj.scaleX / zoomLevel // Échelle d'origine
-        const originalScaleY = obj.scaleY / zoomLevel
-        const originalLeft = obj.left / zoomLevel
-        const originalTop = obj.top / zoomLevel
-
-        fabric.util.animate({
-          startValue: obj.scaleX,
-          endValue: originalScaleX,
-          duration: 500,
-          onChange: (value) => {
-            obj.scaleX = value
-            obj.setCoords() // Met à jour les coordonnées
-            canvas.renderAll() // Redessiner
-          }
-        })
-
-        fabric.util.animate({
-          startValue: obj.scaleY,
-          endValue: originalScaleY,
-          duration: 500,
-          onChange: (value) => {
-            obj.scaleY = value
-            obj.setCoords()
-            canvas.renderAll()
-          }
-        })
-
-        // Animation de la position (left et top)
-        fabric.util.animate({
-          startValue: obj.left,
-          endValue: originalLeft,
-          duration: 500,
-          onChange: (value) => {
-            obj.left = value
-            obj.setCoords()
-            canvas.renderAll()
-          }
-        })
-
-        fabric.util.animate({
-          startValue: obj.top,
-          endValue: originalTop,
-          duration: 500,
-          onChange: (value) => {
-            obj.top = value
-            obj.setCoords()
-            canvas.renderAll()
-          }
-        })
-      })
-    }
-  }
-
+  // Initialisation du canevas
   useEffect(() => {
     if (!canvas) {
-      // Créer l'instance de Fabric.js uniquement si elle n'a pas été créée
       const fabricCanvas = new fabric.Canvas(canvasRef.current, {
-        width: mmToPx(labelConfig.labelWidth), // Convertir mm en pixels
-        height: mmToPx(labelConfig.labelHeight), // Convertir mm en pixels
-        preserveObjectStacking: true // Préserver l'ordre des objets
+        width: mmToPx(labelConfig.labelWidth),
+        height: mmToPx(labelConfig.labelHeight),
+        preserveObjectStacking: true
       })
       setCanvas(fabricCanvas)
     } else {
-      // Si le canevas existe déjà, ajuster sa taille
       canvas.setWidth(mmToPx(labelConfig.labelWidth))
       canvas.setHeight(mmToPx(labelConfig.labelHeight))
-      canvas.renderAll() // Re-render après la modification de la taille
+      canvas.renderAll()
     }
   }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
 
-  // Restriction du mouvement et du redimensionnement des objets
-  useEffect(() => {
-    if (canvas) {
-      const restrictObjectMovement = (e) => {
-        const obj = e.target
-        obj.setCoords()
-        const boundingRect = obj.getBoundingRect()
+  // Gestion des événements du canevas (sélection, mouvement, redimensionnement)
+  useCanvasEvents(canvas, setSelectedObject, setSelectedColor)
 
-        const canvasWidth = canvas.getWidth()
-        const canvasHeight = canvas.getHeight()
-
-        // Limite gauche
-        if (boundingRect.left < 0) {
-          obj.left -= boundingRect.left
-        }
-
-        // Limite supérieure
-        if (boundingRect.top < 0) {
-          obj.top -= boundingRect.top
-        }
-
-        // Limite droite
-        if (boundingRect.left + boundingRect.width > canvasWidth) {
-          obj.left -= boundingRect.left + boundingRect.width - canvasWidth
-        }
-
-        // Limite inférieure
-        if (boundingRect.top + boundingRect.height > canvasHeight) {
-          obj.top -= boundingRect.top + boundingRect.height - canvasHeight
-        }
-
-        obj.setCoords()
-      }
-
-      canvas.on('object:moving', restrictObjectMovement)
-      canvas.on('object:scaling', restrictObjectMovement)
-    }
-  }, [canvas])
-
-  // Mettre à jour selectedObject en fonction des événements de sélection
-  useEffect(() => {
-    if (canvas) {
-      const updateSelectedObject = () => {
-        const activeObject = canvas.getActiveObject()
-        setSelectedObject(activeObject)
-        if (activeObject && activeObject.fill) {
-          setSelectedColor(activeObject.fill) // Mettre à jour le ColorPicker avec la couleur de l'objet
-        }
-      }
-
-      canvas.on('selection:created', updateSelectedObject)
-      canvas.on('selection:updated', updateSelectedObject)
-      canvas.on('selection:cleared', () => {
-        setSelectedObject(null)
-        setSelectedColor('#000000') // Remettre à la couleur par défaut
-      })
-
-      // Nettoyage des événements
-      return () => {
-        canvas.off('selection:created', updateSelectedObject)
-        canvas.off('selection:updated', updateSelectedObject)
-        canvas.off('selection:cleared')
-      }
-    }
-  }, [canvas])
-
-  // Mettre à jour la couleur de l'objet sélectionné lorsque selectedColor change
-  useEffect(() => {
-    if (selectedObject && 'set' in selectedObject) {
-      selectedObject.set('fill', selectedColor) // Met à jour la couleur de l'objet
-      canvas.renderAll()
-    }
-  }, [selectedColor, selectedObject, canvas])
-
-  // Fonction pour ajuster le zoom
-  const handleZoomChange = (e) => {
-    const newZoom = parseFloat(e.target.value)
-    const scaleFactor = newZoom / zoomLevel // Facteur d'échelle basé sur le zoom
-    setZoomLevel(newZoom)
-
-    if (canvas) {
-      // Ajuster la taille du canevas
-      const newWidth = mmToPx(labelConfig.labelWidth) * newZoom // Convertir les dimensions en mm -> pixels
-      const newHeight = mmToPx(labelConfig.labelHeight) * newZoom // Convertir les dimensions en mm -> pixels
-      canvas.setWidth(newWidth)
-      canvas.setHeight(newHeight)
-
-      // Mettre à l'échelle tous les objets présents sur le canevas
-      canvas.getObjects().forEach((obj) => {
-        // Mise à l'échelle de l'objet
-        obj.scaleX = obj.scaleX * scaleFactor
-        obj.scaleY = obj.scaleY * scaleFactor
-
-        // Ajuster la position
-        obj.left = obj.left * scaleFactor
-        obj.top = obj.top * scaleFactor
-
-        obj.setCoords() // Mettre à jour les coordonnées après redimensionnement
-      })
-
-      canvas.renderAll() // Redessiner le canevas avec les nouvelles dimensions
-    }
-  }
+  // Mise à jour de la couleur de l'objet sélectionné
+  useSelectedObject(canvas, selectedObject, selectedColor)
 
   // Fonction utilitaire pour la mise à l'échelle et le positionnement
   const scaleAndPositionObject = (object, zoomLevel) => {
@@ -258,17 +83,23 @@ const CanvasProvider = ({ children }) => {
         top: centerY - (object.height || 0) / 2 // Centrer verticalement
       })
 
-      canvas.add(object) // Ajouter l'objet au canevas
-      scaleAndPositionObject(object, zoomLevel) // Appliquer le zoom
-      canvas.renderAll() // Redessiner le canevas
+      // Ajouter l'objet au canevas
+      canvas.add(object)
+
+      // Appliquer le zoom
+      scaleAndPositionObject(object, zoomLevel)
+
+      // Sélectionner automatiquement l'objet ajouté
+      canvas.setActiveObject(object)
+
+      // Redessiner le canevas
+      canvas.renderAll()
     }
   }
 
   const onAddCircle = () => {
-    // Get the minimum value between labelWidth and labelHeight
     const minDimension = Math.min(labelConfig.labelWidth, labelConfig.labelHeight)
 
-    // Calculate the circle radius based on the smallest dimension
     const circleRadius = minDimension / 2.5
 
     const circle = new fabric.Circle({
@@ -279,7 +110,7 @@ const CanvasProvider = ({ children }) => {
       strokeUniform: true
     })
 
-    addObjectToCanvas(circle) // Use the refactored function
+    addObjectToCanvas(circle)
   }
 
   const onAddRectangle = () => {
@@ -291,17 +122,17 @@ const CanvasProvider = ({ children }) => {
       fill: 'green'
     })
 
-    addObjectToCanvas(rectangle) // Utiliser la fonction factorisée
+    addObjectToCanvas(rectangle)
   }
 
   const onAddText = () => {
-    const fontSize = labelConfig.labelWidth / 5 // Taille de la police proportionnelle à la largeur de l'étiquette
+    const fontSize = labelConfig.labelWidth / 5
     const text = new fabric.IText('Votre texte ici', {
       fontSize: fontSize,
-      fill: selectedColor // Utilise la couleur sélectionnée
+      fill: selectedColor
     })
 
-    addObjectToCanvas(text) // Utiliser la fonction factorisée
+    addObjectToCanvas(text)
   }
 
   const value = {
@@ -310,13 +141,13 @@ const CanvasProvider = ({ children }) => {
     zoomLevel,
     setZoomLevel,
     updateCanvasSize,
+    handleZoomChange,
     labelConfig,
     setLabelConfig,
     selectedColor,
     setSelectedColor,
     selectedObject,
     setSelectedObject,
-    handleZoomChange,
     onAddCircle,
     onAddRectangle,
     onAddText
