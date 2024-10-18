@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useRef, useState, useContext } from 'react'
+import React, { createContext, useEffect, useRef, useState, useContext, useCallback } from 'react'
 import * as fabric from 'fabric'
 import useCanvasZoom from '../hooks/useCanvasZoom'
 import useUpdateCanvasSize from '../hooks/useUpdateCanvasSize'
@@ -7,10 +7,8 @@ import useSelectedObject from '../hooks/useSelectedObject'
 
 const CanvasContext = createContext()
 
-// Hook personnalisé pour utiliser le contexte facilement
 const useCanvas = () => useContext(CanvasContext)
 
-// Conversion millimètres en pixels
 const mmToPx = (mm) => (mm / 25.4) * 72
 
 const CanvasProvider = ({ children }) => {
@@ -18,27 +16,24 @@ const CanvasProvider = ({ children }) => {
   const [canvas, setCanvas] = useState(null)
   const [zoomLevel, setZoomLevel] = useState(1)
 
-  // Configuration des labels (la source de vérité est en millimètres)
   const [labelConfig, setLabelConfig] = useState({
-    labelWidth: 48.5, // Largeur par défaut en mm
-    labelHeight: 25.5, // Hauteur par défaut en mm
+    labelWidth: 48.5,
+    labelHeight: 25.5,
     offsetTop: 22,
     offsetLeft: 8,
     spacingVertical: 0,
     spacingHorizontal: 0
   })
 
-  const [selectedCell, setSelectedCell] = useState(0) // Cellule sélectionnée par défaut (première cellule)
+  const [selectedCell, setSelectedCell] = useState(0) // Cellule sélectionnée par défaut
   const [cellDesigns, setCellDesigns] = useState({})
-  const [totalCells, setTotalCells] = useState(0)
-  // Utiliser le hook de mise à jour de la taille du canevas
-  const updateCanvasSize = useUpdateCanvasSize(canvas, labelConfig, setLabelConfig, setZoomLevel)
+  const [totalCells, setTotalCells] = useState(0) // Nombre total de cellules
 
-  // Gestion du zoom avec le hook
+  const updateCanvasSize = useUpdateCanvasSize(canvas, labelConfig, setLabelConfig, setZoomLevel)
   const handleZoomChange = useCanvasZoom(canvas, zoomLevel, setZoomLevel)
 
-  const [selectedColor, setSelectedColor] = useState('#000000') // Couleur sélectionnée par l'utilisateur
-  const [selectedObject, setSelectedObject] = useState(null) // Objet sélectionné sur le canevas
+  const [selectedColor, setSelectedColor] = useState('#000000') // Couleur sélectionnée
+  const [selectedObject, setSelectedObject] = useState(null) // Objet sélectionné
 
   // Initialisation du canevas
   useEffect(() => {
@@ -50,31 +45,36 @@ const CanvasProvider = ({ children }) => {
       })
       setCanvas(fabricCanvas)
     } else {
-      // Le canevas reste de taille fixe, seul le zoom impactera l'affichage
       canvas.setWidth(mmToPx(labelConfig.labelWidth))
       canvas.setHeight(mmToPx(labelConfig.labelHeight))
       canvas.renderAll()
     }
   }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
 
-  // Un seul hook pour gérer le changement de cellule et forcer le rendu
-  useEffect(() => {
-    if (canvas) {
-      if (cellDesigns[selectedCell]) {
-        // Charger le design de la cellule sélectionnée
-        canvas.clear()
-        canvas.loadFromJSON(cellDesigns[selectedCell], () => {
-          setTimeout(() => {
-            canvas.renderAll() // Forcer le rendu après un léger délai
-          }, 10) // Ajoutez un délai de 100ms pour attendre le rendu complet
-        })
-      } else {
-        // Si la cellule n'a pas de design, effacer le canevas et le rendre vide
-        canvas.clear()
-        canvas.renderAll() // Forcer le rendu même si la cellule est vide
+  // Fonction pour charger le design de la cellule sélectionnée
+  const loadCellDesign = useCallback(
+    (cellIndex) => {
+      if (canvas) {
+        if (cellDesigns[cellIndex]) {
+          canvas.clear()
+          canvas.loadFromJSON(cellDesigns[cellIndex], () => {
+            setTimeout(() => {
+              canvas.renderAll() // Forcer le rendu après un léger délai
+            }, 10)
+          })
+        } else {
+          canvas.clear()
+          canvas.renderAll() // Forcer le rendu même si la cellule est vide
+        }
       }
-    }
-  }, [selectedCell, cellDesigns, canvas])
+    },
+    [canvas, cellDesigns]
+  )
+
+  // Chargement automatique du design de la première cellule
+  useEffect(() => {
+    loadCellDesign(selectedCell) // Charger le design de la cellule sélectionnée
+  }, [selectedCell, loadCellDesign])
 
   // Sauvegarde du design actuel dans la cellule sélectionnée
   const saveCellDesign = () => {
@@ -88,55 +88,70 @@ const CanvasProvider = ({ children }) => {
   }
 
   // Propager le design actuel à toutes les cellules
-  // Propager le design actuel à toutes les cellules
   const propagateDesignToAllCells = () => {
     if (canvas && cellDesigns[selectedCell]) {
       const currentDesign = JSON.stringify(canvas)
       const newDesigns = {}
-      // Appliquer le design actuel à toutes les cellules
       for (let i = 0; i < totalCells; i++) {
         newDesigns[i] = currentDesign
       }
       setCellDesigns(newDesigns) // Mettre à jour les designs de toutes les cellules
+      canvas.renderAll() // Forcer le rendu
     }
   }
-  // Gestion des événements du canevas (sélection, mouvement, redimensionnement)
-  useCanvasEvents(canvas, setSelectedObject, setSelectedColor)
 
-  // Mise à jour de la couleur de l'objet sélectionné
+  // Mise à jour de l'état des cellules
+  useEffect(() => {
+    const { labelWidth, labelHeight, offsetTop, offsetLeft, spacingVertical, spacingHorizontal } =
+      labelConfig
+
+    const pageWidth = 210 // A4 en mm
+    const pageHeight = 297 // A4 en mm
+
+    const availableWidth = pageWidth - offsetLeft
+    const availableHeight = pageHeight - offsetTop
+
+    // Calcul du nombre d'étiquettes par ligne et colonne
+    const labelsPerRow = Math.floor(
+      (availableWidth + spacingHorizontal) / (labelWidth + spacingHorizontal)
+    )
+    const labelsPerColumn = Math.floor(
+      (availableHeight + spacingVertical) / (labelHeight + spacingVertical)
+    )
+
+    const total = labelsPerRow * labelsPerColumn
+    setTotalCells(total)
+  }, [labelConfig])
+
+  useCanvasEvents(canvas, setSelectedObject, setSelectedColor)
   useSelectedObject(canvas, selectedObject, selectedColor)
 
-  // Ajouter un objet (par exemple, un cercle, un rectangle ou du texte) au canevas
   const addObjectToCanvas = (object) => {
     if (canvas) {
       const centerX = mmToPx(labelConfig.labelWidth / 2) // Centre du canevas (X)
       const centerY = mmToPx(labelConfig.labelHeight / 2) // Centre du canevas (Y)
 
-      // Positionner l'objet au centre du canevas
       object.set({
         left: centerX - (object.width || 0) / 2, // Centrer horizontalement
         top: centerY - (object.height || 0) / 2 // Centrer verticalement
       })
 
-      // Ajouter l'objet au canevas
       canvas.add(object)
-
-      // Sélectionner automatiquement l'objet ajouté
       canvas.setActiveObject(object)
-
-      // Redessiner le canevas
       canvas.renderAll()
+
+      // Sauvegarder le design à chaque ajout d'objet
+      saveCellDesign()
     }
   }
 
   const onAddCircle = () => {
     const minDimension = Math.min(labelConfig.labelWidth, labelConfig.labelHeight)
-
     const circleRadius = minDimension / 2.5
 
     const circle = new fabric.Circle({
       radius: circleRadius,
-      fill: 'blue',
+      fill: selectedColor, // Utiliser la couleur sélectionnée
       stroke: '#aaf',
       strokeWidth: 2,
       strokeUniform: true
@@ -151,7 +166,7 @@ const CanvasProvider = ({ children }) => {
     const rectangle = new fabric.Rect({
       width: rectWidth,
       height: rectHeight,
-      fill: 'green'
+      fill: selectedColor // Utiliser la couleur sélectionnée
     })
 
     addObjectToCanvas(rectangle)
@@ -161,7 +176,7 @@ const CanvasProvider = ({ children }) => {
     const fontSize = labelConfig.labelWidth / 5
     const text = new fabric.IText('Votre texte ici', {
       fontSize: fontSize,
-      fill: selectedColor
+      fill: selectedColor // Utiliser la couleur sélectionnée
     })
 
     addObjectToCanvas(text)
