@@ -1,5 +1,4 @@
 import React from 'react'
-// import styles from './FabricDesigner.module.css'
 
 export default function ZoomControl({ zoomLevel, handleZoomChange }) {
   return (
@@ -14,7 +13,7 @@ export default function ZoomControl({ zoomLevel, handleZoomChange }) {
         max="5"
         step="0.1"
         value={zoomLevel}
-        onChange={handleZoomChange}
+        onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
       />
     </div>
   )

@@ -8,37 +8,37 @@
  * @param {Function} setZoomLevel - Fonction pour mettre à jour le niveau de zoom
  * @param {Object} labelConfig - Configuration actuelle des dimensions du canevas
  */
-
 import { useCallback } from 'react'
 
-const useCanvasZoom = (canvas, zoomLevel, setZoomLevel, labelConfig) => {
-  const mmToPx = (mm) => (mm / 25.4) * 72
+const useCanvasZoom = (canvas, zoomLevel, setZoomLevel) => {
   const handleZoomChange = useCallback(
-    (e) => {
-      const newZoom = parseFloat(e.target.value)
-      const scaleFactor = newZoom / zoomLevel
-      setZoomLevel(newZoom)
-
+    (newZoom) => {
       if (canvas) {
-        // Ajuster la taille du canevas
-        const newWidth = mmToPx(labelConfig.labelWidth) * newZoom
-        const newHeight = mmToPx(labelConfig.labelHeight) * newZoom
+        // Dimensions initiales du canevas pour calculer la taille lors du zoom
+        const initialWidth = canvas.originalWidth || canvas.getWidth() // Stocker la largeur initiale
+        const initialHeight = canvas.originalHeight || canvas.getHeight() // Stocker la hauteur initiale
+
+        // Si c'est la première fois, sauvegarder les dimensions initiales
+        if (!canvas.originalWidth) canvas.originalWidth = initialWidth
+        if (!canvas.originalHeight) canvas.originalHeight = initialHeight
+
+        // Appliquer le zoom aux objets dans le canevas
+        canvas.setZoom(newZoom)
+
+        // Ajuster la taille du canevas HTML en fonction du niveau de zoom
+        const newWidth = initialWidth * newZoom
+        const newHeight = initialHeight * newZoom
         canvas.setWidth(newWidth)
         canvas.setHeight(newHeight)
 
-        // Mettre à l'échelle tous les objets présents sur le canevas
-        canvas.getObjects().forEach((obj) => {
-          obj.scaleX = obj.scaleX * scaleFactor
-          obj.scaleY = obj.scaleY * scaleFactor
-          obj.left = obj.left * scaleFactor
-          obj.top = obj.top * scaleFactor
-          obj.setCoords() // Mettre à jour les coordonnées après redimensionnement
-        })
+        // Mettre à jour le niveau de zoom
+        setZoomLevel(newZoom)
 
-        canvas.renderAll() // Redessiner le canevas avec les nouvelles dimensions
+        // Redessiner le canevas
+        canvas.renderAll()
       }
     },
-    [canvas, zoomLevel, setZoomLevel, labelConfig]
+    [canvas, setZoomLevel]
   )
 
   return handleZoomChange

@@ -10,7 +10,7 @@ const ConfigForm = () => {
 
     // Mise à jour de la taille dans le contexte, en millimètres
     if (id === 'labelWidth' || id === 'labelHeight') {
-      updateCanvasSize({ [id]: newValue })
+      updateCanvasSize({ [id]: newValue }) // Réinitialiser la taille et le zoom
     } else {
       // Pour les autres configurations, mise à jour directement
       setLabelConfig((prevConfig) => ({

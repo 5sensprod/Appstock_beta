@@ -28,15 +28,11 @@ const CanvasProvider = ({ children }) => {
     spacingHorizontal: 0
   })
 
-  const updateCanvasSize = useUpdateCanvasSize(
-    canvas,
-    labelConfig,
-    zoomLevel,
-    setZoomLevel,
-    setLabelConfig
-  )
+  // Utiliser le hook de mise à jour de la taille du canevas
+  const updateCanvasSize = useUpdateCanvasSize(canvas, labelConfig, setLabelConfig, setZoomLevel)
 
-  const handleZoomChange = useCanvasZoom(canvas, zoomLevel, setZoomLevel, labelConfig)
+  // Gestion du zoom avec le hook
+  const handleZoomChange = useCanvasZoom(canvas, zoomLevel, setZoomLevel)
 
   const [selectedColor, setSelectedColor] = useState('#000000') // Couleur sélectionnée par l'utilisateur
   const [selectedObject, setSelectedObject] = useState(null) // Objet sélectionné sur le canevas
@@ -51,6 +47,7 @@ const CanvasProvider = ({ children }) => {
       })
       setCanvas(fabricCanvas)
     } else {
+      // Le canevas reste de taille fixe, seul le zoom impactera l'affichage
       canvas.setWidth(mmToPx(labelConfig.labelWidth))
       canvas.setHeight(mmToPx(labelConfig.labelHeight))
       canvas.renderAll()
@@ -63,15 +60,7 @@ const CanvasProvider = ({ children }) => {
   // Mise à jour de la couleur de l'objet sélectionné
   useSelectedObject(canvas, selectedObject, selectedColor)
 
-  // Fonction utilitaire pour la mise à l'échelle et le positionnement
-  const scaleAndPositionObject = (object, zoomLevel) => {
-    object.scaleX = object.scaleX * zoomLevel
-    object.scaleY = object.scaleY * zoomLevel
-    object.left = object.left * zoomLevel
-    object.top = object.top * zoomLevel
-    object.setCoords() // Met à jour les coordonnées après redimensionnement
-  }
-
+  // Ajouter un objet (par exemple, un cercle, un rectangle ou du texte) au canevas
   const addObjectToCanvas = (object) => {
     if (canvas) {
       const centerX = mmToPx(labelConfig.labelWidth / 2) // Centre du canevas (X)
@@ -85,9 +74,6 @@ const CanvasProvider = ({ children }) => {
 
       // Ajouter l'objet au canevas
       canvas.add(object)
-
-      // Appliquer le zoom
-      scaleAndPositionObject(object, zoomLevel)
 
       // Sélectionner automatiquement l'objet ajouté
       canvas.setActiveObject(object)

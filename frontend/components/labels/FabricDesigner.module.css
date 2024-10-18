@@ -27,10 +27,12 @@
   justify-content: center;
   align-items: center;
   margin-top: 20px;
+  overflow: hidden; /* Assurez-vous que le canevas ne dépasse pas */
 }
 
 .sampleCanvas {
   border: 1px solid black;
+  /* Retirez les dimensions fixes */
 }
 
 /* Si tu veux appliquer des styles globaux, utilise des classes dans le style global */

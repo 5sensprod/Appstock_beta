@@ -1,112 +1,44 @@
-/**
- * Hook personnalisé pour gérer la mise à jour des dimensions du canevas.
- * Ce hook permet de redimensionner le canevas et de réajuster les objets avec animation,
- * tout en mettant à jour la configuration des étiquettes (labelConfig).
- *
- * @param {fabric.Canvas} canvas - Instance de Fabric.js du canevas
- * @param {Object} labelConfig - Configuration actuelle des dimensions de l'étiquette
- * @param {number} zoomLevel - Niveau de zoom actuel
- * @param {Function} setZoomLevel - Fonction pour réinitialiser le niveau de zoom
- * @param {Function} setLabelConfig - Fonction pour mettre à jour la configuration des étiquettes
- */
-
 import { useCallback } from 'react'
-import * as fabric from 'fabric'
 
 // Conversion mm -> pixels
 const mmToPx = (mm) => (mm / 25.4) * 72
 
-const useUpdateCanvasSize = (canvas, labelConfig, zoomLevel, setZoomLevel, setLabelConfig) => {
+const useUpdateCanvasSize = (canvas, labelConfig, setLabelConfig, setZoomLevel) => {
+  // Assurez-vous de passer setZoomLevel ici
   const updateCanvasSize = useCallback(
     (newSize) => {
-      if (!canvas) return
+      if (canvas) {
+        const newWidthPx = mmToPx(newSize.labelWidth || labelConfig.labelWidth)
+        const newHeightPx = mmToPx(newSize.labelHeight || labelConfig.labelHeight)
 
-      const newWidthPx = mmToPx(newSize.labelWidth || labelConfig.labelWidth)
-      const newHeightPx = mmToPx(newSize.labelHeight || labelConfig.labelHeight)
+        // Mettre à jour la configuration du label
+        setLabelConfig((prevConfig) => ({
+          ...prevConfig,
+          ...newSize
+        }))
 
-      // Mise à jour de la configuration du label
-      setLabelConfig((prevConfig) => ({
-        ...prevConfig,
-        ...newSize
-      }))
+        // Réinitialiser le niveau de zoom à 1
+        console.log('setZoomLevel is being called with 1') // Log pour vérifier
+        canvas.setZoom(1)
+        setZoomLevel(1) // Assurez-vous que setZoomLevel est passé correctement
 
-      // Réinitialiser le niveau de zoom à 1
-      setZoomLevel(1)
+        // Réinitialiser la taille du canevas
+        canvas.setWidth(newWidthPx)
+        canvas.setHeight(newHeightPx)
 
-      // Animer la taille du canevas
-      fabric.util.animate({
-        startValue: canvas.getWidth(),
-        endValue: newWidthPx,
-        duration: 500,
-        onChange: (value) => {
-          canvas.setWidth(value)
-          canvas.renderAll()
-        }
-      })
-
-      fabric.util.animate({
-        startValue: canvas.getHeight(),
-        endValue: newHeightPx,
-        duration: 500,
-        onChange: (value) => {
-          canvas.setHeight(value)
-          canvas.renderAll()
-        }
-      })
-
-      // Remettre à l'échelle les objets avec animation
-      canvas.getObjects().forEach((obj) => {
-        const originalScaleX = obj.scaleX / zoomLevel
-        const originalScaleY = obj.scaleY / zoomLevel
-        const originalLeft = obj.left / zoomLevel
-        const originalTop = obj.top / zoomLevel
-
-        fabric.util.animate({
-          startValue: obj.scaleX,
-          endValue: originalScaleX,
-          duration: 500,
-          onChange: (value) => {
-            obj.scaleX = value
-            obj.setCoords()
-            canvas.renderAll()
-          }
+        // Remettre les objets à leur position et échelle d'origine
+        canvas.getObjects().forEach((obj) => {
+          obj.scaleX = obj.originalScaleX || obj.scaleX
+          obj.scaleY = obj.originalScaleY || obj.scaleY
+          obj.left = obj.originalLeft || obj.left
+          obj.top = obj.originalTop || obj.top
+          obj.setCoords() // Mettre à jour les coordonnées
         })
 
-        fabric.util.animate({
-          startValue: obj.scaleY,
-          endValue: originalScaleY,
-          duration: 500,
-          onChange: (value) => {
-            obj.scaleY = value
-            obj.setCoords()
-            canvas.renderAll()
-          }
-        })
-
-        fabric.util.animate({
-          startValue: obj.left,
-          endValue: originalLeft,
-          duration: 500,
-          onChange: (value) => {
-            obj.left = value
-            obj.setCoords()
-            canvas.renderAll()
-          }
-        })
-
-        fabric.util.animate({
-          startValue: obj.top,
-          endValue: originalTop,
-          duration: 500,
-          onChange: (value) => {
-            obj.top = value
-            obj.setCoords()
-            canvas.renderAll()
-          }
-        })
-      })
+        canvas.renderAll() // Redessiner le canevas
+      }
     },
-    [canvas, labelConfig, zoomLevel, setZoomLevel, setLabelConfig]
+    [canvas, labelConfig, setLabelConfig, setZoomLevel] // setZoomLevel ajouté comme dépendance
   )
 
   return updateCanvasSize
