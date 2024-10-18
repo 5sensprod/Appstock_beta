@@ -1,14 +1,3 @@
-/**
- * Hook personnalisé pour gérer les événements du canevas.
- * Ce hook gère les événements de sélection, de mouvement et de redimensionnement
- * des objets sur le canevas. Il met à jour l'objet sélectionné et sa couleur,
- * tout en restreignant le mouvement et le redimensionnement des objets aux limites du canevas.
- *
- * @param {fabric.Canvas} canvas - Instance de Fabric.js du canevas
- * @param {Function} setSelectedObject - Fonction pour définir l'objet sélectionné
- * @param {Function} setSelectedColor - Fonction pour définir la couleur sélectionnée
- */
-
 import { useEffect } from 'react'
 
 const useCanvasEvents = (canvas, setSelectedObject, setSelectedColor) => {
@@ -26,21 +15,34 @@ const useCanvasEvents = (canvas, setSelectedObject, setSelectedColor) => {
     const restrictObjectMovement = (e) => {
       const obj = e.target
       obj.setCoords()
+
+      const zoom = canvas.getZoom() // Récupérer le niveau de zoom actuel
       const boundingRect = obj.getBoundingRect()
-      const canvasWidth = canvas.getWidth()
-      const canvasHeight = canvas.getHeight()
 
-      if (boundingRect.left < 0) obj.left -= boundingRect.left
-      if (boundingRect.top < 0) obj.top -= boundingRect.top
-      if (boundingRect.left + boundingRect.width > canvasWidth)
+      // Ajuster les dimensions du canevas en fonction du zoom
+      const canvasWidth = canvas.getWidth() / zoom
+      const canvasHeight = canvas.getHeight() / zoom
+
+      // Limiter le mouvement sur l'axe X
+      if (boundingRect.left < 0) {
+        obj.left -= boundingRect.left
+      }
+      if (boundingRect.left + boundingRect.width > canvasWidth) {
         obj.left -= boundingRect.left + boundingRect.width - canvasWidth
-      if (boundingRect.top + boundingRect.height > canvasHeight)
-        obj.top -= boundingRect.top + boundingRect.height - canvasHeight
+      }
 
-      obj.setCoords()
+      // Limiter le mouvement sur l'axe Y
+      if (boundingRect.top < 0) {
+        obj.top -= boundingRect.top
+      }
+      if (boundingRect.top + boundingRect.height > canvasHeight) {
+        obj.top -= boundingRect.top + boundingRect.height - canvasHeight
+      }
+
+      obj.setCoords() // Recalculer les coordonnées après modification
     }
 
-    // Écouter les événements de sélection et mouvement
+    // Écouter les événements de sélection et de mouvement
     canvas.on('selection:created', updateSelectedObject)
     canvas.on('selection:updated', updateSelectedObject)
     canvas.on('selection:cleared', () => {
