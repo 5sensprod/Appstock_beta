@@ -2,7 +2,7 @@ import React, { useEffect, useCallback } from 'react'
 import { useCanvas } from '../../context/CanvasContext' // Import du contexte
 
 const LayoutGrid = () => {
-  const { labelConfig, selectedCell, setSelectedCell, saveCellDesign } = useCanvas() // Récupère les états nécessaires du contexte
+  const { labelConfig, selectedCell, setSelectedCell, saveCellDesign, setTotalCells } = useCanvas() // Ajout de setTotalCells
 
   const updateGrid = useCallback(() => {
     const { labelWidth, labelHeight, offsetTop, offsetLeft, spacingVertical, spacingHorizontal } =
@@ -22,6 +22,12 @@ const LayoutGrid = () => {
       (availableHeight + spacingVertical) / (labelHeight + spacingVertical)
     )
 
+    // Calcul du nombre total de cellules
+    const totalCells = labelsPerRow * labelsPerColumn
+
+    // Transmettre le nombre total de cellules au contexte
+    setTotalCells(totalCells)
+
     const gridContainer = document.getElementById('gridContainer')
     if (gridContainer) {
       gridContainer.innerHTML = ''
@@ -30,7 +36,9 @@ const LayoutGrid = () => {
         for (let col = 0; col < labelsPerRow; col++) {
           const labelIndex = row * labelsPerRow + col // Calcul de l'index de la cellule
           const label = document.createElement('div')
-          label.className = `absolute border ${selectedCell === labelIndex ? 'border-blue-500' : 'border-gray-300'} bg-gray-400 cursor-pointer`
+          label.className = `absolute border ${
+            selectedCell === labelIndex ? 'border-blue-500' : 'border-gray-300'
+          } bg-gray-400 cursor-pointer`
           label.style.width = `${(labelWidth / pageWidth) * 100}%`
           label.style.height = `${(labelHeight / pageHeight) * 100}%`
           label.style.left = `${((offsetLeft + col * (labelWidth + spacingHorizontal)) / pageWidth) * 100}%`
@@ -45,7 +53,7 @@ const LayoutGrid = () => {
         }
       }
     }
-  }, [labelConfig, selectedCell, setSelectedCell, saveCellDesign])
+  }, [labelConfig, selectedCell, setSelectedCell, saveCellDesign, setTotalCells])
 
   useEffect(() => {
     updateGrid()

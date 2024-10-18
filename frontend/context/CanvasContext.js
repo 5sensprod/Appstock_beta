@@ -30,7 +30,7 @@ const CanvasProvider = ({ children }) => {
 
   const [selectedCell, setSelectedCell] = useState(0) // Cellule sélectionnée par défaut (première cellule)
   const [cellDesigns, setCellDesigns] = useState({})
-
+  const [totalCells, setTotalCells] = useState(0)
   // Utiliser le hook de mise à jour de la taille du canevas
   const updateCanvasSize = useUpdateCanvasSize(canvas, labelConfig, setLabelConfig, setZoomLevel)
 
@@ -87,6 +87,19 @@ const CanvasProvider = ({ children }) => {
     }
   }
 
+  // Propager le design actuel à toutes les cellules
+  // Propager le design actuel à toutes les cellules
+  const propagateDesignToAllCells = () => {
+    if (canvas && cellDesigns[selectedCell]) {
+      const currentDesign = JSON.stringify(canvas)
+      const newDesigns = {}
+      // Appliquer le design actuel à toutes les cellules
+      for (let i = 0; i < totalCells; i++) {
+        newDesigns[i] = currentDesign
+      }
+      setCellDesigns(newDesigns) // Mettre à jour les designs de toutes les cellules
+    }
+  }
   // Gestion des événements du canevas (sélection, mouvement, redimensionnement)
   useCanvasEvents(canvas, setSelectedObject, setSelectedColor)
 
@@ -167,9 +180,11 @@ const CanvasProvider = ({ children }) => {
     setSelectedColor,
     selectedObject,
     setSelectedObject,
-    selectedCell, // Cellule sélectionnée
-    setSelectedCell, // Fonction pour sélectionner une cellule
-    saveCellDesign, // Fonction pour sauvegarder le design de la cellule
+    selectedCell,
+    setSelectedCell,
+    saveCellDesign,
+    propagateDesignToAllCells,
+    setTotalCells,
     onAddCircle,
     onAddRectangle,
     onAddText
