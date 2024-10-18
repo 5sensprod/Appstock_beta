@@ -29,6 +29,10 @@ const CanvasProvider = ({ children }) => {
   const [cellDesigns, setCellDesigns] = useState({})
   const [totalCells, setTotalCells] = useState(0) // Nombre total de cellules
 
+  // Nouveaux états pour gérer la propagation
+  const [isPropagationEnabled, setIsPropagationEnabled] = useState(true) // État pour activer/désactiver la propagation
+  const [cellsToPropagate, setCellsToPropagate] = useState(totalCells) // Nombre de cellules à propager
+
   const updateCanvasSize = useUpdateCanvasSize(canvas, labelConfig, setLabelConfig, setZoomLevel)
   const handleZoomChange = useCanvasZoom(canvas, zoomLevel, setZoomLevel)
 
@@ -100,6 +104,22 @@ const CanvasProvider = ({ children }) => {
     }
   }
 
+  const propagateDesignToCells = () => {
+    if (canvas && cellDesigns[selectedCell]) {
+      const currentDesign = JSON.stringify(canvas)
+      const newDesigns = {}
+      // Si la propagation est activée, on l'applique à toutes les cellules
+      const count = isPropagationEnabled ? totalCells : Math.min(cellsToPropagate, totalCells)
+
+      for (let i = 0; i < count; i++) {
+        newDesigns[i] = currentDesign
+      }
+
+      setCellDesigns(newDesigns) // Mettre à jour les designs des cellules
+      canvas.renderAll() // Forcer le rendu
+    }
+  }
+
   // Mise à jour de l'état des cellules
   useEffect(() => {
     const { labelWidth, labelHeight, offsetTop, offsetLeft, spacingVertical, spacingHorizontal } =
@@ -131,17 +151,23 @@ const CanvasProvider = ({ children }) => {
       const centerX = mmToPx(labelConfig.labelWidth / 2) // Centre du canevas (X)
       const centerY = mmToPx(labelConfig.labelHeight / 2) // Centre du canevas (Y)
 
+      // Positionner l'objet au centre
       object.set({
         left: centerX - (object.width || 0) / 2, // Centrer horizontalement
         top: centerY - (object.height || 0) / 2 // Centrer verticalement
       })
 
+      // Ajouter l'objet au canevas
       canvas.add(object)
-      canvas.setActiveObject(object)
-      canvas.renderAll()
 
-      // Sauvegarder le design à chaque ajout d'objet
+      // Sauvegarder le design après l'ajout de l'objet
       saveCellDesign()
+
+      // Sélectionner automatiquement l'objet ajouté
+      canvas.setActiveObject(object) // Mettre cet appel avant le renderAll
+
+      // Redessiner le canevas pour mettre à jour l'affichage
+      canvas.renderAll()
     }
   }
 
@@ -199,7 +225,13 @@ const CanvasProvider = ({ children }) => {
     setSelectedCell,
     saveCellDesign,
     propagateDesignToAllCells,
+    propagateDesignToCells,
+    isPropagationEnabled, // État de propagation
+    setIsPropagationEnabled, // Fonction pour changer l'état de propagation
+    cellsToPropagate, // Nombre de cellules à propager
+    setCellsToPropagate,
     setTotalCells,
+    totalCells,
     onAddCircle,
     onAddRectangle,
     onAddText
