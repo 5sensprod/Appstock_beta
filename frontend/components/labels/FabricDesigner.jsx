@@ -15,8 +15,7 @@ export default function FabricDesigner() {
     onAddRectangle,
     onAddText,
     selectedColor,
-    setSelectedColor,
-    propagateDesignToAllCells
+    setSelectedColor
   } = useCanvas()
 
   return (
@@ -39,12 +38,6 @@ export default function FabricDesigner() {
       {/* Conteneur du canevas */}
       <CanvasControl canvasRef={canvasRef} />
       {/* Bouton pour propager le design à toutes les cellules */}
-      <button
-        onClick={propagateDesignToAllCells}
-        className="mt-4 rounded bg-blue-500 px-4 py-2 text-white"
-      >
-        Appliquer à toutes les cellules
-      </button>
     </div>
   )
 }
