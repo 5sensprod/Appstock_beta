@@ -2,7 +2,7 @@ import React, { useEffect, useCallback } from 'react'
 import { useCanvas } from '../../context/CanvasContext' // Import du contexte
 
 const LayoutGrid = () => {
-  const { labelConfig } = useCanvas() // Récupère labelConfig ici
+  const { labelConfig, selectedCell, setSelectedCell, saveCellDesign } = useCanvas() // Récupère les états nécessaires du contexte
 
   const updateGrid = useCallback(() => {
     const { labelWidth, labelHeight, offsetTop, offsetLeft, spacingVertical, spacingHorizontal } =
@@ -28,17 +28,24 @@ const LayoutGrid = () => {
 
       for (let row = 0; row < labelsPerColumn; row++) {
         for (let col = 0; col < labelsPerRow; col++) {
+          const labelIndex = row * labelsPerRow + col // Calcul de l'index de la cellule
           const label = document.createElement('div')
-          label.className = 'absolute border border-gray-300 bg-gray-400'
+          label.className = `absolute border ${selectedCell === labelIndex ? 'border-blue-500' : 'border-gray-300'} bg-gray-400 cursor-pointer`
           label.style.width = `${(labelWidth / pageWidth) * 100}%`
           label.style.height = `${(labelHeight / pageHeight) * 100}%`
           label.style.left = `${((offsetLeft + col * (labelWidth + spacingHorizontal)) / pageWidth) * 100}%`
           label.style.top = `${((offsetTop + row * (labelHeight + spacingVertical)) / pageHeight) * 100}%`
+
+          label.onclick = () => {
+            saveCellDesign() // Sauvegarde le design actuel avant de changer de cellule
+            setSelectedCell(labelIndex) // Change la cellule sélectionnée
+          }
+
           gridContainer.appendChild(label)
         }
       }
     }
-  }, [labelConfig])
+  }, [labelConfig, selectedCell, setSelectedCell, saveCellDesign])
 
   useEffect(() => {
     updateGrid()

@@ -28,6 +28,9 @@ const CanvasProvider = ({ children }) => {
     spacingHorizontal: 0
   })
 
+  const [selectedCell, setSelectedCell] = useState(0) // Cellule sélectionnée par défaut (première cellule)
+  const [cellDesigns, setCellDesigns] = useState({})
+
   // Utiliser le hook de mise à jour de la taille du canevas
   const updateCanvasSize = useUpdateCanvasSize(canvas, labelConfig, setLabelConfig, setZoomLevel)
 
@@ -53,6 +56,36 @@ const CanvasProvider = ({ children }) => {
       canvas.renderAll()
     }
   }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
+
+  // Un seul hook pour gérer le changement de cellule et forcer le rendu
+  useEffect(() => {
+    if (canvas) {
+      if (cellDesigns[selectedCell]) {
+        // Charger le design de la cellule sélectionnée
+        canvas.clear()
+        canvas.loadFromJSON(cellDesigns[selectedCell], () => {
+          setTimeout(() => {
+            canvas.renderAll() // Forcer le rendu après un léger délai
+          }, 10) // Ajoutez un délai de 100ms pour attendre le rendu complet
+        })
+      } else {
+        // Si la cellule n'a pas de design, effacer le canevas et le rendre vide
+        canvas.clear()
+        canvas.renderAll() // Forcer le rendu même si la cellule est vide
+      }
+    }
+  }, [selectedCell, cellDesigns, canvas])
+
+  // Sauvegarde du design actuel dans la cellule sélectionnée
+  const saveCellDesign = () => {
+    if (canvas) {
+      const currentDesign = JSON.stringify(canvas)
+      setCellDesigns((prevDesigns) => ({
+        ...prevDesigns,
+        [selectedCell]: currentDesign
+      }))
+    }
+  }
 
   // Gestion des événements du canevas (sélection, mouvement, redimensionnement)
   useCanvasEvents(canvas, setSelectedObject, setSelectedColor)
@@ -134,6 +167,9 @@ const CanvasProvider = ({ children }) => {
     setSelectedColor,
     selectedObject,
     setSelectedObject,
+    selectedCell, // Cellule sélectionnée
+    setSelectedCell, // Fonction pour sélectionner une cellule
+    saveCellDesign, // Fonction pour sauvegarder le design de la cellule
     onAddCircle,
     onAddRectangle,
     onAddText
