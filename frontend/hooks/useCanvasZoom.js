@@ -1,13 +1,3 @@
-/**
- * Hook personnalisé pour gérer le zoom du canevas.
- * Ce hook ajuste la taille du canevas et des objets en fonction du niveau de zoom
- * sélectionné par l'utilisateur.
- *
- * @param {fabric.Canvas} canvas - Instance de Fabric.js du canevas
- * @param {number} zoomLevel - Niveau de zoom actuel
- * @param {Function} setZoomLevel - Fonction pour mettre à jour le niveau de zoom
- * @param {Object} labelConfig - Configuration actuelle des dimensions du canevas
- */
 import { useCallback } from 'react'
 
 const useCanvasZoom = (canvas, zoomLevel, setZoomLevel) => {
