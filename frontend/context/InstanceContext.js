@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useCallback } from 'react'
+import React, { createContext, useState, useContext, useCallback, useEffect } from 'react'
 import { useCanvas } from './CanvasContext' // Importer useCanvas
 
 const InstanceContext = createContext()
@@ -46,30 +46,29 @@ const InstanceProvider = ({ children }) => {
 
   const handleCellClick = (labelIndex) => {
     saveDesignForSelectedCell()
-    setSelectedCell(labelIndex)
-    loadCellDesign(labelIndex)
+    setSelectedCell(labelIndex) // Mettre à jour selectedCell
+    // Ne pas appeler immédiatement loadCellDesign ici
   }
+
+  useEffect(() => {
+    if (selectedCell !== null) {
+      loadCellDesign(selectedCell) // Charger le design de la nouvelle cellule une fois qu'elle est bien sélectionnée
+    }
+  }, [selectedCell, loadCellDesign])
 
   // Fonction pour copier le design actuel du canvas
   const copyDesign = () => {
     if (canvas && typeof canvas.toJSON === 'function') {
       const currentDesign = JSON.stringify(canvas.toJSON()) // Copier le design du canvas
       setCopiedDesign(currentDesign)
-      console.log('Design copié :', currentDesign)
-    } else {
-      console.log('Canvas non valide ou toJSON indisponible.')
     }
   }
 
   // Fonction pour coller le design dans les cellules sélectionnées
   const pasteDesign = (selectedCells, isInstance = false) => {
     if (!canvas || !copiedDesign) {
-      console.log('Aucun design à coller ou canvas non disponible.')
       return
     }
-
-    console.log('Cellules sélectionnées avant collage :', selectedCells) // Vérification
-    console.log('Design copié :', copiedDesign)
 
     selectedCells.forEach((cellIndex) => {
       if (isInstance) {
