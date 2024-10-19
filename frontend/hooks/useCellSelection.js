@@ -6,6 +6,7 @@ const useCellSelection = () => {
   const { labelConfig } = useCanvas() // Récupérer la configuration de la grille via CanvasContext
   const {
     selectedCell,
+    selectedCells,
     setTotalCells,
     handleCellClick,
     cellDesigns // Récupérer les designs des cellules du contexte
@@ -46,8 +47,8 @@ const useCellSelection = () => {
 
           // Appliquer un fond gris très clair si la cellule a un design valide
           label.className = `absolute border ${
-            selectedCell === labelIndex
-              ? 'border-blue-500 bg-blue-500' // Cellule sélectionnée en bleu
+            selectedCells.includes(labelIndex)
+              ? 'border-blue-500 bg-blue-500' // Cellules sélectionnées en bleu
               : hasDesign
                 ? 'border-blue-300 bg-blue-200' // Cellule avec contenu en bleu clair
                 : 'border-gray-300 bg-gray-400' // Cellule vide
@@ -58,22 +59,22 @@ const useCellSelection = () => {
           label.style.left = `${((offsetLeft + col * (labelWidth + spacingHorizontal)) / pageWidth) * 100}%`
           label.style.top = `${((offsetTop + row * (labelHeight + spacingVertical)) / pageHeight) * 100}%`
 
-          label.onclick = () => handleCellClick(labelIndex) // Utiliser handleCellClick du contexte
+          // Passer l'événement du clic pour détecter Ctrl/Cmd
+          label.onclick = (event) => handleCellClick(labelIndex, event)
 
           gridContainer.appendChild(label)
         }
       }
     }
-  }, [labelConfig, selectedCell, setTotalCells, handleCellClick, cellDesigns])
+  }, [labelConfig, selectedCells, setTotalCells, handleCellClick, cellDesigns]) // Retirer `selectedCell` des dépendances
 
-  // Mettre à jour la grille chaque fois que les designs ou la cellule sélectionnée changent
   useEffect(() => {
     if (cellDesigns.length > 0) {
       console.log('Cell Designs:', cellDesigns)
     }
-    console.log('Selected Cell:', selectedCell)
+    console.log('Selected Cells:', selectedCells) // Afficher le tableau des cellules sélectionnées
     updateGrid()
-  }, [updateGrid, cellDesigns, selectedCell])
+  }, [updateGrid, cellDesigns, selectedCells])
 
   return { updateGrid, selectedCell }
 }
