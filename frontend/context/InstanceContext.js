@@ -8,10 +8,10 @@ export const useInstance = () => useContext(InstanceContext)
 const InstanceProvider = ({ children }) => {
   const { canvas } = useCanvas() // Utiliser useCanvas pour accéder au canevas
   const [selectedCell, setSelectedCell] = useState(0) // Cellule sélectionnée par défaut
+  const [selectedCells, setSelectedCells] = useState([]) // Gestion des cellules sélectionnées multiples
   const [cellDesigns, setCellDesigns] = useState({})
   const [totalCells, setTotalCells] = useState(0) // Nombre total de cellules
   const [copiedDesign, setCopiedDesign] = useState(null)
-  const [selectedCells, setSelectedCells] = useState([]) // Gestion des cellules sélectionnées
 
   // Sauvegarde automatique lorsque le canevas est modifié
   useEffect(() => {
@@ -50,6 +50,7 @@ const InstanceProvider = ({ children }) => {
   // Fonction pour charger le design de la cellule sélectionnée
   const loadCellDesign = useCallback(
     (cellIndex) => {
+      console.log(`Chargement du design pour la cellule ${cellIndex}`)
       if (canvas) {
         if (cellDesigns[cellIndex]) {
           canvas.clear()
@@ -67,17 +68,33 @@ const InstanceProvider = ({ children }) => {
     [canvas, cellDesigns]
   )
 
-  // Fonction pour gérer le clic sur une cellule
-  const handleCellClick = (labelIndex) => {
-    setSelectedCell(labelIndex) // Mettre à jour la cellule sélectionnée sans sauvegarde directe ici
+  // Fonction pour gérer le clic sur une cellule (avec sélection multiple)
+  const handleCellClick = (labelIndex, event) => {
+    if (event.ctrlKey || event.metaKey) {
+      // Sélection multiple avec Ctrl ou Cmd
+      setSelectedCells((prevSelectedCells) => {
+        if (prevSelectedCells.includes(labelIndex)) {
+          // Si la cellule est déjà sélectionnée, la retirer
+          return prevSelectedCells.filter((index) => index !== labelIndex)
+        } else {
+          // Sinon, l'ajouter à la sélection
+          return [...prevSelectedCells, labelIndex]
+        }
+      })
+    } else {
+      // Sélection unique si Ctrl/Cmd n'est pas enfoncé
+      setSelectedCells([labelIndex])
+      setSelectedCell(labelIndex)
+    }
   }
 
   // Activer la première cellule au montage
   useEffect(() => {
     setSelectedCell(0) // Sélectionner automatiquement la première cellule au chargement
+    setSelectedCells([0]) // Ajouter cette cellule à la sélection multiple
   }, [])
 
-  // Charger le design de la cellule lorsqu'elle est sélectionnée
+  // Charger le design des cellules lorsqu'elles sont sélectionnées
   useEffect(() => {
     if (selectedCell !== null) {
       loadCellDesign(selectedCell) // Charger le design de la nouvelle cellule sélectionnée
@@ -89,6 +106,7 @@ const InstanceProvider = ({ children }) => {
     if (canvas && typeof canvas.toJSON === 'function') {
       const currentDesign = JSON.stringify(canvas.toJSON()) // Copier le design du canvas
       setCopiedDesign(currentDesign)
+      console.log('Design copié:', currentDesign) // Log pour débogage
     }
   }, [canvas])
 
@@ -96,10 +114,13 @@ const InstanceProvider = ({ children }) => {
   const pasteDesign = useCallback(
     (selectedCells, isInstance = false) => {
       if (!canvas || !copiedDesign) {
+        console.log('Erreur: Canvas ou design copié non défini')
         return
       }
 
       selectedCells.forEach((cellIndex) => {
+        console.log(`Collage du design dans la cellule ${cellIndex}`)
+
         if (isInstance) {
           const instanceDesign = JSON.stringify({
             ...JSON.parse(copiedDesign),
@@ -125,8 +146,8 @@ const InstanceProvider = ({ children }) => {
   const value = {
     selectedCell,
     setSelectedCell,
-    handleCellClick,
-    selectedCells,
+    handleCellClick, // Gère la sélection multiple
+    selectedCells, // Tableau des cellules sélectionnées
     setSelectedCells,
     cellDesigns,
     loadCellDesign,
