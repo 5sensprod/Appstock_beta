@@ -8,10 +8,10 @@ export const useInstance = () => useContext(InstanceContext)
 const InstanceProvider = ({ children }) => {
   const { canvas } = useCanvas() // Utiliser useCanvas pour accéder au canevas
   const [selectedCell, setSelectedCell] = useState(0) // Cellule sélectionnée par défaut
-  const [selectedCells, setSelectedCells] = useState([]) // Gestion des cellules sélectionnées
   const [cellDesigns, setCellDesigns] = useState({})
   const [totalCells, setTotalCells] = useState(0) // Nombre total de cellules
   const [copiedDesign, setCopiedDesign] = useState(null)
+  const [selectedCells, setSelectedCells] = useState([]) // Gestion des cellules sélectionnées
 
   // Sauvegarde automatique lorsque le canevas est modifié
   useEffect(() => {
@@ -68,24 +68,10 @@ const InstanceProvider = ({ children }) => {
   )
 
   // Fonction pour gérer le clic sur une cellule
-  const handleCellClick = (labelIndex, event) => {
-    if (event.ctrlKey || event.metaKey) {
-      // Sélection multiple avec Ctrl ou Cmd
-      setSelectedCells((prevSelectedCells) => {
-        if (prevSelectedCells.includes(labelIndex)) {
-          // Si la cellule est déjà sélectionnée, la retirer
-          return prevSelectedCells.filter((index) => index !== labelIndex)
-        } else {
-          // Sinon, l'ajouter à la sélection
-          return [...prevSelectedCells, labelIndex]
-        }
-      })
-    } else {
-      // Sélection unique si Ctrl/Cmd n'est pas enfoncé
-      setSelectedCells([labelIndex])
-      setSelectedCell(labelIndex)
-    }
+  const handleCellClick = (labelIndex) => {
+    setSelectedCell(labelIndex) // Mettre à jour la cellule sélectionnée sans sauvegarde directe ici
   }
+
   // Activer la première cellule au montage
   useEffect(() => {
     setSelectedCell(0) // Sélectionner automatiquement la première cellule au chargement
