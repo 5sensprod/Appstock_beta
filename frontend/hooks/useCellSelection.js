@@ -68,14 +68,12 @@ const useCellSelection = () => {
 
   // Mettre à jour la grille chaque fois que les designs ou la cellule sélectionnée changent
   useEffect(() => {
-    console.log('Cell Designs:', cellDesigns) // Vérifier si `cellDesigns` est bien rempli
-    console.log('Selected Cell:', selectedCell) // Vérifier quelle cellule est actuellement sélectionnée
-    updateGrid() // Recréer la grille à chaque changement
-  }, [updateGrid, cellDesigns, selectedCell])
-
-  useEffect(() => {
+    if (cellDesigns.length > 0) {
+      console.log('Cell Designs:', cellDesigns)
+    }
+    console.log('Selected Cell:', selectedCell)
     updateGrid()
-  }, [updateGrid])
+  }, [updateGrid, cellDesigns, selectedCell])
 
   return { updateGrid, selectedCell }
 }
