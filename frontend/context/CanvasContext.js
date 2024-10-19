@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useRef, useState, useContext, useCallback } from 'react'
+import React, { createContext, useEffect, useRef, useState, useContext } from 'react'
 import * as fabric from 'fabric'
 import useCanvasZoom from '../hooks/useCanvasZoom'
 import useUpdateCanvasSize from '../hooks/useUpdateCanvasSize'
@@ -25,14 +25,6 @@ const CanvasProvider = ({ children }) => {
     spacingHorizontal: 0
   })
 
-  const [selectedCell, setSelectedCell] = useState(0) // Cellule sélectionnée par défaut
-  const [cellDesigns, setCellDesigns] = useState({})
-  const [totalCells, setTotalCells] = useState(0) // Nombre total de cellules
-
-  // Nouveaux états pour gérer la propagation
-  const [isPropagationEnabled, setIsPropagationEnabled] = useState(true) // État pour activer/désactiver la propagation
-  const [cellsToPropagate, setCellsToPropagate] = useState(totalCells) // Nombre de cellules à propager
-
   const updateCanvasSize = useUpdateCanvasSize(canvas, labelConfig, setLabelConfig, setZoomLevel)
   const handleZoomChange = useCanvasZoom(canvas, zoomLevel, setZoomLevel)
 
@@ -48,100 +40,13 @@ const CanvasProvider = ({ children }) => {
         preserveObjectStacking: true
       })
       setCanvas(fabricCanvas)
+      console.log('Canvas initialisé :', fabricCanvas) // Vérification du canvas
     } else {
       canvas.setWidth(mmToPx(labelConfig.labelWidth))
       canvas.setHeight(mmToPx(labelConfig.labelHeight))
       canvas.renderAll()
     }
   }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
-
-  // Fonction pour charger le design de la cellule sélectionnée
-  const loadCellDesign = useCallback(
-    (cellIndex) => {
-      if (canvas) {
-        if (cellDesigns[cellIndex]) {
-          canvas.clear()
-          canvas.loadFromJSON(cellDesigns[cellIndex], () => {
-            setTimeout(() => {
-              canvas.renderAll() // Forcer le rendu après un léger délai
-            }, 10)
-          })
-        } else {
-          canvas.clear()
-          canvas.renderAll() // Forcer le rendu même si la cellule est vide
-        }
-      }
-    },
-    [canvas, cellDesigns]
-  )
-
-  // Chargement automatique du design de la première cellule
-  useEffect(() => {
-    loadCellDesign(selectedCell) // Charger le design de la cellule sélectionnée
-  }, [selectedCell, loadCellDesign])
-
-  // Sauvegarde du design actuel dans la cellule sélectionnée
-  const saveCellDesign = () => {
-    if (canvas) {
-      const currentDesign = JSON.stringify(canvas)
-      setCellDesigns((prevDesigns) => ({
-        ...prevDesigns,
-        [selectedCell]: currentDesign
-      }))
-    }
-  }
-
-  // Propager le design actuel à toutes les cellules
-  const propagateDesignToAllCells = () => {
-    if (canvas && cellDesigns[selectedCell]) {
-      const currentDesign = JSON.stringify(canvas)
-      const newDesigns = {}
-      for (let i = 0; i < totalCells; i++) {
-        newDesigns[i] = currentDesign
-      }
-      setCellDesigns(newDesigns) // Mettre à jour les designs de toutes les cellules
-      canvas.renderAll() // Forcer le rendu
-    }
-  }
-
-  const propagateDesignToCells = () => {
-    if (canvas && cellDesigns[selectedCell]) {
-      const currentDesign = JSON.stringify(canvas)
-      const newDesigns = {}
-      // Si la propagation est activée, on l'applique à toutes les cellules
-      const count = isPropagationEnabled ? totalCells : Math.min(cellsToPropagate, totalCells)
-
-      for (let i = 0; i < count; i++) {
-        newDesigns[i] = currentDesign
-      }
-
-      setCellDesigns(newDesigns) // Mettre à jour les designs des cellules
-      canvas.renderAll() // Forcer le rendu
-    }
-  }
-
-  // Mise à jour de l'état des cellules
-  useEffect(() => {
-    const { labelWidth, labelHeight, offsetTop, offsetLeft, spacingVertical, spacingHorizontal } =
-      labelConfig
-
-    const pageWidth = 210 // A4 en mm
-    const pageHeight = 297 // A4 en mm
-
-    const availableWidth = pageWidth - offsetLeft
-    const availableHeight = pageHeight - offsetTop
-
-    // Calcul du nombre d'étiquettes par ligne et colonne
-    const labelsPerRow = Math.floor(
-      (availableWidth + spacingHorizontal) / (labelWidth + spacingHorizontal)
-    )
-    const labelsPerColumn = Math.floor(
-      (availableHeight + spacingVertical) / (labelHeight + spacingVertical)
-    )
-
-    const total = labelsPerRow * labelsPerColumn
-    setTotalCells(total)
-  }, [labelConfig])
 
   useCanvasEvents(canvas, setSelectedObject, setSelectedColor)
   useSelectedObject(canvas, selectedObject, selectedColor)
@@ -160,11 +65,8 @@ const CanvasProvider = ({ children }) => {
       // Ajouter l'objet au canevas
       canvas.add(object)
 
-      // Sauvegarder le design après l'ajout de l'objet
-      saveCellDesign()
-
-      // Sélectionner automatiquement l'objet ajouté
-      canvas.setActiveObject(object) // Mettre cet appel avant le renderAll
+      // Sélectionner l'objet ajouté
+      canvas.setActiveObject(object) // Rendre l'objet actif pour être sélectionné
 
       // Redessiner le canevas pour mettre à jour l'affichage
       canvas.renderAll()
@@ -221,17 +123,6 @@ const CanvasProvider = ({ children }) => {
     setSelectedColor,
     selectedObject,
     setSelectedObject,
-    selectedCell,
-    setSelectedCell,
-    saveCellDesign,
-    propagateDesignToAllCells,
-    propagateDesignToCells,
-    isPropagationEnabled, // État de propagation
-    setIsPropagationEnabled, // Fonction pour changer l'état de propagation
-    cellsToPropagate, // Nombre de cellules à propager
-    setCellsToPropagate,
-    setTotalCells,
-    totalCells,
     onAddCircle,
     onAddRectangle,
     onAddText
