@@ -5,7 +5,7 @@ import { useCanvas } from '../context/CanvasContext' // Import du contexte pour 
 const useCellSelection = () => {
   const { labelConfig } = useCanvas() // Récupérer la configuration de la grille via CanvasContext
   const {
-    selectedCells,
+    selectedCell,
     setTotalCells,
     handleCellClick,
     cellDesigns // Récupérer les designs des cellules du contexte
@@ -43,12 +43,9 @@ const useCellSelection = () => {
           // Vérifier si la cellule contient un design valide (non vide)
           const hasDesign = cellDesigns[labelIndex] && cellDesigns[labelIndex].trim() !== ''
 
-          // Vérifier si la cellule est sélectionnée dans le tableau des cellules sélectionnées
-          const isSelected = selectedCells.includes(labelIndex)
-
           // Appliquer un fond gris très clair si la cellule a un design valide
           label.className = `absolute border ${
-            isSelected
+            selectedCell === labelIndex
               ? 'border-blue-500 bg-gray-100' // Cellule sélectionnée
               : hasDesign
                 ? 'border-gray-300 bg-gray-200' // Cellule avec design
@@ -60,22 +57,19 @@ const useCellSelection = () => {
           label.style.left = `${((offsetLeft + col * (labelWidth + spacingHorizontal)) / pageWidth) * 100}%`
           label.style.top = `${((offsetTop + row * (labelHeight + spacingVertical)) / pageHeight) * 100}%`
 
-          label.onclick = (e) => {
-            const isMultiSelect = e.ctrlKey || e.shiftKey // Vérifier si `Ctrl` ou `Shift` est enfoncé
-            handleCellClick(labelIndex, isMultiSelect) // Passer l'information de multi-sélection
-          }
+          label.onclick = () => handleCellClick(labelIndex) // Utiliser handleCellClick du contexte
 
           gridContainer.appendChild(label)
         }
       }
     }
-  }, [labelConfig, selectedCells, setTotalCells, handleCellClick, cellDesigns])
+  }, [labelConfig, selectedCell, setTotalCells, handleCellClick, cellDesigns])
 
   useEffect(() => {
     updateGrid()
   }, [updateGrid])
 
-  return { updateGrid, selectedCells }
+  return { updateGrid, selectedCell }
 }
 
 export default useCellSelection
