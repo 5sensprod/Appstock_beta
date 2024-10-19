@@ -4,20 +4,15 @@ import { useCanvas } from '../context/CanvasContext' // Import du contexte pour 
 
 const useCellSelection = () => {
   const { labelConfig } = useCanvas() // Récupérer la configuration de la grille via CanvasContext
-  const {
-    selectedCells, // Utiliser selectedCells pour gérer la sélection multiple
-    setTotalCells,
-    handleCellClick,
-    cellDesigns // Récupérer les designs des cellules du contexte
-  } = useInstance() // Gérer les cellules via InstanceContext
+  const { selectedCells, setTotalCells, handleCellClick, cellDesigns } = useInstance()
 
   // Fonction de mise à jour de la grille
   const updateGrid = useCallback(() => {
     const { labelWidth, labelHeight, offsetTop, offsetLeft, spacingVertical, spacingHorizontal } =
       labelConfig
 
-    const pageWidth = 210 // A4 en mm
-    const pageHeight = 297 // A4 en mm
+    const pageWidth = 210
+    const pageHeight = 297
 
     const availableWidth = pageWidth - offsetLeft
     const availableHeight = pageHeight - offsetTop
@@ -74,13 +69,13 @@ const useCellSelection = () => {
     }
     console.log('Selected Cells:', selectedCells) // Afficher le tableau des cellules sélectionnées
     updateGrid() // Recréer la grille à chaque changement
-  }, [updateGrid, cellDesigns, selectedCells]) // Utiliser selectedCells comme dépendance
+  }, [updateGrid, cellDesigns, selectedCells])
 
   useEffect(() => {
     updateGrid()
   }, [updateGrid])
 
-  return { updateGrid, selectedCells } // Retourner selectedCells au lieu de selectedCell
+  return { updateGrid, selectedCells }
 }
 
 export default useCellSelection

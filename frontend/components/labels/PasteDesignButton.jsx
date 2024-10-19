@@ -3,12 +3,13 @@ import React from 'react'
 import { useInstance } from '../../context/InstanceContext'
 
 const PasteDesignButton = () => {
-  const { pasteDesign, selectedCell } = useInstance() // Extraire pasteDesign et selectedCell
+  const { pasteDesign, selectedCells, selectedCell } = useInstance() // Extraire selectedCells et selectedCell
 
   const handlePasteClick = () => {
-    if (selectedCell !== null) {
-      // Coller le design dans la cellule sélectionnée
-      pasteDesign([selectedCell]) // On passe la cellule sélectionnée comme tableau
+    const cellsToPaste = selectedCells.length > 0 ? selectedCells : [selectedCell] // Utiliser la sélection multiple ou unique
+
+    if (cellsToPaste.length > 0) {
+      pasteDesign(cellsToPaste) // Coller le design dans toutes les cellules sélectionnées
     } else {
       console.log('Aucune cellule sélectionnée pour coller le design.')
     }
