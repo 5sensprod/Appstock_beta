@@ -11,7 +11,7 @@ const InstanceProvider = ({ children }) => {
   const [cellDesigns, setCellDesigns] = useState({})
   const [totalCells, setTotalCells] = useState(0) // Nombre total de cellules
   const [copiedDesign, setCopiedDesign] = useState(null)
-  const [selectedCells, setSelectedCells] = useState([]) // Gestion des cellules sélectionnées
+  const [selectedCells, setSelectedCells] = useState([0]) // Gestion des cellules sélectionnées (la première est sélectionnée par défaut)
 
   // Sauvegarde du design actuel dans la cellule sélectionnée
   const saveDesignForSelectedCell = () => {
@@ -52,10 +52,26 @@ const InstanceProvider = ({ children }) => {
     [canvas, cellDesigns]
   )
 
-  const handleCellClick = (labelIndex) => {
+  // Gestion de la sélection multiple
+  const handleCellClick = (labelIndex, isMultiSelect = false) => {
     saveDesignForSelectedCell()
-    setSelectedCell(labelIndex) // Mettre à jour selectedCell
-    // Ne pas appeler immédiatement loadCellDesign ici
+
+    if (isMultiSelect) {
+      // Ajouter ou retirer la cellule sélectionnée
+      setSelectedCells((prevSelectedCells) => {
+        if (prevSelectedCells.includes(labelIndex)) {
+          // Si la cellule est déjà sélectionnée, la désélectionner
+          return prevSelectedCells.filter((cell) => cell !== labelIndex)
+        } else {
+          // Sinon, ajouter la cellule à la sélection multiple
+          return [...prevSelectedCells, labelIndex]
+        }
+      })
+    } else {
+      // Sélection simple (une seule cellule sélectionnée)
+      setSelectedCells([labelIndex])
+      setSelectedCell(labelIndex) // Mettre à jour selectedCell pour une seule sélection
+    }
   }
 
   useEffect(() => {
@@ -73,30 +89,21 @@ const InstanceProvider = ({ children }) => {
   }
 
   // Fonction pour coller le design dans les cellules sélectionnées
-  const pasteDesign = (selectedCells, isInstance = false) => {
-    if (!canvas || !copiedDesign) {
+  const pasteDesign = (isInstance = false) => {
+    if (!canvas || !copiedDesign || selectedCells.length === 0) {
       return
     }
 
     selectedCells.forEach((cellIndex) => {
-      if (isInstance) {
-        const instanceDesign = JSON.stringify({
-          ...JSON.parse(copiedDesign),
-          parentCell: selectedCell // Assurer que cette logique est correcte
-        })
-        setCellDesigns((prevDesigns) => ({
-          ...prevDesigns,
-          [cellIndex]: instanceDesign
-        }))
-      } else {
-        setCellDesigns((prevDesigns) => ({
-          ...prevDesigns,
-          [cellIndex]: copiedDesign
-        }))
-      }
-    })
+      // Appliquer le design dans chaque cellule sélectionnée
+      setCellDesigns((prevDesigns) => ({
+        ...prevDesigns,
+        [cellIndex]: copiedDesign
+      }))
 
-    loadCellDesign(selectedCells[0]) // Charger le design dans la première cellule sélectionnée
+      // Charger le design dans la cellule après avoir mis à jour le design
+      loadCellDesign(cellIndex)
+    })
   }
 
   const value = {
