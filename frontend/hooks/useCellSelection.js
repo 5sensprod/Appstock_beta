@@ -32,6 +32,7 @@ const useCellSelection = () => {
     setTotalCells(totalCells)
 
     const gridContainer = document.getElementById('gridContainer')
+    console.log('Grid container trouvé')
     if (gridContainer) {
       gridContainer.innerHTML = '' // Réinitialiser la grille
 
@@ -41,14 +42,14 @@ const useCellSelection = () => {
           const label = document.createElement('div')
 
           // Vérifier si la cellule contient un design valide (non vide)
-          const hasDesign = cellDesigns[labelIndex] && cellDesigns[labelIndex].trim() !== ''
+          const hasDesign = Boolean(cellDesigns[labelIndex])
 
           // Appliquer un fond gris très clair si la cellule a un design valide
           label.className = `absolute border ${
             selectedCell === labelIndex
-              ? 'border-blue-500 bg-gray-100' // Cellule sélectionnée
+              ? 'border-blue-500 bg-blue-500' // Cellule sélectionnée en bleu
               : hasDesign
-                ? 'border-gray-300 bg-gray-200' // Cellule avec design
+                ? 'border-blue-300 bg-blue-200' // Cellule avec contenu en bleu clair
                 : 'border-gray-300 bg-gray-400' // Cellule vide
           } cursor-pointer`
 
@@ -64,6 +65,13 @@ const useCellSelection = () => {
       }
     }
   }, [labelConfig, selectedCell, setTotalCells, handleCellClick, cellDesigns])
+
+  // Mettre à jour la grille chaque fois que les designs ou la cellule sélectionnée changent
+  useEffect(() => {
+    console.log('Cell Designs:', cellDesigns) // Vérifier si `cellDesigns` est bien rempli
+    console.log('Selected Cell:', selectedCell) // Vérifier quelle cellule est actuellement sélectionnée
+    updateGrid() // Recréer la grille à chaque changement
+  }, [updateGrid, cellDesigns, selectedCell])
 
   useEffect(() => {
     updateGrid()
