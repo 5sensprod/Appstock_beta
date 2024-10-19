@@ -15,12 +15,20 @@ const InstanceProvider = ({ children }) => {
 
   // Sauvegarde du design actuel dans la cellule sélectionnée
   const saveDesignForSelectedCell = () => {
-    if (canvas) {
+    if (canvas && canvas.getObjects().length > 0) {
+      // Vérifier si le canevas contient des objets
       const currentDesign = JSON.stringify(canvas)
       setCellDesigns((prevDesigns) => ({
         ...prevDesigns,
         [selectedCell]: currentDesign
       }))
+    } else {
+      // Si la cellule est vide, la retirer de cellDesigns
+      setCellDesigns((prevDesigns) => {
+        const newDesigns = { ...prevDesigns }
+        delete newDesigns[selectedCell] // Supprimer l'entrée si elle est vide
+        return newDesigns
+      })
     }
   }
 

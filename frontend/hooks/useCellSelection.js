@@ -7,7 +7,8 @@ const useCellSelection = () => {
   const {
     selectedCell,
     setTotalCells,
-    handleCellClick // Extraire handleCellClick du contexte
+    handleCellClick,
+    cellDesigns // Récupérer les designs des cellules du contexte
   } = useInstance() // Gérer les cellules via InstanceContext
 
   const updateGrid = useCallback(() => {
@@ -39,10 +40,16 @@ const useCellSelection = () => {
           const labelIndex = row * labelsPerRow + col
           const label = document.createElement('div')
 
+          // Vérifier si la cellule contient un design valide (non vide)
+          const hasDesign = cellDesigns[labelIndex] && cellDesigns[labelIndex].trim() !== ''
+
+          // Appliquer un fond gris très clair si la cellule a un design valide
           label.className = `absolute border ${
             selectedCell === labelIndex
-              ? 'border-blue-500 bg-gray-100'
-              : 'border-gray-300 bg-gray-400'
+              ? 'border-blue-500 bg-gray-100' // Cellule sélectionnée
+              : hasDesign
+                ? 'border-gray-300 bg-gray-200' // Cellule avec design
+                : 'border-gray-300 bg-gray-400' // Cellule vide
           } cursor-pointer`
 
           label.style.width = `${(labelWidth / pageWidth) * 100}%`
@@ -56,7 +63,7 @@ const useCellSelection = () => {
         }
       }
     }
-  }, [labelConfig, selectedCell, setTotalCells, handleCellClick])
+  }, [labelConfig, selectedCell, setTotalCells, handleCellClick, cellDesigns])
 
   useEffect(() => {
     updateGrid()
