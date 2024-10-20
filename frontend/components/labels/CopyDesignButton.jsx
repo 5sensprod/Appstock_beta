@@ -9,7 +9,7 @@ const CopyDesignButton = () => {
   return (
     <button
       onClick={copyDesign}
-      className="rounded bg-blue-500 p-2 text-white shadow hover:bg-blue-600"
+      className="rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
       title="Copier le design"
     >
       <FontAwesomeIcon icon={faCopy} />

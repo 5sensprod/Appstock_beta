@@ -1,5 +1,7 @@
 // frontend/components/labels/PasteDesignButton.jsx
 import React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPaste } from '@fortawesome/free-solid-svg-icons' // Importer l'icône faPaste
 import { useInstance } from '../../context/InstanceContext'
 
 const PasteDesignButton = () => {
@@ -17,10 +19,11 @@ const PasteDesignButton = () => {
 
   return (
     <button
-      className="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+      className="rounded bg-green-500 p-2 text-white hover:bg-green-600"
       onClick={handlePasteClick}
+      title="Coller le design"
     >
-      Coller le design
+      <FontAwesomeIcon icon={faPaste} /> {/* Utilisation de l'icône faPaste */}
     </button>
   )
 }
