@@ -17,7 +17,7 @@ const InstanceProvider = ({ children }) => {
   // Logique unifiée pour la sauvegarde du canevas
   useEffect(() => {
     if (canvas) {
-      const saveChanges = () => {
+      const saveChangesOnDeselection = () => {
         const currentDesign = JSON.stringify(canvas)
 
         // Sauvegarder le design pour chaque cellule sélectionnée
@@ -37,14 +37,12 @@ const InstanceProvider = ({ children }) => {
         })
       }
 
-      // Attacher les événements
-      canvas.on('object:modified', saveChanges)
-      canvas.on('object:added', saveChanges)
+      // Attacher l'événement pour détecter la désélection d'un objet
+      canvas.on('selection:cleared', saveChangesOnDeselection)
 
       // Nettoyer les événements lors du démontage
       return () => {
-        canvas.off('object:modified', saveChanges)
-        canvas.off('object:added', saveChanges)
+        canvas.off('selection:cleared', saveChangesOnDeselection)
       }
     }
   }, [canvas, selectedCells, cellDesigns])
@@ -71,6 +69,13 @@ const InstanceProvider = ({ children }) => {
 
   // Fonction pour gérer le clic sur une cellule (avec sélection multiple)
   const handleCellClick = (labelIndex, event) => {
+    // Vérifier si le canevas existe
+    if (canvas) {
+      // Désélectionner l'objet actif sur le canevas
+      canvas.discardActiveObject()
+      canvas.renderAll() // Redessiner le canevas pour appliquer la désélection
+    }
+
     if (event.ctrlKey || event.metaKey) {
       // Sélection multiple avec Ctrl ou Cmd
       setSelectedCells((prevSelectedCells) => {
