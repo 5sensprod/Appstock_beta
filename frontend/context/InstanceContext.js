@@ -19,13 +19,16 @@ const InstanceProvider = ({ children }) => {
       const saveChanges = () => {
         const currentDesign = JSON.stringify(canvas)
 
-        console.log('Sauvegarde du design pour la cellule', selectedCell)
+        console.log('Tentative de sauvegarde du design pour la cellule:', selectedCell)
+        console.log('Design actuel du canvas:', currentDesign)
 
         if (canvas.getObjects().length > 0 && cellDesigns[selectedCell] !== currentDesign) {
           setCellDesigns((prevDesigns) => ({
             ...prevDesigns,
             [selectedCell]: currentDesign
           }))
+          console.log('Design mis à jour pour la cellule:', selectedCell)
+          console.log('Nouveau cellDesigns:', { ...cellDesigns, [selectedCell]: currentDesign })
         } else if (canvas.getObjects().length === 0 && cellDesigns[selectedCell]) {
           console.log('Suppression du design pour la cellule', selectedCell)
 
