@@ -1,88 +1,101 @@
 import { jsPDF } from 'jspdf'
 import * as fabric from 'fabric'
 
-// Conversion mm en pixels basée sur le même calcul que dans votre CanvasContext
+// Conversion mm en pixels
 const mmToPx = (mm) => (mm / 25.4) * 72
 
-// Fonction pour charger le design dans un canvas temporaire avec une résolution plus élevée
+// Fonction pour charger le design dans un canvas temporaire
 const loadCanvasDesign = (cellIndex, cellDesign, labelWidth, labelHeight, scaleFactor = 4) => {
   return new Promise((resolve, reject) => {
     const canvasElement = document.createElement('canvas')
 
-    // Augmenter la résolution du canvas temporaire en utilisant un scaleFactor
     const tempCanvas = new fabric.Canvas(canvasElement, {
-      width: mmToPx(labelWidth) * scaleFactor, // Largeur augmentée pour une meilleure qualité
-      height: mmToPx(labelHeight) * scaleFactor // Hauteur augmentée pour une meilleure qualité
+      width: mmToPx(labelWidth) * scaleFactor,
+      height: mmToPx(labelHeight) * scaleFactor
     })
 
-    // Charger le design depuis le JSON
     tempCanvas.loadFromJSON(cellDesign, () => {
-      // Appliquer le zoom au canvas pour adapter les objets à la nouvelle résolution
-      tempCanvas.setZoom(scaleFactor) // Ajuster le zoom pour correspondre à la taille réelle
-
-      tempCanvas.renderAll() // Forcer le rendu du design
+      tempCanvas.setZoom(scaleFactor)
+      tempCanvas.renderAll()
 
       setTimeout(() => {
         const objects = tempCanvas.getObjects()
         if (objects.length > 0) {
-          console.log(`Objet chargé dans le canvas pour la cellule ${cellIndex}:`, objects)
-
-          // Récupérer l'image du canvas en base64 avec une meilleure qualité
-          const imgData = tempCanvas.toDataURL('image/png') // Générer l'image avec haute qualité
+          const imgData = tempCanvas.toDataURL('image/png')
           resolve(imgData)
         } else {
-          reject(new Error("Aucun objet n'a été chargé dans le canvas."))
+          reject(new Error(`Aucun objet n'a été chargé pour la cellule ${cellIndex}.`))
         }
-      }, 500) // Attendre que tout soit bien rendu
+      }, 500)
     })
   })
 }
 
-const exportGridToPDF = async (labelConfig, cellDesigns) => {
+// Fonction pour calculer les positions des cellules sur la page
+const calculateGridPositions = (labelConfig, pageWidth, pageHeight) => {
   const { labelWidth, labelHeight, offsetTop, offsetLeft, spacingVertical, spacingHorizontal } =
     labelConfig
-
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  })
-
-  const pageWidth = 210
-  const pageHeight = 297
-
-  let x = offsetLeft
-  let y = offsetTop
 
   const labelsPerRow = Math.floor((pageWidth - offsetLeft) / (labelWidth + spacingHorizontal))
   const labelsPerColumn = Math.floor((pageHeight - offsetTop) / (labelHeight + spacingVertical))
 
-  // Boucle sur chaque cellule pour charger son contenu
+  return {
+    labelsPerRow,
+    labelsPerColumn,
+    offsetTop,
+    offsetLeft,
+    labelWidth,
+    labelHeight,
+    spacingVertical,
+    spacingHorizontal
+  }
+}
+
+const exportGridToPDF = async (labelConfig, cellDesigns) => {
+  const {
+    labelsPerRow,
+    labelsPerColumn,
+    offsetTop,
+    offsetLeft,
+    labelWidth,
+    labelHeight,
+    spacingVertical,
+    spacingHorizontal
+  } = calculateGridPositions(labelConfig, 210, 297) // Dimensions A4
+
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+
+  let x = offsetLeft
+  let y = offsetTop
+
+  const tasks = [] // Stocker les promesses de chargement des designs
+
+  // Boucle sur chaque cellule
   for (let row = 0; row < labelsPerColumn; row++) {
     for (let col = 0; col < labelsPerRow; col++) {
       const cellIndex = row * labelsPerRow + col
 
       if (cellDesigns[cellIndex]) {
-        console.log(`Chargement du design pour la cellule ${cellIndex}`)
-        try {
-          // Charger le design de la cellule avec une résolution plus élevée
-          const imgData = await loadCanvasDesign(
-            cellIndex,
-            cellDesigns[cellIndex],
-            labelWidth,
-            labelHeight,
-            4 // Facteur d'échelle pour améliorer la qualité
-          )
+        // Capturer les valeurs actuelles de x et y dans des variables locales
+        const currentX = x
+        const currentY = y
 
-          // Ajouter l'image au PDF en réduisant sa taille à l'échelle normale
-          pdf.addImage(imgData, 'PNG', x, y, labelWidth, labelHeight)
-        } catch (error) {
-          console.error(`Erreur lors du rendu de la cellule ${cellIndex}:`, error)
-        }
-      } else {
-        // Optionnel : Ajouter une cellule vide ou bordée
-        // pdf.setDrawColor(200, 200, 200)
-        // pdf.rect(x, y, labelWidth, labelHeight)
+        const loadTask = loadCanvasDesign(
+          cellIndex,
+          cellDesigns[cellIndex],
+          labelWidth,
+          labelHeight,
+          4
+        )
+          .then((imgData) => {
+            // Utiliser les valeurs capturées de currentX et currentY
+            pdf.addImage(imgData, 'PNG', currentX, currentY, labelWidth, labelHeight)
+          })
+          .catch((error) => {
+            console.error(`Erreur lors du rendu de la cellule ${cellIndex}:`, error)
+          })
+
+        tasks.push(loadTask)
       }
 
       // Avancer horizontalement
@@ -93,6 +106,9 @@ const exportGridToPDF = async (labelConfig, cellDesigns) => {
     x = offsetLeft
     y += labelHeight + spacingVertical
   }
+
+  // Attendre que toutes les images soient chargées
+  await Promise.all(tasks)
 
   // Enregistrer le fichier PDF
   pdf.save('grid_layout_with_images_high_quality.pdf')

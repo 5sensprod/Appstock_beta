@@ -1,19 +1,18 @@
 import React from 'react'
 import { useInstance } from '../../context/InstanceContext'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCopy } from '@fortawesome/free-solid-svg-icons'
+import IconButton from '../ui/IconButton'
 
 const CopyDesignButton = () => {
-  const { copyDesign } = useInstance() // Fonction pour copier le design
+  const { copyDesign } = useInstance()
 
   return (
-    <button
+    <IconButton
       onClick={copyDesign}
-      className="rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
+      icon={faCopy}
       title="Copier le design"
-    >
-      <FontAwesomeIcon icon={faCopy} />
-    </button>
+      className="bg-blue-500 hover:bg-blue-600"
+    />
   )
 }
 
