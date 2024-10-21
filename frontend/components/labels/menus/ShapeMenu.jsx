@@ -2,7 +2,7 @@ import React from 'react'
 import { faCircle, faSquare } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../../ui/IconButton'
 
-export default function ShaspeMenu({ onAddCircle, onAddRectangle }) {
+export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   return (
     <div className="flex space-x-2 rounded bg-white shadow-lg">
       <IconButton

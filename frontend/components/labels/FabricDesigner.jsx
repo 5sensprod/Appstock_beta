@@ -10,14 +10,13 @@ import { useCanvas } from '../../context/CanvasContext'
 import { InstanceProvider, useInstance } from '../../context/InstanceContext'
 
 export default function FabricDesigner() {
-  const { canvasRef, zoomLevel, handleZoomChange, onAddCircle, onAddRectangle, onAddText } =
-    useCanvas()
+  const { canvasRef, zoomLevel, handleZoomChange } = useCanvas()
   const { handleColorChange, selectedColor } = useInstance()
 
   return (
     <InstanceProvider>
       <div className={styles.app}>
-        <Menu onAddCircle={onAddCircle} onAddRectangle={onAddRectangle} onAddText={onAddText} />
+        <Menu /> {/* Plus besoin de passer les props ici */}
         <ColorPicker color={selectedColor} setTextStyle={handleColorChange} />
         <div className="flex items-center space-x-2">
           <CopyDesignButton />
