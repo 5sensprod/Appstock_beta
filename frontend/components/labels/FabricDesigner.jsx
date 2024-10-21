@@ -2,7 +2,7 @@ import React from 'react'
 import styles from './FabricDesigner.module.css'
 import ColorPicker from './texttool/ColorPicker'
 import CanvasControl from './CanvasControl'
-import ShapeButtons from './ShapeButtons'
+import Menu from './texttool/Menu'
 import ZoomControl from './ZoomControl'
 import CopyDesignButton from './CopyDesignButton'
 import PasteDesignButton from './PasteDesignButton'
@@ -18,17 +18,11 @@ export default function FabricDesigner() {
 
   return (
     <InstanceProvider>
-      {' '}
-      {/* Plus besoin de passer canvas */}
       <div className={styles.app}>
         <h1>FabricJS avec zoom et redimensionnement</h1>
 
         {/* Section pour ajouter des formes et du texte */}
-        <ShapeButtons
-          onAddCircle={onAddCircle}
-          onAddRectangle={onAddRectangle}
-          onAddText={onAddText}
-        />
+        <Menu onAddCircle={onAddCircle} onAddRectangle={onAddRectangle} onAddText={onAddText} />
 
         {/* Sélecteur de couleur */}
         <ColorPicker color={selectedColor} setTextStyle={handleColorChange} />

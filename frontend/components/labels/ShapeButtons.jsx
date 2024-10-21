@@ -1,31 +1,29 @@
 import React from 'react'
+import { faCircle, faSquare, faTextHeight } from '@fortawesome/free-solid-svg-icons'
+import IconButton from '../ui/IconButton'
 import styles from './FabricDesigner.module.css'
 
-export default function ShapeButtons({
-  onAddCircle,
-  onAddRectangle,
-  onAddText
-}) {
+export default function ShapeButtons({ onAddCircle, onAddRectangle, onAddText }) {
   return (
     <div className={styles.buttonContainer}>
-      <button
+      <IconButton
         onClick={onAddCircle}
+        icon={faCircle}
+        title="Ajouter un cercle"
         className={styles.button}
-      >
-        Ajouter un cercle
-      </button>
-      <button
+      />
+      <IconButton
         onClick={onAddRectangle}
+        icon={faSquare}
+        title="Ajouter un rectangle"
         className={styles.button}
-      >
-        Ajouter un rectangle
-      </button>
-      <button
+      />
+      <IconButton
         onClick={onAddText}
+        icon={faTextHeight}
+        title="Ajouter du texte"
         className={styles.button}
-      >
-        Ajouter du texte
-      </button>
+      />
     </div>
   )
 }
