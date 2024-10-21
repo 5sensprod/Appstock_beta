@@ -12,6 +12,7 @@ const InstanceProvider = ({ children }) => {
   const [cellDesigns, setCellDesigns] = useState({})
   const [totalCells, setTotalCells] = useState(0)
   const [copiedDesign, setCopiedDesign] = useState(null)
+  const [unsavedChanges, setUnsavedChanges] = useState(false) // Gérer les changements non sauvegardés
 
   // Fonction pour charger le design de la cellule sélectionnée
   const loadCellDesign = useCallback(
@@ -34,8 +35,41 @@ const InstanceProvider = ({ children }) => {
     [canvas, cellDesigns]
   )
 
+  // Fonction pour vérifier si le design a réellement changé
+  const hasDesignChanged = useCallback(() => {
+    if (!canvas) return false
+
+    const currentDesign = JSON.stringify(canvas.toJSON())
+    const savedDesign = cellDesigns[selectedCell]
+
+    return currentDesign !== savedDesign // Retourne true si le design a changé
+  }, [canvas, cellDesigns, selectedCell])
+
   // Fonction pour gérer le clic sur une cellule (avec sélection multiple)
   const handleCellClick = (labelIndex, event) => {
+    // Vérifier si l'utilisateur clique sur la cellule déjà sélectionnée
+    if (labelIndex === selectedCell) {
+      console.log('Clic sur la même cellule, aucune action nécessaire')
+      return
+    }
+
+    // Vérifier s'il y a des changements non sauvegardés uniquement si le design a changé
+    if (unsavedChanges && hasDesignChanged()) {
+      const confirmSave = window.confirm(
+        'Vous avez des modifications non sauvegardées. Voulez-vous sauvegarder avant de quitter ?'
+      )
+
+      if (confirmSave) {
+        saveChanges() // Sauvegarder les modifications
+      }
+    }
+
+    if (canvas) {
+      // Désélectionner tous les objets du canevas avant de changer de cellule
+      canvas.discardActiveObject() // Annuler la sélection de tous les objets
+      canvas.renderAll() // Forcer le rendu pour appliquer la désélection
+    }
+
     if (event.ctrlKey || event.metaKey) {
       // Sélection multiple avec Ctrl ou Cmd
       setSelectedCells((prevSelectedCells) => {
@@ -51,6 +85,7 @@ const InstanceProvider = ({ children }) => {
       // Sélection unique si Ctrl/Cmd n'est pas enfoncé
       setSelectedCells([labelIndex])
       setSelectedCell(labelIndex)
+      setUnsavedChanges(false) // Réinitialiser l'état des modifications non sauvegardées
     }
   }
 
@@ -102,42 +137,54 @@ const InstanceProvider = ({ children }) => {
     [canvas, copiedDesign, setCellDesigns]
   )
 
-  // Modifier la logique de sauvegarde
-  useEffect(() => {
-    if (canvas) {
-      const saveChanges = () => {
-        const currentDesign = JSON.stringify(canvas)
+  // Fonction pour sauvegarder manuellement les modifications
+  const saveChanges = () => {
+    const currentDesign = JSON.stringify(canvas)
 
-        console.log('Sauvegarde du design pour la cellule', selectedCell)
+    console.log('Sauvegarde du design pour la cellule', selectedCell)
 
-        // Sauvegarder le design pour chaque cellule sélectionnée
-        selectedCells.forEach((cellIndex) => {
-          if (canvas.getObjects().length > 0 && cellDesigns[cellIndex] !== currentDesign) {
-            setCellDesigns((prevDesigns) => ({
-              ...prevDesigns,
-              [cellIndex]: currentDesign
-            }))
-          } else if (canvas.getObjects().length === 0 && cellDesigns[cellIndex]) {
-            console.log('Suppression du design pour la cellule', cellIndex)
+    // Sauvegarder le design pour chaque cellule sélectionnée
+    selectedCells.forEach((cellIndex) => {
+      if (canvas.getObjects().length > 0 && cellDesigns[cellIndex] !== currentDesign) {
+        setCellDesigns((prevDesigns) => ({
+          ...prevDesigns,
+          [cellIndex]: currentDesign
+        }))
+      } else if (canvas.getObjects().length === 0 && cellDesigns[cellIndex]) {
+        console.log('Suppression du design pour la cellule', cellIndex)
 
-            setCellDesigns((prevDesigns) => {
-              const newDesigns = { ...prevDesigns }
-              delete newDesigns[cellIndex]
-              return newDesigns
-            })
-          }
+        setCellDesigns((prevDesigns) => {
+          const newDesigns = { ...prevDesigns }
+          delete newDesigns[cellIndex]
+          return newDesigns
         })
       }
+    })
 
-      canvas.on('object:modified', saveChanges)
-      canvas.on('object:added', saveChanges)
+    setUnsavedChanges(false) // Les modifications sont sauvegardées
+  }
+
+  // Détection des modifications sur le canvas
+  useEffect(() => {
+    if (canvas) {
+      const handleObjectModified = () => {
+        // Ne marquer comme modifié que si le design a vraiment changé
+        if (hasDesignChanged()) {
+          setUnsavedChanges(true) // Marquer la cellule comme ayant des modifications non sauvegardées
+        }
+      }
+
+      // Attacher les événements
+      canvas.on('object:modified', handleObjectModified) // Pour modifications
+      canvas.on('object:added', handleObjectModified) // Marquer comme modifié après ajout
 
       return () => {
-        canvas.off('object:modified', saveChanges)
-        canvas.off('object:added', saveChanges)
+        // Nettoyer les événements
+        canvas.off('object:modified', handleObjectModified)
+        canvas.off('object:added', handleObjectModified)
       }
     }
-  }, [canvas, selectedCells, cellDesigns, selectedCell])
+  }, [canvas, selectedCell, cellDesigns, hasDesignChanged])
 
   const value = {
     selectedCell,
@@ -150,7 +197,8 @@ const InstanceProvider = ({ children }) => {
     totalCells,
     setTotalCells,
     copyDesign,
-    pasteDesign
+    pasteDesign,
+    saveChanges
   }
 
   return <InstanceContext.Provider value={value}>{children}</InstanceContext.Provider>
