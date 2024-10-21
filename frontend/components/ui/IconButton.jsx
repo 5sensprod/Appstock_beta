@@ -2,7 +2,12 @@ import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import PropTypes from 'prop-types'
 
-const IconButton = ({ onClick, icon, title, className }) => {
+const IconButton = ({
+  onClick,
+  icon,
+  title = '', // Valeur par défaut pour title
+  className = 'bg-blue-500' // Valeur par défaut pour className
+}) => {
   return (
     <button
       onClick={onClick}
@@ -20,12 +25,6 @@ IconButton.propTypes = {
   icon: PropTypes.object.isRequired, // FontAwesomeIcon utilise des objets pour les icônes
   title: PropTypes.string,
   className: PropTypes.string
-}
-
-// Valeurs par défaut
-IconButton.defaultProps = {
-  title: '',
-  className: 'bg-blue-500'
 }
 
 export default IconButton
