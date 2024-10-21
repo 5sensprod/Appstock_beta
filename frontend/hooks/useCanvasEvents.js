@@ -18,7 +18,6 @@ const useCanvasEvents = (canvas, setSelectedObject, setSelectedColor) => {
     canvas.on('selection:updated', updateSelectedObject)
     canvas.on('selection:cleared', () => {
       setSelectedObject(null)
-      setSelectedColor('#000000') // Remettre à la couleur par défaut
     })
 
     // Nettoyer les événements lors du démontage

@@ -7,7 +7,7 @@ const InstanceContext = createContext()
 export const useInstance = () => useContext(InstanceContext)
 
 const InstanceProvider = ({ children }) => {
-  const { canvas } = useCanvas()
+  const { canvas, updateSelectedColor } = useCanvas()
   const [selectedCell, setSelectedCell] = useState(0) // Cellule sélectionnée par défaut
   const [selectedCells, setSelectedCells] = useState([]) // Gestion des cellules sélectionnées multiples
   const [cellDesigns, setCellDesigns] = useState({}) // Gestion des designs par cellule
@@ -78,17 +78,16 @@ const InstanceProvider = ({ children }) => {
     (color) => {
       const activeObject = canvas.getActiveObject()
       if (activeObject) {
-        activeObject.set('fill', color) // Changer la couleur de l'objet sélectionné
-        canvas.renderAll() // Forcer le rendu après le changement de couleur
-
-        canvas.fire('object:modified', { target: activeObject }) // Déclencher l'événement `object:modified`
-
-        setUnsavedChanges(true) // Marquer l'objet comme modifié
+        activeObject.set('fill', color)
+        canvas.renderAll()
+        canvas.fire('object:modified', { target: activeObject })
+        setUnsavedChanges(true)
       }
 
-      setSelectedColor(color) // Mettre à jour la couleur sélectionnée dans le contexte
+      setSelectedColor(color)
+      updateSelectedColor(color) // Mettre à jour la couleur dans CanvasContext
     },
-    [canvas]
+    [canvas, updateSelectedColor]
   )
   // Gestion du clic sur une cellule (avec sélection multiple ou simple)
   const handleCellClick = useCallback(

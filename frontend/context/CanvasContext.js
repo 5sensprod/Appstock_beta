@@ -29,7 +29,7 @@ const CanvasProvider = ({ children }) => {
   const updateCanvasSize = useUpdateCanvasSize(canvas, labelConfig, setLabelConfig, setZoomLevel)
   const handleZoomChange = useCanvasZoom(canvas, zoomLevel, setZoomLevel)
 
-  const [selectedColor, setSelectedColor] = useState('#000000') // Couleur sélectionnée
+  const [selectedColor, setSelectedColor] = useState('#000000') // Couleur par défaut
   const [selectedObject, setSelectedObject] = useState(null) // Objet sélectionné
 
   // Initialisation du canevas
@@ -41,7 +41,7 @@ const CanvasProvider = ({ children }) => {
         preserveObjectStacking: true
       })
       setCanvas(fabricCanvas)
-      console.log('Canvas initialisé :', fabricCanvas) // Vérification du canvas
+      console.log('Canvas initialisé :', fabricCanvas)
     } else {
       canvas.setWidth(mmToPx(labelConfig.labelWidth))
       canvas.setHeight(mmToPx(labelConfig.labelHeight))
@@ -49,32 +49,33 @@ const CanvasProvider = ({ children }) => {
     }
   }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
 
+  // Gestion des événements du canevas
   useCanvasEvents(canvas, setSelectedObject, setSelectedColor)
   useSelectedObject(canvas, selectedObject, selectedColor)
   useObjectConstraints(canvas)
 
   const addObjectToCanvas = (object) => {
     if (canvas) {
-      const centerX = mmToPx(labelConfig.labelWidth / 2) // Centre du canevas (X)
-      const centerY = mmToPx(labelConfig.labelHeight / 2) // Centre du canevas (Y)
+      const centerX = mmToPx(labelConfig.labelWidth / 2)
+      const centerY = mmToPx(labelConfig.labelHeight / 2)
 
-      // Positionner l'objet au centre
       object.set({
-        left: centerX - (object.width || 0) / 2, // Centrer horizontalement
-        top: centerY - (object.height || 0) / 2 // Centrer verticalement
+        left: centerX - (object.width || 0) / 2,
+        top: centerY - (object.height || 0) / 2
       })
 
-      // Ajouter l'objet au canevas
       canvas.add(object)
-
-      // Sélectionner l'objet ajouté
-      canvas.setActiveObject(object) // Rendre l'objet actif pour être sélectionné
-
-      // Redessiner le canevas pour mettre à jour l'affichage
+      canvas.setActiveObject(object)
       canvas.renderAll()
     }
   }
 
+  // Fonction pour mettre à jour la couleur sélectionnée via InstanceContext
+  const updateSelectedColor = (color) => {
+    setSelectedColor(color)
+  }
+
+  // Méthode pour ajouter un cercle
   const onAddCircle = () => {
     const minDimension = Math.min(labelConfig.labelWidth, labelConfig.labelHeight)
     const circleRadius = minDimension / 2.5
@@ -90,6 +91,7 @@ const CanvasProvider = ({ children }) => {
     addObjectToCanvas(circle)
   }
 
+  // Méthode pour ajouter un rectangle
   const onAddRectangle = () => {
     const rectWidth = labelConfig.labelWidth / 1.1
     const rectHeight = labelConfig.labelHeight / 1.1
@@ -102,6 +104,7 @@ const CanvasProvider = ({ children }) => {
     addObjectToCanvas(rectangle)
   }
 
+  // Méthode pour ajouter du texte
   const onAddText = () => {
     const fontSize = labelConfig.labelWidth / 5
     const text = new fabric.IText('Votre texte ici', {
@@ -139,7 +142,8 @@ const CanvasProvider = ({ children }) => {
     onAddRectangle,
     onAddText,
     isShapeSelected, // Expose cette fonction
-    isTextSelected
+    isTextSelected,
+    updateSelectedColor
   }
 
   return <CanvasContext.Provider value={value}>{children}</CanvasContext.Provider>
