@@ -112,6 +112,16 @@ const CanvasProvider = ({ children }) => {
     addObjectToCanvas(text)
   }
 
+  const isShapeSelected = () => {
+    if (!selectedObject) return false
+    return selectedObject.type === 'circle' || selectedObject.type === 'rect'
+  }
+
+  const isTextSelected = () => {
+    if (!selectedObject) return false
+    return selectedObject.type === 'i-text'
+  }
+
   const value = {
     canvasRef,
     canvas,
@@ -127,7 +137,9 @@ const CanvasProvider = ({ children }) => {
     setSelectedObject,
     onAddCircle,
     onAddRectangle,
-    onAddText
+    onAddText,
+    isShapeSelected, // Expose cette fonction
+    isTextSelected
   }
 
   return <CanvasContext.Provider value={value}>{children}</CanvasContext.Provider>
