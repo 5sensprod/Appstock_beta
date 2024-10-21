@@ -3,7 +3,8 @@ import { HexColorPicker } from 'react-colorful'
 import IconButton from '../../ui/IconButton'
 import { faEyeDropper } from '@fortawesome/free-solid-svg-icons' // Importer l'icône pipette de FontAwesome
 
-const ColorPicker = ({ color, setTextStyle }) => {
+const ColorPicker = ({ color, setSelectedColor }) => {
+  // Renommer setTextStyle en setSelectedColor
   const [isEyeDropperSupported, setIsEyeDropperSupported] = useState(false)
 
   useEffect(() => {
@@ -21,11 +22,11 @@ const ColorPicker = ({ color, setTextStyle }) => {
     try {
       const eyeDropper = new window.EyeDropper()
       const result = await eyeDropper.open()
-      console.log('Résultat complet capturé par EyeDropper:', result) // Affiche tout le résultat
+      console.log('Résultat complet capturé par EyeDropper:', result)
 
       if (result && result.sRGBHex) {
-        console.log('Couleur capturée par EyeDropper:', result.sRGBHex) // Affiche la couleur capturée
-        setTextStyle(result.sRGBHex) // Transmet la couleur capturée via la pipette
+        console.log('Couleur capturée par EyeDropper:', result.sRGBHex)
+        setSelectedColor(result.sRGBHex) // Utiliser setSelectedColor
       } else {
         console.log('Aucune couleur capturée')
       }
@@ -38,7 +39,7 @@ const ColorPicker = ({ color, setTextStyle }) => {
     <div className="textTool mb-2">
       <HexColorPicker
         color={color}
-        onChange={(newColor) => setTextStyle(newColor)} // Transmet la couleur sélectionnée
+        onChange={(newColor) => setSelectedColor(newColor)} // Utiliser setSelectedColor
       />
 
       {isEyeDropperSupported && (
