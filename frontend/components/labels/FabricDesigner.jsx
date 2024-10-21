@@ -8,18 +8,13 @@ import CopyDesignButton from './CopyDesignButton'
 import PasteDesignButton from './PasteDesignButton'
 import { useCanvas } from '../../context/CanvasContext'
 import { InstanceProvider } from '../../context/InstanceContext'
+import { useInstance } from '../../context/InstanceContext'
 
 export default function FabricDesigner() {
-  const {
-    canvasRef,
-    zoomLevel,
-    handleZoomChange,
-    onAddCircle,
-    onAddRectangle,
-    onAddText,
-    selectedColor,
-    setSelectedColor
-  } = useCanvas()
+  const { canvasRef, zoomLevel, handleZoomChange, onAddCircle, onAddRectangle, onAddText } =
+    useCanvas()
+
+  const { handleColorChange, selectedColor } = useInstance()
 
   return (
     <InstanceProvider>
@@ -36,7 +31,7 @@ export default function FabricDesigner() {
         />
 
         {/* Sélecteur de couleur */}
-        <ColorPicker color={selectedColor} setTextStyle={(color) => setSelectedColor(color)} />
+        <ColorPicker color={selectedColor} setTextStyle={handleColorChange} />
 
         {/* Contrôle de zoom et bouton de copie */}
         <div className="flex items-center space-x-2">

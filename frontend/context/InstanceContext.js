@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useCallback, useEffect } from 'react'
 import { useCanvas } from './CanvasContext'
+import useCanvasEvents from '../hooks/useCanvasEvents'
 
 const InstanceContext = createContext()
 
@@ -9,10 +10,14 @@ const InstanceProvider = ({ children }) => {
   const { canvas } = useCanvas()
   const [selectedCell, setSelectedCell] = useState(0) // Cellule sélectionnée par défaut
   const [selectedCells, setSelectedCells] = useState([]) // Gestion des cellules sélectionnées multiples
-  const [cellDesigns, setCellDesigns] = useState({})
-  const [totalCells, setTotalCells] = useState(0)
-  const [copiedDesign, setCopiedDesign] = useState(null)
-  const [unsavedChanges, setUnsavedChanges] = useState(false) // Gérer les changements non sauvegardés
+  const [cellDesigns, setCellDesigns] = useState({}) // Gestion des designs par cellule
+  const [totalCells, setTotalCells] = useState(0) // Nombre total de cellules
+  const [copiedDesign, setCopiedDesign] = useState(null) // Design copié pour collage
+  const [unsavedChanges, setUnsavedChanges] = useState(false) // Suivi des changements non sauvegardés
+  const [selectedColor, setSelectedColor] = useState('#000000') // Gestion de la couleur sélectionnée
+  const [selectedObject, setSelectedObject] = useState(null)
+
+  useCanvasEvents(canvas, setSelectedObject, setSelectedColor)
 
   // Fonction pour charger le design de la cellule sélectionnée
   const loadCellDesign = useCallback(
@@ -67,6 +72,24 @@ const InstanceProvider = ({ children }) => {
     setUnsavedChanges(false)
   }, [canvas, selectedCell, selectedCells])
 
+  // Gérer le changement de couleur des objets
+  // Fonction pour gérer le changement de couleur des objets
+  const handleColorChange = useCallback(
+    (color) => {
+      const activeObject = canvas.getActiveObject()
+      if (activeObject) {
+        activeObject.set('fill', color) // Changer la couleur de l'objet sélectionné
+        canvas.renderAll() // Forcer le rendu après le changement de couleur
+
+        canvas.fire('object:modified', { target: activeObject }) // Déclencher l'événement `object:modified`
+
+        setUnsavedChanges(true) // Marquer l'objet comme modifié
+      }
+
+      setSelectedColor(color) // Mettre à jour la couleur sélectionnée dans le contexte
+    },
+    [canvas]
+  )
   // Gestion du clic sur une cellule (avec sélection multiple ou simple)
   const handleCellClick = useCallback(
     (labelIndex, event) => {
@@ -169,7 +192,10 @@ const InstanceProvider = ({ children }) => {
     setTotalCells,
     copyDesign,
     pasteDesign,
-    saveChanges
+    saveChanges,
+    selectedColor,
+    handleColorChange,
+    selectedObject
   }
 
   return <InstanceContext.Provider value={value}>{children}</InstanceContext.Provider>
