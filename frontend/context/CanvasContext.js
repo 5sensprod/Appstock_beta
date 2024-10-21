@@ -4,6 +4,7 @@ import useCanvasZoom from '../hooks/useCanvasZoom'
 import useUpdateCanvasSize from '../hooks/useUpdateCanvasSize'
 import useCanvasEvents from '../hooks/useCanvasEvents'
 import useSelectedObject from '../hooks/useSelectedObject'
+import useObjectConstraints from '../hooks/useObjectConstraints'
 
 const CanvasContext = createContext()
 
@@ -50,6 +51,7 @@ const CanvasProvider = ({ children }) => {
 
   useCanvasEvents(canvas, setSelectedObject, setSelectedColor)
   useSelectedObject(canvas, selectedObject, selectedColor)
+  useObjectConstraints(canvas)
 
   const addObjectToCanvas = (object) => {
     if (canvas) {
