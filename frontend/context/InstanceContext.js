@@ -13,43 +13,6 @@ const InstanceProvider = ({ children }) => {
   const [totalCells, setTotalCells] = useState(0)
   const [copiedDesign, setCopiedDesign] = useState(null)
 
-  // Sauvegarde automatique lorsque le canevas est modifié
-  // useEffect(() => {
-  //   if (canvas) {
-  //     const saveChanges = () => {
-  //       const currentDesign = JSON.stringify(canvas)
-
-  //       console.log('Tentative de sauvegarde du design pour la cellule:', selectedCell)
-  //       console.log('Design actuel du canvas:', currentDesign)
-
-  //       if (canvas.getObjects().length > 0 && cellDesigns[selectedCell] !== currentDesign) {
-  //         setCellDesigns((prevDesigns) => ({
-  //           ...prevDesigns,
-  //           [selectedCell]: currentDesign
-  //         }))
-  //         console.log('Design mis à jour pour la cellule:', selectedCell)
-  //         console.log('Nouveau cellDesigns:', { ...cellDesigns, [selectedCell]: currentDesign })
-  //       } else if (canvas.getObjects().length === 0 && cellDesigns[selectedCell]) {
-  //         console.log('Suppression du design pour la cellule', selectedCell)
-
-  //         setCellDesigns((prevDesigns) => {
-  //           const newDesigns = { ...prevDesigns }
-  //           delete newDesigns[selectedCell]
-  //           return newDesigns
-  //         })
-  //       }
-  //     }
-
-  //     canvas.on('object:modified', saveChanges)
-  //     canvas.on('object:added', saveChanges)
-
-  //     return () => {
-  //       canvas.off('object:modified', saveChanges)
-  //       canvas.off('object:added', saveChanges)
-  //     }
-  //   }
-  // }, [canvas, selectedCell, cellDesigns])
-
   // Fonction pour charger le design de la cellule sélectionnée
   const loadCellDesign = useCallback(
     (cellIndex) => {
@@ -117,27 +80,26 @@ const InstanceProvider = ({ children }) => {
   const pasteDesign = useCallback(
     (selectedCells) => {
       if (!canvas || !copiedDesign) {
-        console.log('Erreur: Canvas ou design copié non défini')
         return
       }
 
       // Parcourir toutes les cellules sélectionnées
       selectedCells.forEach((cellIndex) => {
-        console.log(`Collage du design dans la cellule ${cellIndex}`)
+        canvas.clear() // Effacer le contenu actuel de la cellule
+        canvas.loadFromJSON(copiedDesign, () => {
+          setTimeout(() => {
+            canvas.renderAll() // Re-rendu du canevas après un léger délai
+          }, 10)
+        })
 
-        // Appliquer le design copié à chaque cellule
+        // Appliquer le design copié à chaque cellule dans l'état
         setCellDesigns((prevDesigns) => ({
           ...prevDesigns,
           [cellIndex]: copiedDesign
         }))
-
-        // Charger le design dans la cellule courante
-        loadCellDesign(cellIndex)
       })
-
-      // Il n'est plus nécessaire d'appeler loadCellDesign ici, car nous l'appelons déjà dans la boucle
     },
-    [canvas, copiedDesign, loadCellDesign]
+    [canvas, copiedDesign, setCellDesigns]
   )
 
   // Modifier la logique de sauvegarde
