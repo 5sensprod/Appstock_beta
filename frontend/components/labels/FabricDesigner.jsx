@@ -19,8 +19,6 @@ export default function FabricDesigner() {
   return (
     <InstanceProvider>
       <div className={styles.app}>
-        <h1>FabricJS avec zoom et redimensionnement</h1>
-
         {/* Section pour ajouter des formes et du texte */}
         <Menu onAddCircle={onAddCircle} onAddRectangle={onAddRectangle} onAddText={onAddText} />
 
