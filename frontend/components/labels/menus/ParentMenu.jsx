@@ -11,7 +11,7 @@ const ParentMenu = ({ icon, titleOpen, titleClosed, isOpen, toggle, size, iconSi
         isActive={isOpen}
         size={size}
         iconSize={iconSize}
-        className={`transition-all duration-300 ${isOpen ? 'bg-blue-300' : 'bg-blue-500'}`}
+        className={`transition-all duration-200 ${isOpen ? 'bg-blue-300' : 'bg-blue-500'}`}
       />
       {/* Sous-menu avec animation de translation */}
       <div

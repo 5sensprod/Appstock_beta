@@ -37,7 +37,7 @@ const Menu = () => {
   }
 
   return (
-    <div className="relative flex items-start p-4">
+    <div className="relative flex items-start gap-4 p-4">
       <ParentMenu
         icon={faShapes}
         titleOpen="Masquer les formes"
