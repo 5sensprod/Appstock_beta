@@ -7,24 +7,22 @@ import ZoomControl from './ZoomControl'
 import CopyDesignButton from './CopyDesignButton'
 import PasteDesignButton from './PasteDesignButton'
 import { useCanvas } from '../../context/CanvasContext'
-import { InstanceProvider, useInstance } from '../../context/InstanceContext'
+import { useInstance } from '../../context/InstanceContext'
 
 export default function FabricDesigner() {
   const { canvasRef, zoomLevel, handleZoomChange } = useCanvas()
   const { handleColorChange, selectedColor } = useInstance()
 
   return (
-    <InstanceProvider>
-      <div className={styles.app}>
-        <Menu /> {/* Plus besoin de passer les props ici */}
-        <ColorPicker color={selectedColor} setTextStyle={handleColorChange} />
-        <div className="flex items-center space-x-2">
-          <CopyDesignButton />
-          <PasteDesignButton />
-          <ZoomControl zoomLevel={zoomLevel} handleZoomChange={handleZoomChange} />
-        </div>
-        <CanvasControl canvasRef={canvasRef} />
+    <div className={styles.app}>
+      <Menu /> {/* Plus besoin de passer les props ici */}
+      <ColorPicker color={selectedColor} setTextStyle={handleColorChange} />
+      <div className="flex items-center space-x-2">
+        <CopyDesignButton />
+        <PasteDesignButton />
+        <ZoomControl zoomLevel={zoomLevel} handleZoomChange={handleZoomChange} />
       </div>
-    </InstanceProvider>
+      <CanvasControl canvasRef={canvasRef} />
+    </div>
   )
 }
