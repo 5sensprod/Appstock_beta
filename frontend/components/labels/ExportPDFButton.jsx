@@ -16,16 +16,12 @@ const ExportPDFButton = () => {
   useEffect(() => {
     if (shouldExport && Object.keys(cellDesigns).length > 0) {
       // Exporter le PDF uniquement lorsque `cellDesigns` est mis à jour
-      console.log('Export PDF déclenché après la mise à jour de cellDesigns')
       exportGridToPDF(labelConfig, cellDesigns)
       setShouldExport(false) // Réinitialiser shouldExport après l'export
     }
   }, [cellDesigns, shouldExport, labelConfig])
 
   const handleExportPDF = async () => {
-    console.log('unsavedChanges:', unsavedChanges)
-    console.log('hasDesignChanged:', hasDesignChanged())
-
     // Vérification des modifications non sauvegardées
     if (unsavedChanges && hasDesignChanged()) {
       const confirmSave = window.confirm(

@@ -8,15 +8,14 @@ export const useInstance = () => useContext(InstanceContext)
 
 const InstanceProvider = ({ children }) => {
   const { canvas, updateSelectedColor } = useCanvas()
-  const [selectedCell, setSelectedCell] = useState(0) // Cellule sélectionnée par défaut
-  const [selectedCells, setSelectedCells] = useState([]) // Gestion des cellules sélectionnées multiples
-  const [cellDesigns, setCellDesigns] = useState({}) // Gestion des designs par cellule
-  const [totalCells, setTotalCells] = useState(0) // Nombre total de cellules
-  const [copiedDesign, setCopiedDesign] = useState(null) // Design copié pour collage
-  const [unsavedChanges, setUnsavedChanges] = useState(false) // Suivi des changements non sauvegardés
-  const [selectedColor, setSelectedColor] = useState('#000000') // Gestion de la couleur sélectionnée
+  const [selectedCell, setSelectedCell] = useState(0)
+  const [selectedCells, setSelectedCells] = useState([])
+  const [cellDesigns, setCellDesigns] = useState({})
+  const [totalCells, setTotalCells] = useState(0)
+  const [copiedDesign, setCopiedDesign] = useState(null)
+  const [unsavedChanges, setUnsavedChanges] = useState(false)
+  const [selectedColor, setSelectedColor] = useState('#000000')
   const [selectedObject, setSelectedObject] = useState(null)
-  const [isSaving, setIsSaving] = useState(false)
 
   useCanvasEvents(canvas, setSelectedObject, setSelectedColor)
 
@@ -57,6 +56,7 @@ const InstanceProvider = ({ children }) => {
 
       console.log('Sauvegarde du design pour la cellule', selectedCell)
 
+      // Mettre à jour `cellDesigns` pour les cellules sélectionnées
       setCellDesigns((prevDesigns) => {
         const updatedDesigns = { ...prevDesigns }
 
@@ -73,22 +73,10 @@ const InstanceProvider = ({ children }) => {
         return updatedDesigns
       })
 
-      // Attendre la mise à jour de `cellDesigns` via un `setTimeout`
-      setTimeout(() => {
-        console.log('Mise à jour de `cellDesigns` terminée:', cellDesigns)
-        resolve()
-      }, 100)
+      setUnsavedChanges(false)
+      resolve() // Résoudre la promesse après mise à jour de `cellDesigns`
     })
-  }, [canvas, selectedCell, selectedCells, cellDesigns])
-
-  useEffect(() => {
-    if (!isSaving) return
-
-    setTimeout(() => {
-      console.log('cellDesigns mis à jour:', cellDesigns)
-      setIsSaving(false)
-    }, 100)
-  }, [cellDesigns, isSaving])
+  }, [canvas, selectedCell, selectedCells])
 
   // Fonction pour gérer le changement de couleur des objets
   const handleColorChange = useCallback(
@@ -211,7 +199,7 @@ const InstanceProvider = ({ children }) => {
     selectedColor,
     handleColorChange,
     selectedObject,
-    unsavedChanges, // Assure-toi que unsavedChanges est bien fourni ici
+    unsavedChanges,
     hasDesignChanged
   }
 
