@@ -7,84 +7,62 @@ import ParentMenu from './menus/ParentMenu'
 import { useCanvas } from '../../context/CanvasContext'
 
 const Menu = () => {
-  const [showShapes, setShowShapes] = useState(false)
-  const [showText, setShowText] = useState(false)
-  const [showImages, setShowImages] = useState(false)
-
-  // Récupération des méthodes et de la sélection d'objets depuis le contexte Canvas
+  const [openMenu, setOpenMenu] = useState(null)
   const { onAddCircle, onAddRectangle, onAddText, onAddImage, selectedObject } = useCanvas()
 
   useEffect(() => {
     if (selectedObject?.type === 'circle' || selectedObject?.type === 'rect') {
-      setShowShapes(true)
-      setShowText(false)
+      setOpenMenu('shapes')
+    } else if (selectedObject?.type === 'i-text') {
+      setOpenMenu('text')
     }
   }, [selectedObject])
 
-  useEffect(() => {
-    if (selectedObject?.type === 'i-text') {
-      setShowText(true)
-      setShowShapes(false)
-    }
-  }, [selectedObject])
-
-  const toggleShapes = () => {
-    setShowText(false)
-    setShowShapes((prev) => !prev)
-  }
-
-  const toggleText = () => {
-    setShowShapes(false)
-    setShowText((prev) => !prev)
-  }
-
-  const toggleImages = () => {
-    setShowShapes(false)
-    setShowText(false)
-    setShowImages((prev) => !prev)
+  const handleMenuToggle = (menuName) => {
+    // Si on clique sur le même menu, on le ferme, sinon on l'ouvre
+    setOpenMenu((currentMenu) => (currentMenu === menuName ? null : menuName))
   }
 
   return (
-    <div className="relative flex items-start gap-4 p-4">
+    <div className="relative flex flex-row items-start gap-4 p-4">
+      {/* Menu pour les formes */}
       <ParentMenu
         icon={faShapes}
         titleOpen="Masquer les formes"
         titleClosed="Afficher les formes"
-        isOpen={showShapes}
-        toggle={toggleShapes}
+        isOpen={openMenu === 'shapes'}
+        toggle={() => handleMenuToggle('shapes')}
         size="w-16 h-16"
         iconSize="text-3xl"
       >
         <ShapeMenu onAddCircle={onAddCircle} onAddRectangle={onAddRectangle} />
       </ParentMenu>
 
-      <div className={`relative transition-all duration-300 ${showShapes ? 'ml-40' : 'ml-4'}`}>
-        <ParentMenu
-          icon={faTextHeight}
-          titleOpen="Masquer le texte"
-          titleClosed="Afficher le texte"
-          isOpen={showText}
-          toggle={toggleText}
-          size="w-16 h-16"
-          iconSize="text-3xl"
-        >
-          <TextMenu onAddText={onAddText} />
-        </ParentMenu>
-      </div>
+      {/* Menu pour le texte */}
+      <ParentMenu
+        icon={faTextHeight}
+        titleOpen="Masquer le texte"
+        titleClosed="Afficher le texte"
+        isOpen={openMenu === 'text'}
+        toggle={() => handleMenuToggle('text')}
+        size="w-16 h-16"
+        iconSize="text-3xl"
+      >
+        <TextMenu onAddText={onAddText} />
+      </ParentMenu>
 
-      <div className={`relative transition-all duration-300 ${showImages ? 'ml-40' : 'ml-4'}`}>
-        <ParentMenu
-          icon={faImage}
-          titleOpen="Masquer les images"
-          titleClosed="Afficher les images"
-          isOpen={showImages}
-          toggle={toggleImages}
-          size="w-16 h-16"
-          iconSize="text-3xl"
-        >
-          <ImageMenu onAddImage={onAddImage} />
-        </ParentMenu>
-      </div>
+      {/* Menu pour les images */}
+      <ParentMenu
+        icon={faImage}
+        titleOpen="Masquer les images"
+        titleClosed="Afficher les images"
+        isOpen={openMenu === 'images'}
+        toggle={() => handleMenuToggle('images')}
+        size="w-16 h-16"
+        iconSize="text-3xl"
+      >
+        <ImageMenu onAddImage={onAddImage} />
+      </ParentMenu>
     </div>
   )
 }

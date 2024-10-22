@@ -1,6 +1,4 @@
 import React from 'react'
-import { faImage } from '@fortawesome/free-solid-svg-icons'
-import IconButton from '../../ui/IconButton'
 
 export default function ImageMenu({ onAddImage }) {
   const handleFileChange = (event) => {
@@ -18,11 +16,6 @@ export default function ImageMenu({ onAddImage }) {
         accept="image/*"
         onChange={handleFileChange} // Lorsque le fichier est sélectionné
         className="w-64 rounded border p-2"
-      />
-      <IconButton
-        icon={faImage}
-        title="Ajouter une image"
-        className="flex size-12 items-center justify-center rounded bg-green-500 text-white hover:bg-green-600"
       />
     </div>
   )

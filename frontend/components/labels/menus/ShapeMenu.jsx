@@ -28,7 +28,9 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   }, [])
 
   return (
-    <div className="relative flex space-x-2 rounded bg-white shadow-lg">
+    <div className="relative flex w-64 space-x-2 rounded bg-white p-2 shadow-lg">
+      {' '}
+      {/* Largeur fixée à 64 unités */}
       <IconButton
         onClick={onAddCircle}
         icon={faCircle}
@@ -41,22 +43,15 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
         title="Ajouter un rectangle"
         className="flex size-12 items-center justify-center rounded bg-blue-500 text-white hover:bg-blue-600"
       />
-
-      {/* Bouton pour ouvrir le sélecteur de couleurs */}
       <IconButton
         onClick={toggleColorPicker}
-        icon={faPalette} // Icône de palette
+        icon={faPalette}
         title="Choisir une couleur"
         className="flex size-12 items-center justify-center rounded bg-gray-500 text-white hover:bg-gray-600"
       />
-
-      {/* Afficher le ColorPicker si l'état isColorPickerOpen est vrai */}
       {isColorPickerOpen && (
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
-          <ColorPicker
-            color={selectedColor} // Utiliser la couleur actuelle du contexte
-            setSelectedColor={handleColorChange} // Utiliser handleColorChange pour mettre à jour la couleur
-          />
+          <ColorPicker color={selectedColor} setSelectedColor={handleColorChange} />
         </div>
       )}
     </div>
