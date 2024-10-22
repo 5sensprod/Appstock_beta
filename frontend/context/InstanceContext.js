@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useCallback, useEffect } from 'react'
 import { useCanvas } from './CanvasContext'
-import useCanvasEvents from '../hooks/useCanvasEvents'
+import useCanvasObjectHandler from '../hooks/useCanvasObjectHandler'
 
 const InstanceContext = createContext()
 
@@ -17,7 +17,7 @@ const InstanceProvider = ({ children }) => {
   const [selectedColor, setSelectedColor] = useState('#000000')
   const [selectedObject, setSelectedObject] = useState(null)
 
-  useCanvasEvents(canvas, setSelectedObject, setSelectedColor)
+  useCanvasObjectHandler(canvas, selectedObject, selectedColor, setSelectedObject, setSelectedColor)
 
   // Fonction pour charger le design de la cellule sélectionnée
   const loadCellDesign = useCallback(

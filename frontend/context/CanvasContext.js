@@ -61,6 +61,11 @@ const CanvasProvider = ({ children }) => {
   useCanvasObjectHandler(canvas, selectedObject, selectedColor, setSelectedObject, setSelectedColor)
   useObjectConstraints(canvas)
 
+  // Fonction pour mettre à jour la couleur sélectionnée via InstanceContext
+  const updateSelectedColor = (color) => {
+    setSelectedColor(color)
+  }
+
   const addObjectToCanvas = (object) => {
     if (canvas) {
       const centerX = mmToPx(labelConfig.labelWidth / 2)
@@ -75,11 +80,6 @@ const CanvasProvider = ({ children }) => {
       canvas.setActiveObject(object)
       canvas.renderAll()
     }
-  }
-
-  // Fonction pour mettre à jour la couleur sélectionnée via InstanceContext
-  const updateSelectedColor = (color) => {
-    setSelectedColor(color)
   }
 
   // Méthode pour ajouter un cercle
