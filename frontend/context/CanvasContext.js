@@ -83,6 +83,11 @@ const CanvasProvider = ({ children }) => {
     return selectedObject.type === 'i-text'
   }
 
+  const isImageSelected = () => {
+    if (!selectedObject) return false
+    return selectedObject.type === 'image'
+  }
+
   const value = {
     canvasRef,
     canvas,
@@ -102,6 +107,7 @@ const CanvasProvider = ({ children }) => {
     onAddImage,
     isShapeSelected,
     isTextSelected,
+    isImageSelected,
     updateSelectedColor
   }
 

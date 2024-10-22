@@ -11,15 +11,23 @@ const Menu = () => {
   const { onAddCircle, onAddRectangle, onAddText, onAddImage, selectedObject } = useCanvas()
 
   useEffect(() => {
-    if (selectedObject?.type === 'circle' || selectedObject?.type === 'rect') {
-      setOpenMenu('shapes')
-    } else if (selectedObject?.type === 'i-text') {
-      setOpenMenu('text')
+    switch (selectedObject?.type) {
+      case 'circle':
+      case 'rect':
+        setOpenMenu('shapes')
+        break
+      case 'i-text':
+        setOpenMenu('text')
+        break
+      case 'image':
+        setOpenMenu('images')
+        break
+      default:
+        setOpenMenu(null)
     }
   }, [selectedObject])
 
   const handleMenuToggle = (menuName) => {
-    // Si on clique sur le même menu, on le ferme, sinon on l'ouvre
     setOpenMenu((currentMenu) => (currentMenu === menuName ? null : menuName))
   }
 
