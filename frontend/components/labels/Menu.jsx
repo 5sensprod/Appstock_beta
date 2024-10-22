@@ -11,20 +11,14 @@ const Menu = () => {
   const { onAddCircle, onAddRectangle, onAddText, onAddImage, selectedObject } = useCanvas()
 
   useEffect(() => {
-    switch (selectedObject?.type) {
-      case 'circle':
-      case 'rect':
-        setOpenMenu('shapes')
-        break
-      case 'i-text':
-        setOpenMenu('text')
-        break
-      case 'image':
-        setOpenMenu('images')
-        break
-      default:
-        setOpenMenu(null)
+    const menuMap = {
+      circle: 'shapes',
+      rect: 'shapes',
+      'i-text': 'text',
+      image: 'images'
     }
+
+    setOpenMenu(menuMap[selectedObject?.type] || null)
   }, [selectedObject])
 
   const handleMenuToggle = (menuName) => {
