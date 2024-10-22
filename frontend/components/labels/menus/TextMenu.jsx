@@ -28,7 +28,7 @@ export default function TextMenu({ onAddText }) {
   }, [])
 
   return (
-    <div className="relative flex w-48 space-x-2 rounded bg-white p-2 shadow-lg">
+    <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
       {' '}
       {/* Largeur fixée à 48 unités */}
       <IconButton

@@ -9,7 +9,7 @@ export default function ImageMenu({ onAddImage }) {
   }
 
   return (
-    <div className="relative flex space-x-2 rounded bg-white p-2 shadow-lg">
+    <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
       {/* Champ de fichier pour uploader une image */}
       <input
         type="file"

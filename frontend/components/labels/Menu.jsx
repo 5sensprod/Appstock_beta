@@ -24,7 +24,7 @@ const Menu = () => {
   }
 
   return (
-    <div className="relative flex flex-row items-start gap-4 p-4">
+    <div className="relative flex flex-row items-start gap-4">
       {/* Menu pour les formes */}
       <ParentMenu
         icon={faShapes}
