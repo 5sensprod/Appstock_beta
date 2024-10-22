@@ -67,7 +67,7 @@ const CanvasProvider = ({ children }) => {
     setSelectedColor(color)
   }
 
-  const { onAddCircle, onAddRectangle, onAddText } = useAddObjectToCanvas(
+  const { onAddCircle, onAddRectangle, onAddText, onAddImage } = useAddObjectToCanvas(
     canvas,
     labelConfig,
     selectedColor
@@ -99,6 +99,7 @@ const CanvasProvider = ({ children }) => {
     onAddCircle,
     onAddRectangle,
     onAddText,
+    onAddImage,
     isShapeSelected,
     isTextSelected,
     updateSelectedColor

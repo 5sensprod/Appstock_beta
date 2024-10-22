@@ -7,19 +7,20 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor) => {
     (object) => {
       if (!canvas) return
 
+      // Calcul des coordonnées centrales du canevas
       const centerX = mmToPx(labelConfig.labelWidth / 2)
       const centerY = mmToPx(labelConfig.labelHeight / 2)
 
       object.set({
-        left: centerX - (object.width || 0) / 2,
-        top: centerY - (object.height || 0) / 2
+        left: centerX - object.getScaledWidth() / 2, // Centre horizontalement
+        top: centerY - object.getScaledHeight() / 2 // Centre verticalement
       })
 
       canvas.add(object)
       canvas.setActiveObject(object)
       canvas.renderAll()
     },
-    [canvas, labelConfig] // Dépendances pour que la fonction soit recalculée lorsque nécessaire
+    [canvas, labelConfig]
   )
 
   // Fonction pour ajouter un cercle
@@ -64,10 +65,52 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor) => {
     addObjectToCanvas(text)
   }, [selectedColor, labelConfig, addObjectToCanvas])
 
+  // Fonction pour ajouter une image à partir d'une URL
+  const onAddImage = useCallback(
+    (file) => {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const imgElement = new Image()
+        imgElement.src = event.target.result
+
+        imgElement.onload = () => {
+          // Obtenir les dimensions de l'image chargée
+          const imgWidth = imgElement.naturalWidth
+          const imgHeight = imgElement.naturalHeight
+
+          // Obtenir les dimensions du canevas
+          const canvasWidth = mmToPx(labelConfig.labelWidth)
+          const canvasHeight = mmToPx(labelConfig.labelHeight)
+
+          // Calculer le facteur de réduction pour conserver les proportions
+          const scaleFactor = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight)
+
+          // Créer une instance de fabric.Image avec les dimensions ajustées
+          const fabricImg = new fabric.Image(imgElement, {
+            scaleX: scaleFactor, // Appliquer le facteur de réduction
+            scaleY: scaleFactor
+          })
+
+          // Ajouter l'image au canevas en la centrant
+          addObjectToCanvas(fabricImg)
+        }
+
+        imgElement.onerror = () => {
+          console.error("Échec du chargement de l'image.")
+        }
+      }
+
+      if (file) {
+        reader.readAsDataURL(file) // Lire le fichier image sélectionné
+      }
+    },
+    [addObjectToCanvas, labelConfig]
+  )
   return {
     onAddCircle,
     onAddRectangle,
-    onAddText
+    onAddText,
+    onAddImage
   }
 }
 
