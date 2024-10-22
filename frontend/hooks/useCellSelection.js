@@ -45,7 +45,7 @@ const useCellSelection = () => {
               ? 'border-blue-500 bg-blue-500' // Cellules sélectionnées en bleu
               : hasDesign
                 ? 'border-blue-300 bg-blue-200' // Cellule avec contenu en bleu clair
-                : 'border-gray-300 bg-gray-400' // Cellule vide
+                : 'border-gray-300 bg-gray-100' // Cellule vide
           } cursor-pointer`
 
           label.style.width = `${(labelWidth / pageWidth) * 100}%`

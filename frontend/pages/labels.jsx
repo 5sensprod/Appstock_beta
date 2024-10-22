@@ -33,7 +33,7 @@ const Labels = () => {
           <div className="flex items-center justify-center">
             <button onClick={toggleRightPanel} className="mx-2">
               <FontAwesomeIcon
-                icon={isRightPanelVisible ? faChevronLeft : faChevronRight}
+                icon={isRightPanelVisible ? faChevronRight : faChevronLeft}
                 size="lg"
                 className="transition-colors duration-300 hover:text-blue-500"
               />
