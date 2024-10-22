@@ -1,11 +1,10 @@
 import React, { createContext, useEffect, useRef, useState, useContext } from 'react'
 import * as fabric from 'fabric'
-import useCanvasZoom from '../hooks/useCanvasZoom'
-import useUpdateCanvasSize from '../hooks/useUpdateCanvasSize'
 import useCanvasEvents from '../hooks/useCanvasEvents'
 import useSelectedObject from '../hooks/useSelectedObject'
 import useObjectConstraints from '../hooks/useObjectConstraints'
 import { mmToPx } from '../utils/conversionUtils'
+import useCanvasTransform from '../hooks/useCanvasTransform'
 const CanvasContext = createContext()
 
 const useCanvas = () => useContext(CanvasContext)
@@ -24,8 +23,13 @@ const CanvasProvider = ({ children }) => {
     spacingHorizontal: 0
   })
 
-  const updateCanvasSize = useUpdateCanvasSize(canvas, labelConfig, setLabelConfig, setZoomLevel)
-  const handleZoomChange = useCanvasZoom(canvas, zoomLevel, setZoomLevel)
+  const { updateCanvasSize, handleZoomChange } = useCanvasTransform(
+    canvas,
+    labelConfig,
+    setLabelConfig,
+    zoomLevel,
+    setZoomLevel
+  )
 
   const [selectedColor, setSelectedColor] = useState('#000000') // Couleur par défaut
   const [selectedObject, setSelectedObject] = useState(null) // Objet sélectionné
@@ -39,9 +43,9 @@ const CanvasProvider = ({ children }) => {
         preserveObjectStacking: true
       })
 
-      // Définir la couleur de fond du canvas via Fabric.js
+      // Définir la couleur de fond du canevas
       fabricCanvas.backgroundColor = 'white'
-      fabricCanvas.renderAll() // Rendre le canevas avec le fond appliqué
+      fabricCanvas.renderAll()
 
       setCanvas(fabricCanvas)
       console.log('Canvas initialisé :', fabricCanvas)
@@ -49,10 +53,7 @@ const CanvasProvider = ({ children }) => {
       canvas.setWidth(mmToPx(labelConfig.labelWidth))
       canvas.setHeight(mmToPx(labelConfig.labelHeight))
 
-      // Redéfinir le fond à chaque fois que le canevas est réinitialisé
       canvas.backgroundColor = 'white'
-      canvas.renderAll() // Rendre le canevas avec le fond appliqué
-
       canvas.renderAll()
     }
   }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
@@ -149,7 +150,7 @@ const CanvasProvider = ({ children }) => {
     onAddCircle,
     onAddRectangle,
     onAddText,
-    isShapeSelected, // Expose cette fonction
+    isShapeSelected,
     isTextSelected,
     updateSelectedColor
   }

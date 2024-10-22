@@ -25,11 +25,16 @@ const InstanceProvider = ({ children }) => {
       console.log(`Chargement du design pour la cellule ${cellIndex}`)
       if (!canvas) return
 
+      // Effacer le contenu du canevas mais réappliquer la couleur de fond
       canvas.clear()
+      canvas.backgroundColor = 'white' // Réappliquer la couleur de fond blanche
 
       if (cellDesigns[cellIndex]) {
+        // Charger le design à partir de JSON
         canvas.loadFromJSON(cellDesigns[cellIndex], () => {
-          setTimeout(() => canvas.renderAll(), 10) // Re-rendu du canevas après un léger délai
+          setTimeout(() => {
+            canvas.renderAll() // Re-rendu du canevas après un léger délai
+          }, 10)
         })
       } else {
         canvas.renderAll() // Forcer le rendu même si la cellule est vide
@@ -111,7 +116,7 @@ const InstanceProvider = ({ children }) => {
 
       if (canvas) {
         canvas.discardActiveObject()
-        canvas.renderAll() // Annuler la sélection et forcer le rendu
+        canvas.renderAll()
       }
 
       setSelectedCells((prevSelectedCells) => {
