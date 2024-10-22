@@ -26,8 +26,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 20px;
-  overflow: hidden; /* Assurez-vous que le canevas ne dépasse pas */
+  /* width: 500px; */
+  height: 500px;
+  background-color: #e0e0e0;
+  border-radius: 5px;
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 .sampleCanvas {

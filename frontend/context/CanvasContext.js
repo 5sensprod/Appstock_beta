@@ -40,11 +40,21 @@ const CanvasProvider = ({ children }) => {
         height: mmToPx(labelConfig.labelHeight),
         preserveObjectStacking: true
       })
+
+      // Définir la couleur de fond du canvas via Fabric.js
+      fabricCanvas.backgroundColor = 'white'
+      fabricCanvas.renderAll() // Rendre le canevas avec le fond appliqué
+
       setCanvas(fabricCanvas)
       console.log('Canvas initialisé :', fabricCanvas)
     } else {
       canvas.setWidth(mmToPx(labelConfig.labelWidth))
       canvas.setHeight(mmToPx(labelConfig.labelHeight))
+
+      // Redéfinir le fond à chaque fois que le canevas est réinitialisé
+      canvas.backgroundColor = 'white'
+      canvas.renderAll() // Rendre le canevas avec le fond appliqué
+
       canvas.renderAll()
     }
   }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])

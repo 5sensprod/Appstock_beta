@@ -21,6 +21,12 @@ const useCanvasZoom = (canvas, zoomLevel, setZoomLevel) => {
         canvas.setWidth(newWidth)
         canvas.setHeight(newHeight)
 
+        // Appliquer les transformations de vue au canevas (pour réagir au zoom)
+        const vpt = canvas.viewportTransform
+        vpt[4] = (canvas.getWidth() - newWidth) / 2 // Centrer horizontalement
+        vpt[5] = (canvas.getHeight() - newHeight) / 2 // Centrer verticalement
+        canvas.setViewportTransform(vpt)
+
         // Mettre à jour le niveau de zoom
         setZoomLevel(newZoom)
 
