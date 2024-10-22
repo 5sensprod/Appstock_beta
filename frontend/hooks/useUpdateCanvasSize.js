@@ -1,7 +1,5 @@
 import { useCallback } from 'react'
-
-// Conversion mm -> pixels
-const mmToPx = (mm) => (mm / 25.4) * 72
+import { mmToPx } from '../utils/conversionUtils'
 
 const useUpdateCanvasSize = (canvas, labelConfig, setLabelConfig, setZoomLevel) => {
   // Assurez-vous de passer setZoomLevel ici

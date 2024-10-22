@@ -5,12 +5,10 @@ import useUpdateCanvasSize from '../hooks/useUpdateCanvasSize'
 import useCanvasEvents from '../hooks/useCanvasEvents'
 import useSelectedObject from '../hooks/useSelectedObject'
 import useObjectConstraints from '../hooks/useObjectConstraints'
-
+import { mmToPx } from '../utils/conversionUtils'
 const CanvasContext = createContext()
 
 const useCanvas = () => useContext(CanvasContext)
-
-const mmToPx = (mm) => (mm / 25.4) * 72
 
 const CanvasProvider = ({ children }) => {
   const canvasRef = useRef(null)
