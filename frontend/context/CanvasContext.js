@@ -1,7 +1,6 @@
 import React, { createContext, useEffect, useRef, useState, useContext } from 'react'
 import * as fabric from 'fabric'
-import useCanvasEvents from '../hooks/useCanvasEvents'
-import useSelectedObject from '../hooks/useSelectedObject'
+import useCanvasObjectHandler from '../hooks/useCanvasObjectHandler'
 import useObjectConstraints from '../hooks/useObjectConstraints'
 import { mmToPx } from '../utils/conversionUtils'
 import useCanvasTransform from '../hooks/useCanvasTransform'
@@ -59,8 +58,7 @@ const CanvasProvider = ({ children }) => {
   }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
 
   // Gestion des événements du canevas
-  useCanvasEvents(canvas, setSelectedObject, setSelectedColor)
-  useSelectedObject(canvas, selectedObject, selectedColor)
+  useCanvasObjectHandler(canvas, selectedObject, selectedColor, setSelectedObject, setSelectedColor)
   useObjectConstraints(canvas)
 
   const addObjectToCanvas = (object) => {

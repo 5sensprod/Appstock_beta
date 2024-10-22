@@ -1,7 +1,12 @@
-// frontend/hooks/useCanvasEvents.js
 import { useEffect } from 'react'
 
-const useCanvasEvents = (canvas, setSelectedObject, setSelectedColor) => {
+const useCanvasObjectHandler = (
+  canvas,
+  selectedObject,
+  selectedColor,
+  setSelectedObject,
+  setSelectedColor
+) => {
   useEffect(() => {
     if (!canvas) return
 
@@ -27,6 +32,14 @@ const useCanvasEvents = (canvas, setSelectedObject, setSelectedColor) => {
       canvas.off('selection:cleared')
     }
   }, [canvas, setSelectedObject, setSelectedColor])
+
+  // Appliquer la couleur sélectionnée à l'objet sélectionné
+  useEffect(() => {
+    if (selectedObject && 'set' in selectedObject) {
+      selectedObject.set('fill', selectedColor)
+      canvas.renderAll()
+    }
+  }, [selectedColor, selectedObject, canvas])
 }
 
-export default useCanvasEvents
+export default useCanvasObjectHandler
