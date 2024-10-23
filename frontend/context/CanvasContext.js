@@ -70,6 +70,7 @@ const CanvasProvider = ({ children }) => {
     selectedFont,
     setSelectedFont
   )
+
   useObjectConstraints(canvas)
 
   // Fonction pour mettre à jour la couleur sélectionnée via InstanceContext
