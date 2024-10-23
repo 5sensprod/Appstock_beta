@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { faShapes, faTextHeight, faImage } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import ShapeMenu from './menus/ShapeMenu'
@@ -8,10 +8,12 @@ import { useCanvas } from '../../context/CanvasContext'
 
 const Menu = () => {
   const [activeMenu, setActiveMenu] = useState(null) // Un seul état pour gérer quel menu est ouvert
-  const [menuWidth, setMenuWidth] = useState(0) // Stocker la largeur du menu ouvert
-  const menuRef = useRef(null) // Référence pour mesurer la largeur
 
-  // Récupération des méthodes et de la sélection d'objets depuis le contexte Canvas
+  // Largeurs fixes pour chaque sous-menu
+  const shapeMenuWidth = 135 // Largeur du ShapeMenu (en pixels)
+  const textMenuWidth = 100 // Largeur du TextMenu (en pixels)
+  const imageMenuWidth = 275 // Largeur du ImageMenu (en pixels)
+
   const { onAddCircle, onAddRectangle, onAddText, onAddImage, selectedObject } = useCanvas()
 
   useEffect(() => {
@@ -29,25 +31,15 @@ const Menu = () => {
   const toggleMenu = (menu) => {
     if (activeMenu === menu) {
       setActiveMenu(null)
-      setMenuWidth(0)
     } else {
       setActiveMenu(menu)
     }
   }
 
-  // Mesurer la largeur du sous-menu et l'appliquer à la marge
-  useEffect(() => {
-    if (menuRef.current && activeMenu) {
-      setMenuWidth(menuRef.current.offsetWidth)
-    } else {
-      setMenuWidth(0)
-    }
-  }, [activeMenu])
-
   return (
-    <div className="relative flex items-start gap-4 p-4">
+    <div className="relative flex items-start gap-4 py-4">
       {/* Bouton et menu pour les formes */}
-      <div className="relative" ref={activeMenu === 'shapes' ? menuRef : null}>
+      <div className="relative">
         <button
           onClick={() => toggleMenu('shapes')}
           className={`flex items-center justify-center rounded bg-blue-500 p-4 text-white hover:bg-blue-600 ${
@@ -57,7 +49,10 @@ const Menu = () => {
           <FontAwesomeIcon icon={faShapes} className="text-3xl" />
         </button>
         {activeMenu === 'shapes' && (
-          <div className="absolute left-full top-0 ml-2" ref={menuRef}>
+          <div
+            className="absolute left-full top-0 ml-2"
+            style={{ width: `${shapeMenuWidth}px` }} // Largeur fixe du sous-menu "shapes"
+          >
             <ShapeMenu onAddCircle={onAddCircle} onAddRectangle={onAddRectangle} />
           </div>
         )}
@@ -67,7 +62,7 @@ const Menu = () => {
       <div
         className="relative"
         style={{
-          marginLeft: activeMenu ? `${menuWidth}px` : '0px',
+          marginLeft: activeMenu === 'shapes' ? `${shapeMenuWidth}px` : '0px',
           transition: 'margin-left 0.3s ease'
         }}
       >
@@ -80,7 +75,10 @@ const Menu = () => {
           <FontAwesomeIcon icon={faTextHeight} className="text-3xl" />
         </button>
         {activeMenu === 'text' && (
-          <div className="absolute left-full top-0 ml-2" ref={menuRef}>
+          <div
+            className="absolute left-full top-0 ml-2"
+            style={{ width: `${textMenuWidth}px` }} // Largeur fixe du sous-menu "text"
+          >
             <TextMenu onAddText={onAddText} />
           </div>
         )}
@@ -90,7 +88,7 @@ const Menu = () => {
       <div
         className="relative"
         style={{
-          marginLeft: activeMenu ? `${menuWidth}px` : '0px',
+          marginLeft: activeMenu === 'text' ? `${textMenuWidth}px` : '0px',
           transition: 'margin-left 0.3s ease'
         }}
       >
@@ -103,7 +101,10 @@ const Menu = () => {
           <FontAwesomeIcon icon={faImage} className="text-3xl" />
         </button>
         {activeMenu === 'images' && (
-          <div className="absolute left-full top-0 ml-2" ref={menuRef}>
+          <div
+            className="absolute left-full top-0 ml-2"
+            style={{ width: `${imageMenuWidth}px` }} // Largeur fixe du sous-menu "images"
+          >
             <ImageMenu onAddImage={onAddImage} />
           </div>
         )}

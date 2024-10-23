@@ -28,7 +28,7 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   }, [])
 
   return (
-    <div className="relative flex w-auto space-x-2 rounded bg-white pl-2 shadow-lg">
+    <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
       <button
         onClick={onAddCircle}
         className="flex items-center justify-center rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
