@@ -63,7 +63,7 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
     fontObserver
       .load()
       .then(() => {
-        const textBox = new fabric.IText('Votre texte ici', {
+        const textBox = new fabric.Textbox('Votre texte ici', {
           fontSize: fontSize,
           fill: selectedColor,
           textAlign: 'left',
@@ -127,12 +127,24 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
     },
     [addObjectToCanvas, labelConfig]
   )
+
+  // Ajout de la fonction pour supprimer un objet
+  const onDeleteObject = useCallback(() => {
+    const activeObject = canvas.getActiveObject()
+    if (activeObject) {
+      canvas.remove(activeObject) // Supprimer l'objet actif du canevas
+      canvas.discardActiveObject() // Désélectionner l'objet
+      canvas.renderAll() // Re-rendu du canevas
+    }
+  }, [canvas])
+
   return {
     onAddCircle,
     onAddRectangle,
     onAddText,
     onAddImage,
-    selectedFont
+    selectedFont,
+    onDeleteObject
   }
 }
 

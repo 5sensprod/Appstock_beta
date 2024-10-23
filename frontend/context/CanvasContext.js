@@ -83,13 +83,8 @@ const CanvasProvider = ({ children }) => {
     setSelectedFont(font)
   }
 
-  const { onAddCircle, onAddRectangle, onAddText, onAddImage } = useAddObjectToCanvas(
-    canvas,
-    labelConfig,
-    selectedColor,
-    selectedFont,
-    setSelectedFont
-  )
+  const { onAddCircle, onAddRectangle, onAddText, onAddImage, onDeleteObject } =
+    useAddObjectToCanvas(canvas, labelConfig, selectedColor, selectedFont, setSelectedFont)
 
   useEffect(() => {
     if (canvas) {
@@ -111,6 +106,19 @@ const CanvasProvider = ({ children }) => {
     if (!selectedObject) return false
     return selectedObject.type === 'image'
   }
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        onDeleteObject() // Appeler la fonction de suppression
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown) // Ajouter l'écouteur d'événements au document
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown) // Nettoyer l'écouteur d'événements lors du démontage
+    }
+  }, [onDeleteObject])
 
   const value = {
     canvasRef,
@@ -135,7 +143,8 @@ const CanvasProvider = ({ children }) => {
     updateSelectedColor,
     selectedFont,
     setSelectedFont,
-    updateSelectedFont
+    updateSelectedFont,
+    onDeleteObject
   }
 
   return <CanvasContext.Provider value={value}>{children}</CanvasContext.Provider>

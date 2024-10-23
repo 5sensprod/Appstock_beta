@@ -14,7 +14,9 @@ const InstanceProvider = ({ children }) => {
     selectedColor,
     selectedObject,
     selectedFont, // Importer la police depuis CanvasContext
-    setSelectedFont // Fonction pour mettre à jour la police
+    setSelectedFont,
+    onDeleteObject,
+    isTextSelected
   } = useCanvas() // Utiliser directement CanvasContext
 
   const [selectedCell, setSelectedCell] = useState(0)
@@ -257,7 +259,9 @@ const InstanceProvider = ({ children }) => {
     setSelectedFont,
     updateSelectedFont,
     unsavedChanges,
-    hasDesignChanged
+    hasDesignChanged,
+    onDeleteObject,
+    isTextSelected
   }
 
   return <InstanceContext.Provider value={value}>{children}</InstanceContext.Provider>

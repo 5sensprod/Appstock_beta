@@ -1,12 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTextHeight, faPalette } from '@fortawesome/free-solid-svg-icons'
+import { faTextHeight, faPalette, faTrash } from '@fortawesome/free-solid-svg-icons' // Ajoute faTrash pour le bouton de suppression
+import IconButton from '../../ui/IconButton' // Importer IconButton
 import ColorPicker from '../texttool/ColorPicker'
 import { useInstance } from '../../../context/InstanceContext'
 
 export default function TextMenu({ onAddText }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
-  const { selectedColor, handleColorChange, handleFontChange, selectedFont } = useInstance()
+  const {
+    selectedColor,
+    handleColorChange,
+    handleFontChange,
+    selectedFont,
+    onDeleteObject,
+    isTextSelected
+  } = useInstance()
   const pickerRef = useRef(null)
 
   const toggleColorPicker = () => {
@@ -27,20 +34,38 @@ export default function TextMenu({ onAddText }) {
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
-      <button
+      {/* Utilisation d'IconButton pour ajouter du texte */}
+      <IconButton
         onClick={onAddText}
-        className="flex items-center justify-center rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
+        icon={faTextHeight}
         title="Ajouter du texte"
-      >
-        <FontAwesomeIcon icon={faTextHeight} className="text-xl" />
-      </button>
-      <button
+        className="bg-blue-500 hover:bg-blue-600" // Personnaliser la couleur
+        size="w-9 h-12" // Taille du bouton
+        iconSize="text-xl" // Taille de l'icône
+      />
+
+      {/* Afficher le bouton de suppression uniquement si un texte est sélectionné */}
+      {isTextSelected() && (
+        <IconButton
+          onClick={onDeleteObject}
+          icon={faTrash}
+          title="Supprimer l'élément"
+          className="bg-red-500 hover:bg-red-600"
+          size="w-9 h-12"
+          iconSize="text-xl"
+        />
+      )}
+
+      {/* Utilisation d'IconButton pour le ColorPicker */}
+      <IconButton
         onClick={toggleColorPicker}
-        className="flex items-center justify-center rounded bg-gray-500 p-2 text-white hover:bg-gray-600"
+        icon={faPalette}
         title="Choisir une couleur"
-      >
-        <FontAwesomeIcon icon={faPalette} className="text-xl" />
-      </button>
+        className="bg-gray-500 hover:bg-gray-600" // Personnaliser la couleur
+        size="w-9 h-12" // Taille du bouton
+        iconSize="text-xl" // Taille de l'icône
+      />
+
       {isColorPickerOpen && (
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
           <ColorPicker color={selectedColor} setSelectedColor={handleColorChange} />
