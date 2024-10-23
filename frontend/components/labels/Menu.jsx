@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { faShapes, faTextHeight, faImage } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import IconButton from '../ui/IconButton'
 import ShapeMenu from './menus/ShapeMenu'
 import TextMenu from './menus/TextMenu'
 import ImageMenu from './menus/ImageMenu'
@@ -37,17 +37,17 @@ const Menu = () => {
   }
 
   return (
-    <div className="relative flex items-start gap-4 py-4">
+    <div className="relative flex items-start gap-4 p-4">
       {/* Bouton et menu pour les formes */}
       <div className="relative">
-        <button
+        <IconButton
           onClick={() => toggleMenu('shapes')}
-          className={`flex items-center justify-center rounded bg-blue-500 p-4 text-white hover:bg-blue-600 ${
-            activeMenu === 'shapes' ? 'bg-blue-300' : ''
-          }`}
-        >
-          <FontAwesomeIcon icon={faShapes} className="text-3xl" />
-        </button>
+          icon={faShapes}
+          title="Afficher les formes"
+          className={`${activeMenu === 'shapes' ? 'bg-blue-300' : 'bg-blue-500'}`} // Changer de couleur si le menu est actif
+          size="w-16 h-16" // Taille du bouton
+          iconSize="text-3xl" // Taille de l'icône
+        />
         {activeMenu === 'shapes' && (
           <div
             className="absolute left-full top-0 ml-2"
@@ -66,14 +66,14 @@ const Menu = () => {
           transition: 'margin-left 0.3s ease'
         }}
       >
-        <button
+        <IconButton
           onClick={() => toggleMenu('text')}
-          className={`flex items-center justify-center rounded bg-blue-500 p-4 text-white hover:bg-blue-600 ${
-            activeMenu === 'text' ? 'bg-blue-300' : ''
-          }`}
-        >
-          <FontAwesomeIcon icon={faTextHeight} className="text-3xl" />
-        </button>
+          icon={faTextHeight}
+          title="Afficher le texte"
+          className={`${activeMenu === 'text' ? 'bg-blue-300' : 'bg-blue-500'}`} // Changer de couleur si le menu est actif
+          size="w-16 h-16"
+          iconSize="text-3xl"
+        />
         {activeMenu === 'text' && (
           <div
             className="absolute left-full top-0 ml-2"
@@ -92,14 +92,14 @@ const Menu = () => {
           transition: 'margin-left 0.3s ease'
         }}
       >
-        <button
+        <IconButton
           onClick={() => toggleMenu('images')}
-          className={`flex items-center justify-center rounded bg-blue-500 p-4 text-white hover:bg-blue-600 ${
-            activeMenu === 'images' ? 'bg-blue-300' : ''
-          }`}
-        >
-          <FontAwesomeIcon icon={faImage} className="text-3xl" />
-        </button>
+          icon={faImage}
+          title="Afficher les images"
+          className={`${activeMenu === 'images' ? 'bg-blue-300' : 'bg-blue-500'}`} // Changer de couleur si le menu est actif
+          size="w-16 h-16"
+          iconSize="text-3xl"
+        />
         {activeMenu === 'images' && (
           <div
             className="absolute left-full top-0 ml-2"

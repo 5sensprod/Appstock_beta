@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircle, faSquare, faPalette } from '@fortawesome/free-solid-svg-icons'
+import IconButton from '../../ui/IconButton' // Importer IconButton
 import ColorPicker from '../texttool/ColorPicker'
 import { useInstance } from '../../../context/InstanceContext'
 
@@ -29,27 +29,36 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
-      <button
+      {/* Utilisation d'IconButton pour ajouter un cercle */}
+      <IconButton
         onClick={onAddCircle}
-        className="flex items-center justify-center rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
+        icon={faCircle}
         title="Ajouter un cercle"
-      >
-        <FontAwesomeIcon icon={faCircle} className="text-xl" />
-      </button>
-      <button
+        className="bg-blue-500 hover:bg-blue-600" // Personnaliser la couleur
+        size="w-12 h-12" // Taille du bouton
+        iconSize="text-xl" // Taille de l'icône
+      />
+
+      {/* Utilisation d'IconButton pour ajouter un rectangle */}
+      <IconButton
         onClick={onAddRectangle}
-        className="flex items-center justify-center rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
+        icon={faSquare}
         title="Ajouter un rectangle"
-      >
-        <FontAwesomeIcon icon={faSquare} className="text-xl" />
-      </button>
-      <button
+        className="bg-blue-500 hover:bg-blue-600" // Personnaliser la couleur
+        size="w-12 h-12" // Taille du bouton
+        iconSize="text-xl" // Taille de l'icône
+      />
+
+      {/* Utilisation d'IconButton pour le ColorPicker */}
+      <IconButton
         onClick={toggleColorPicker}
-        className="flex items-center justify-center rounded bg-gray-500 p-2 text-white hover:bg-gray-600"
+        icon={faPalette}
         title="Choisir une couleur"
-      >
-        <FontAwesomeIcon icon={faPalette} className="text-xl" />
-      </button>
+        className="bg-gray-500 hover:bg-gray-600" // Personnaliser la couleur
+        size="w-12 h-12" // Taille du bouton
+        iconSize="text-xl" // Taille de l'icône
+      />
+
       {isColorPickerOpen && (
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
           <ColorPicker color={selectedColor} setSelectedColor={handleColorChange} />
