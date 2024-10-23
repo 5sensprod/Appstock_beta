@@ -31,8 +31,9 @@ const CanvasProvider = ({ children }) => {
     setZoomLevel
   )
 
-  const [selectedColor, setSelectedColor] = useState('#000000') // Couleur par défaut
-  const [selectedObject, setSelectedObject] = useState(null) // Objet sélectionné
+  const [selectedColor, setSelectedColor] = useState('#000000')
+  const [selectedFont, setSelectedFont] = useState('Arial')
+  const [selectedObject, setSelectedObject] = useState(null)
 
   // Initialisation du canevas
   useEffect(() => {
@@ -59,12 +60,26 @@ const CanvasProvider = ({ children }) => {
   }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
 
   // Gestion des événements du canevas
-  useCanvasObjectHandler(canvas, selectedObject, selectedColor, setSelectedObject, setSelectedColor)
+
+  useCanvasObjectHandler(
+    canvas,
+    selectedObject,
+    selectedColor,
+    setSelectedObject,
+    setSelectedColor,
+    selectedFont,
+    setSelectedFont // S'assurer que setSelectedFont est bien passé ici
+  )
   useObjectConstraints(canvas)
 
   // Fonction pour mettre à jour la couleur sélectionnée via InstanceContext
   const updateSelectedColor = (color) => {
     setSelectedColor(color)
+  }
+
+  // Fonction pour mettre à jour la police sélectionnée
+  const updateSelectedFont = (font) => {
+    setSelectedFont(font)
   }
 
   const { onAddCircle, onAddRectangle, onAddText, onAddImage } = useAddObjectToCanvas(
@@ -108,7 +123,10 @@ const CanvasProvider = ({ children }) => {
     isShapeSelected,
     isTextSelected,
     isImageSelected,
-    updateSelectedColor
+    updateSelectedColor,
+    selectedFont,
+    setSelectedFont,
+    updateSelectedFont
   }
 
   return <CanvasContext.Provider value={value}>{children}</CanvasContext.Provider>

@@ -1,23 +1,26 @@
 import React, { createContext, useState, useContext, useCallback, useEffect } from 'react'
 import { useCanvas } from './CanvasContext'
-import useCanvasObjectHandler from '../hooks/useCanvasObjectHandler'
 
 const InstanceContext = createContext()
 
 export const useInstance = () => useContext(InstanceContext)
 
 const InstanceProvider = ({ children }) => {
-  const { canvas, updateSelectedColor } = useCanvas()
+  const {
+    canvas,
+    updateSelectedColor,
+    selectedColor,
+    selectedObject,
+    selectedFont, // Importer la police depuis CanvasContext
+    setSelectedFont // Fonction pour mettre à jour la police
+  } = useCanvas() // Utiliser directement CanvasContext
+
   const [selectedCell, setSelectedCell] = useState(0)
   const [selectedCells, setSelectedCells] = useState([])
   const [cellDesigns, setCellDesigns] = useState({})
   const [totalCells, setTotalCells] = useState(0)
   const [copiedDesign, setCopiedDesign] = useState(null)
   const [unsavedChanges, setUnsavedChanges] = useState(false)
-  const [selectedColor, setSelectedColor] = useState('#000000')
-  const [selectedObject, setSelectedObject] = useState(null)
-
-  useCanvasObjectHandler(canvas, selectedObject, selectedColor, setSelectedObject, setSelectedColor)
 
   // Fonction pour charger le design de la cellule sélectionnée
   const loadCellDesign = useCallback(
@@ -61,7 +64,6 @@ const InstanceProvider = ({ children }) => {
 
       console.log('Sauvegarde du design pour la cellule', selectedCell)
 
-      // Mettre à jour `cellDesigns` pour les cellules sélectionnées
       setCellDesigns((prevDesigns) => {
         const updatedDesigns = { ...prevDesigns }
 
@@ -79,7 +81,7 @@ const InstanceProvider = ({ children }) => {
       })
 
       setUnsavedChanges(false)
-      resolve() // Résoudre la promesse après mise à jour de `cellDesigns`
+      resolve()
     })
   }, [canvas, selectedCell, selectedCells])
 
@@ -94,11 +96,11 @@ const InstanceProvider = ({ children }) => {
         setUnsavedChanges(true)
       }
 
-      setSelectedColor(color)
       updateSelectedColor(color) // Mettre à jour la couleur dans CanvasContext
     },
     [canvas, updateSelectedColor]
   )
+
   // Gestion du clic sur une cellule (avec sélection multiple ou simple)
   const handleCellClick = useCallback(
     (labelIndex, event) => {
@@ -132,6 +134,7 @@ const InstanceProvider = ({ children }) => {
     },
     [selectedCell, unsavedChanges, hasDesignChanged, saveChanges, canvas]
   )
+
   // Copier le design actuel du canevas
   const copyDesign = useCallback(() => {
     if (canvas && typeof canvas.toJSON === 'function') {
@@ -204,6 +207,8 @@ const InstanceProvider = ({ children }) => {
     selectedColor,
     handleColorChange,
     selectedObject,
+    selectedFont, // Utiliser la police importée depuis CanvasContext
+    setSelectedFont, // Fournir la méthode de mise à jour de la police
     unsavedChanges,
     hasDesignChanged
   }

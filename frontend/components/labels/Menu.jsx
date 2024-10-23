@@ -11,7 +11,7 @@ const Menu = () => {
 
   // Largeurs fixes pour chaque sous-menu
   const shapeMenuWidth = 135 // Largeur du ShapeMenu (en pixels)
-  const textMenuWidth = 100 // Largeur du TextMenu (en pixels)
+  const textMenuWidth = 300 // Largeur du TextMenu (en pixels)
   const imageMenuWidth = 275 // Largeur du ImageMenu (en pixels)
 
   const { onAddCircle, onAddRectangle, onAddText, onAddImage, selectedObject } = useCanvas()
