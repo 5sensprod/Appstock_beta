@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { HexColorPicker } from 'react-colorful'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEyeDropper } from '@fortawesome/free-solid-svg-icons' // Icône de pipette de FontAwesome
+import { faEyeDropper } from '@fortawesome/free-solid-svg-icons' // Icône pipette de FontAwesome
+import IconButton from '../../ui/IconButton' // Importer IconButton
 
 const ColorPicker = ({ color, setSelectedColor }) => {
   const [isEyeDropperSupported, setIsEyeDropperSupported] = useState(false)
@@ -36,16 +36,19 @@ const ColorPicker = ({ color, setSelectedColor }) => {
 
   return (
     <div className="textTool mb-2">
+      {/* Composant HexColorPicker */}
       <HexColorPicker color={color} onChange={(newColor) => setSelectedColor(newColor)} />
 
+      {/* Bouton pipette avec IconButton */}
       {isEyeDropperSupported && (
-        <button
+        <IconButton
           onClick={handleEyeDropper}
-          className="mt-2 flex items-center justify-center rounded bg-gray-200 p-2 text-black hover:bg-gray-300"
+          icon={faEyeDropper}
           title="Utiliser la pipette"
-        >
-          <FontAwesomeIcon icon={faEyeDropper} className="text-xl" />
-        </button>
+          className="mt-2 bg-blue-500 hover:bg-blue-600" // Couleurs et marges personnalisées
+          size="w-10 h-10" // Taille du bouton
+          iconSize="text-xl" // Taille de l'icône
+        />
       )}
     </div>
   )
