@@ -60,7 +60,6 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor) => {
     const textBox = new fabric.Textbox('Votre texte ici', {
       fontSize: fontSize,
       fill: selectedColor,
-      width: labelConfig.labelWidth, // Vous pouvez définir une largeur fixe si nécessaire
       textAlign: 'left' // Alignez le texte comme vous le souhaitez : 'left', 'center', 'right'
     })
 
