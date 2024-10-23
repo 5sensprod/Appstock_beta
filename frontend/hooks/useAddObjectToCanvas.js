@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import * as fabric from 'fabric'
 import { mmToPx } from '../utils/conversionUtils' // Assure-toi que tu as la fonction de conversion
 
-const useAddObjectToCanvas = (canvas, labelConfig, selectedColor) => {
+const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) => {
   const addObjectToCanvas = useCallback(
     (object) => {
       if (!canvas) return
@@ -60,11 +60,12 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor) => {
     const textBox = new fabric.Textbox('Votre texte ici', {
       fontSize: fontSize,
       fill: selectedColor,
-      textAlign: 'left' // Alignez le texte comme vous le souhaitez : 'left', 'center', 'right'
+      textAlign: 'left',
+      fontFamily: selectedFont
     })
 
     addObjectToCanvas(textBox)
-  }, [selectedColor, labelConfig, addObjectToCanvas])
+  }, [selectedColor, labelConfig, selectedFont, addObjectToCanvas])
 
   // Fonction pour ajouter une image à partir d'une URL
   const onAddImage = useCallback(
@@ -111,7 +112,8 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor) => {
     onAddCircle,
     onAddRectangle,
     onAddText,
-    onAddImage
+    onAddImage,
+    selectedFont
   }
 }
 

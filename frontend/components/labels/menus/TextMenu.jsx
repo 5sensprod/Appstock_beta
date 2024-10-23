@@ -50,7 +50,10 @@ export default function TextMenu({ onAddText }) {
       {/* Sélecteur de police */}
       <select
         value={selectedFont}
-        onChange={(e) => setSelectedFont(e.target.value)} // Utiliser setSelectedFont ici
+        onChange={(e) => {
+          console.log('Police sélectionnée:', e.target.value)
+          setSelectedFont(e.target.value)
+        }}
         className="rounded border bg-white p-2 shadow"
       >
         <option value="Arial">Arial</option>
