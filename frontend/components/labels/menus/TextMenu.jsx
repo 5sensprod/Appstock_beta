@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTextHeight, faPalette } from '@fortawesome/free-solid-svg-icons'
-import IconButton from '../../ui/IconButton'
 import ColorPicker from '../texttool/ColorPicker'
-import { useInstance } from '../../../context/InstanceContext' // Importer le contexte
+import { useInstance } from '../../../context/InstanceContext'
 
 export default function TextMenu({ onAddText }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false) // Gérer l'ouverture du ColorPicker
@@ -29,20 +29,20 @@ export default function TextMenu({ onAddText }) {
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
-      {' '}
-      {/* Largeur fixée à 48 unités */}
-      <IconButton
+      <button
         onClick={onAddText}
-        icon={faTextHeight}
+        className="flex items-center justify-center rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
         title="Ajouter du texte"
-        className="flex size-12 items-center justify-center rounded bg-blue-500 text-white hover:bg-blue-600"
-      />
-      <IconButton
+      >
+        <FontAwesomeIcon icon={faTextHeight} className="text-xl" />
+      </button>
+      <button
         onClick={toggleColorPicker}
-        icon={faPalette}
+        className="flex items-center justify-center rounded bg-gray-500 p-2 text-white hover:bg-gray-600"
         title="Choisir une couleur"
-        className="flex size-12 items-center justify-center rounded bg-gray-500 text-white hover:bg-gray-600"
-      />
+      >
+        <FontAwesomeIcon icon={faPalette} className="text-xl" />
+      </button>
       {isColorPickerOpen && (
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
           <ColorPicker color={selectedColor} setSelectedColor={handleColorChange} />

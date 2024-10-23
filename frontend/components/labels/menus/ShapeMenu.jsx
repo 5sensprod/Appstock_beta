@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { faCircle, faSquare, faPalette } from '@fortawesome/free-solid-svg-icons' // Icône palette
-import IconButton from '../../ui/IconButton'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircle, faSquare, faPalette } from '@fortawesome/free-solid-svg-icons'
 import ColorPicker from '../texttool/ColorPicker'
-import { useInstance } from '../../../context/InstanceContext' // Importer le contexte
+import { useInstance } from '../../../context/InstanceContext'
 
 export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false) // Gérer l'ouverture du ColorPicker
@@ -29,26 +29,27 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white pl-2 shadow-lg">
-      {' '}
-      {/* Largeur fixée à 64 unités */}
-      <IconButton
+      <button
         onClick={onAddCircle}
-        icon={faCircle}
+        className="flex items-center justify-center rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
         title="Ajouter un cercle"
-        className="flex size-12 items-center justify-center rounded bg-blue-500 text-white hover:bg-blue-600"
-      />
-      <IconButton
+      >
+        <FontAwesomeIcon icon={faCircle} className="text-xl" />
+      </button>
+      <button
         onClick={onAddRectangle}
-        icon={faSquare}
+        className="flex items-center justify-center rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
         title="Ajouter un rectangle"
-        className="flex size-12 items-center justify-center rounded bg-blue-500 text-white hover:bg-blue-600"
-      />
-      <IconButton
+      >
+        <FontAwesomeIcon icon={faSquare} className="text-xl" />
+      </button>
+      <button
         onClick={toggleColorPicker}
-        icon={faPalette}
+        className="flex items-center justify-center rounded bg-gray-500 p-2 text-white hover:bg-gray-600"
         title="Choisir une couleur"
-        className="flex size-12 items-center justify-center rounded bg-gray-500 text-white hover:bg-gray-600"
-      />
+      >
+        <FontAwesomeIcon icon={faPalette} className="text-xl" />
+      </button>
       {isColorPickerOpen && (
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
           <ColorPicker color={selectedColor} setSelectedColor={handleColorChange} />
