@@ -57,12 +57,14 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor) => {
   const onAddText = useCallback(() => {
     const fontSize = labelConfig.labelWidth / 5
 
-    const text = new fabric.IText('Votre texte ici', {
+    const textBox = new fabric.Textbox('Votre texte ici', {
       fontSize: fontSize,
-      fill: selectedColor
+      fill: selectedColor,
+      width: labelConfig.labelWidth, // Vous pouvez définir une largeur fixe si nécessaire
+      textAlign: 'left' // Alignez le texte comme vous le souhaitez : 'left', 'center', 'right'
     })
 
-    addObjectToCanvas(text)
+    addObjectToCanvas(textBox)
   }, [selectedColor, labelConfig, addObjectToCanvas])
 
   // Fonction pour ajouter une image à partir d'une URL

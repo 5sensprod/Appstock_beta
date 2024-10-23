@@ -68,7 +68,7 @@ const CanvasProvider = ({ children }) => {
     setSelectedObject,
     setSelectedColor,
     selectedFont,
-    setSelectedFont // S'assurer que setSelectedFont est bien passé ici
+    setSelectedFont
   )
   useObjectConstraints(canvas)
 
@@ -85,7 +85,9 @@ const CanvasProvider = ({ children }) => {
   const { onAddCircle, onAddRectangle, onAddText, onAddImage } = useAddObjectToCanvas(
     canvas,
     labelConfig,
-    selectedColor
+    selectedColor,
+    selectedFont,
+    setSelectedFont
   )
 
   const isShapeSelected = () => {
@@ -95,7 +97,7 @@ const CanvasProvider = ({ children }) => {
 
   const isTextSelected = () => {
     if (!selectedObject) return false
-    return selectedObject.type === 'i-text'
+    return selectedObject.type === 'i-text' || selectedObject.type === 'textbox'
   }
 
   const isImageSelected = () => {

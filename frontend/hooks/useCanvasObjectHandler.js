@@ -44,7 +44,11 @@ const useCanvasObjectHandler = (
   }, [selectedColor, selectedObject, canvas])
 
   useEffect(() => {
-    if (selectedObject && 'set' in selectedObject && selectedObject.type === 'i-text') {
+    if (
+      selectedObject &&
+      'set' in selectedObject &&
+      (selectedObject.type === 'i-text' || selectedObject.type === 'textbox')
+    ) {
       // Stocker les valeurs originales importantes
       const originalText = selectedObject.text
       const originalLeft = selectedObject.left

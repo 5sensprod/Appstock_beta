@@ -19,7 +19,7 @@ const Menu = () => {
   useEffect(() => {
     if (selectedObject?.type === 'circle' || selectedObject?.type === 'rect') {
       setActiveMenu('shapes')
-    } else if (selectedObject?.type === 'i-text') {
+    } else if (selectedObject?.type === 'i-text' || selectedObject?.type === 'textbox') {
       setActiveMenu('text')
     } else if (selectedObject?.type === 'image') {
       setActiveMenu('images')
