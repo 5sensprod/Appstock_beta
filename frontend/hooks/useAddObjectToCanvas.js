@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import * as fabric from 'fabric'
 import { mmToPx } from '../utils/conversionUtils' // Assure-toi que tu as la fonction de conversion
-
+import FontFaceObserver from 'fontfaceobserver'
 const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) => {
   const addObjectToCanvas = useCallback(
     (object) => {
@@ -57,22 +57,33 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
   const onAddText = useCallback(() => {
     const fontSize = labelConfig.labelWidth / 5
 
-    const textBox = new fabric.Textbox('Votre texte ici', {
-      fontSize: fontSize,
-      fill: selectedColor,
-      textAlign: 'left',
-      fontFamily: selectedFont // Utiliser la police sélectionnée
-    })
+    // Charger la police avec FontFaceObserver avant de créer le texte
+    const fontObserver = new FontFaceObserver(selectedFont)
 
-    addObjectToCanvas(textBox)
+    fontObserver
+      .load()
+      .then(() => {
+        const textBox = new fabric.IText('Votre texte ici', {
+          fontSize: fontSize,
+          fill: selectedColor,
+          textAlign: 'left',
+          fontFamily: selectedFont // Appliquer la police sélectionnée
+        })
 
-    // Réinitialiser les dimensions et les coordonnées pour ajuster la sélection
-    textBox.set('dirty', true)
-    textBox.initDimensions() // Recalculer les dimensions en fonction de la police
-    textBox.setCoords() // Mettre à jour les coordonnées pour ajuster la sélection
+        // Ajouter l'objet texte une fois la police chargée
+        addObjectToCanvas(textBox)
 
-    canvas.setActiveObject(textBox) // Rendre l'objet actif
-    canvas.renderAll() // Forcer le re-rendu du canevas
+        // Réinitialiser les dimensions et ajuster la sélection
+        textBox.set('dirty', true)
+        textBox.initDimensions()
+        textBox.setCoords()
+
+        canvas.setActiveObject(textBox)
+        canvas.renderAll()
+      })
+      .catch((error) => {
+        console.error(`Erreur lors du chargement de la police ${selectedFont}:`, error)
+      })
   }, [selectedColor, labelConfig, selectedFont, addObjectToCanvas, canvas])
 
   // Fonction pour ajouter une image à partir d'une URL
