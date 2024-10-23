@@ -6,7 +6,7 @@ import { useInstance } from '../../../context/InstanceContext'
 
 export default function TextMenu({ onAddText }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
-  const { selectedColor, handleColorChange, selectedFont, setSelectedFont } = useInstance() // Utiliser setSelectedFont
+  const { selectedColor, handleColorChange, handleFontChange, selectedFont } = useInstance()
   const pickerRef = useRef(null)
 
   const toggleColorPicker = () => {
@@ -50,17 +50,16 @@ export default function TextMenu({ onAddText }) {
       {/* Sélecteur de police */}
       <select
         value={selectedFont}
-        onChange={(e) => {
-          console.log('Police sélectionnée:', e.target.value)
-          setSelectedFont(e.target.value)
-        }}
+        onChange={(e) => handleFontChange(e.target.value)}
         className="rounded border bg-white p-2 shadow"
       >
-        <option value="Arial">Arial</option>
-        <option value="Courier New">Courier New</option>
-        <option value="Georgia">Georgia</option>
-        <option value="Times New Roman">Times New Roman</option>
-        <option value="Verdana">Verdana</option>
+        <option value="Lato">Lato</option>
+        <option value="Merriweather">Merriweather</option>
+        <option value="Nunito">Nunito</option>
+        <option value="Open Sans">Open Sans</option>
+        <option value="Pacifico">Pacifico</option>
+        <option value="Playfair Display">Playfair Display</option>
+        <option value="Roboto">Roboto</option>
       </select>
     </div>
   )

@@ -61,11 +61,19 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
       fontSize: fontSize,
       fill: selectedColor,
       textAlign: 'left',
-      fontFamily: selectedFont
+      fontFamily: selectedFont // Utiliser la police sélectionnée
     })
 
     addObjectToCanvas(textBox)
-  }, [selectedColor, labelConfig, selectedFont, addObjectToCanvas])
+
+    // Réinitialiser les dimensions et les coordonnées pour ajuster la sélection
+    textBox.set('dirty', true)
+    textBox.initDimensions() // Recalculer les dimensions en fonction de la police
+    textBox.setCoords() // Mettre à jour les coordonnées pour ajuster la sélection
+
+    canvas.setActiveObject(textBox) // Rendre l'objet actif
+    canvas.renderAll() // Forcer le re-rendu du canevas
+  }, [selectedColor, labelConfig, selectedFont, addObjectToCanvas, canvas])
 
   // Fonction pour ajouter une image à partir d'une URL
   const onAddImage = useCallback(

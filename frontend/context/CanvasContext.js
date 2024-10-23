@@ -32,7 +32,7 @@ const CanvasProvider = ({ children }) => {
   )
 
   const [selectedColor, setSelectedColor] = useState('#000000')
-  const [selectedFont, setSelectedFont] = useState('Arial')
+  const [selectedFont, setSelectedFont] = useState('Lato')
   const [selectedObject, setSelectedObject] = useState(null)
 
   // Initialisation du canevas
@@ -90,6 +90,12 @@ const CanvasProvider = ({ children }) => {
     selectedFont,
     setSelectedFont
   )
+
+  useEffect(() => {
+    if (canvas) {
+      canvas.renderAll() // Forcer le re-rendu lorsque la police change
+    }
+  }, [selectedFont, canvas])
 
   const isShapeSelected = () => {
     if (!selectedObject) return false
