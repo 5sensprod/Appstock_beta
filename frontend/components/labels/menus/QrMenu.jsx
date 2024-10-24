@@ -1,19 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react'
 import IconButton from '../../ui/IconButton'
 import ColorPicker from '../texttool/ColorPicker'
-import { faQrcode, faPalette, faSyncAlt } from '@fortawesome/free-solid-svg-icons' // Ajouter l'icône de rafraîchissement
+import { faQrcode, faPalette, faSync } from '@fortawesome/free-solid-svg-icons' // Importer l'icône de rafraîchissement
 import { useInstance } from '../../../context/InstanceContext'
 
-export default function QrMenu({ onAddQrCode, selectedQrText, onUpdateQrCode }) {
-  const { selectedColor, handleColorChange } = useInstance()
-  const [qrText, setQrText] = useState(selectedQrText || '') // État pour stocker le texte QR
-  const [isModified, setIsModified] = useState(false) // Nouvel état pour suivre les modifications du texte
+export default function QrMenu({ onAddQrCode, onUpdateQrCode, selectedQrText }) {
+  const { selectedColor, handleColorChange } = useInstance() // Récupérer la couleur sélectionnée et la fonction de changement de couleur
+  const [qrText, setQrText] = useState(selectedQrText || '') // État pour stocker le texte à encoder dans le QR
+  const [isModified, setIsModified] = useState(false) // État pour vérifier si le QR code a été modifié
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false) // État pour gérer l'ouverture du ColorPicker
-  const pickerRef = useRef(null)
+  const pickerRef = useRef(null) // Référence pour le ColorPicker
 
   useEffect(() => {
     if (selectedQrText) {
-      setQrText(selectedQrText)
+      setQrText(selectedQrText) // Mettre à jour si un texte est sélectionné
       setIsModified(false) // Réinitialiser l'état de modification quand on sélectionne un nouveau QR code
     }
   }, [selectedQrText])
@@ -21,42 +21,44 @@ export default function QrMenu({ onAddQrCode, selectedQrText, onUpdateQrCode }) 
   // Gestion de la validation du texte et de la génération du QR code
   const handleValidate = () => {
     if (qrText.trim()) {
-      onAddQrCode(qrText)
-      setQrText('')
+      onAddQrCode(qrText) // Ajouter le QR code avec le texte fourni dans le canevas
+      setQrText('') // Réinitialiser le champ après validation
+      setIsModified(false) // Réinitialiser l'état de modification
     }
-  }
-
-  // Détecter les changements de texte pour activer l'icône de rafraîchissement
-  const handleInputChange = (e) => {
-    const newText = e.target.value
-    setQrText(newText)
-    setIsModified(newText !== selectedQrText) // Activer/désactiver l'icône selon si le texte est modifié
   }
 
   // Gestion de la mise à jour du QR code
   const handleUpdate = () => {
     if (isModified && qrText.trim()) {
-      onUpdateQrCode(qrText) // Appeler la fonction de mise à jour avec le nouveau texte
+      onUpdateQrCode(qrText, selectedColor) // Mettre à jour avec le texte et la couleur actuelle
       setIsModified(false) // Désactiver l'icône de rafraîchissement après mise à jour
     }
   }
 
-  // Gestion de l'ouverture/fermeture du ColorPicker
-  const toggleColorPicker = () => {
-    setIsColorPickerOpen((prev) => !prev)
+  // Détecter si le texte a été modifié
+  const handleTextChange = (e) => {
+    setQrText(e.target.value)
+    setIsModified(true) // Activer l'icône de rafraîchissement
   }
 
+  // Détecter si la couleur a été modifiée
+  const handleColorChangeAndUpdate = (color) => {
+    handleColorChange(color) // Mettre à jour la couleur dans le contexte
+    if (qrText.trim()) {
+      onUpdateQrCode(qrText, color) // Mettre à jour immédiatement le QR code avec la nouvelle couleur
+    }
+  }
   // Fermer le ColorPicker lorsqu'on clique en dehors
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
-        setIsColorPickerOpen(false)
+        setIsColorPickerOpen(false) // Fermer le ColorPicker si on clique en dehors
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('mousedown', handleClickOutside) // Nettoyer l'écouteur d'événements
     }
   }, [])
 
@@ -67,7 +69,7 @@ export default function QrMenu({ onAddQrCode, selectedQrText, onUpdateQrCode }) 
         type="text"
         placeholder="Entrez votre texte ou URL"
         value={qrText}
-        onChange={handleInputChange} // Détecter les changements
+        onChange={handleTextChange} // Appeler la fonction lors de la modification du texte
         className="w-64 rounded border p-2"
       />
 
@@ -81,20 +83,20 @@ export default function QrMenu({ onAddQrCode, selectedQrText, onUpdateQrCode }) 
         iconSize="text-xl"
       />
 
-      {/* Bouton pour mettre à jour le QR code */}
-      <IconButton
-        onClick={handleUpdate}
-        icon={faSyncAlt}
-        title="Mettre à jour QR Code"
-        className={`bg-gray-500 text-white hover:bg-gray-600 ${isModified ? 'opacity-100' : 'cursor-not-allowed opacity-50'}`}
-        size="w-9 h-12"
-        iconSize="text-xl"
-        disabled={!isModified} // Désactiver le bouton si rien n'est modifié
-      />
-
+      {/* Icône de rafraîchissement activée seulement si le texte ou la couleur a changé */}
+      {selectedQrText && isModified && (
+        <IconButton
+          onClick={handleUpdate}
+          icon={faSync}
+          title="Mettre à jour le QR Code"
+          className="bg-green-500 text-white hover:bg-green-600"
+          size="w-9 h-12"
+          iconSize="text-xl"
+        />
+      )}
       {/* Bouton pour ouvrir le ColorPicker */}
       <IconButton
-        onClick={toggleColorPicker}
+        onClick={() => setIsColorPickerOpen((prev) => !prev)}
         icon={faPalette}
         title="Choisir une couleur"
         className="bg-gray-500 hover:bg-gray-600"
@@ -105,7 +107,7 @@ export default function QrMenu({ onAddQrCode, selectedQrText, onUpdateQrCode }) 
       {/* Afficher le ColorPicker quand il est ouvert */}
       {isColorPickerOpen && (
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
-          <ColorPicker color={selectedColor} setSelectedColor={handleColorChange} />
+          <ColorPicker color={selectedColor} setSelectedColor={handleColorChangeAndUpdate} />
         </div>
       )}
     </div>

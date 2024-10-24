@@ -208,15 +208,15 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
   )
 
   const onUpdateQrCode = useCallback(
-    (newText) => {
+    (newText, newColor) => {
       const activeObject = canvas.getActiveObject()
       if (activeObject && activeObject.isQRCode) {
         QRCode.toDataURL(
-          newText,
+          newText, // Utiliser le texte existant ou un nouveau texte
           {
             width: activeObject.width, // Garder la même taille que l'original
             margin: 2,
-            color: { dark: rgbToHex(selectedColor) || '#000000', light: '#ffffff' }
+            color: { dark: rgbToHex(newColor) || '#000000', light: '#ffffff' } // Utiliser la nouvelle couleur
           },
           (err, url) => {
             if (err) {
@@ -228,7 +228,7 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
             imgElement.src = url
 
             imgElement.onload = () => {
-              activeObject.setElement(imgElement) // Remplacer l'image du QR code avec la nouvelle
+              activeObject.setElement(imgElement) // Remplacer l'image du QR code
               activeObject.qrText = newText // Mettre à jour le texte associé au QR code
               canvas.renderAll() // Re-rendu du canevas pour appliquer les changements
             }
@@ -240,7 +240,7 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
         )
       }
     },
-    [canvas, selectedColor]
+    [canvas] // Ajout de dépendance au canvas
   )
 
   return {
