@@ -28,10 +28,7 @@ const Menu = () => {
   } = useCanvas()
 
   useEffect(() => {
-    console.log('selectedObject après sélection:', selectedObject)
-
     const qrCodeSelected = isQRCodeSelected() // Appel de la fonction mémorisée
-    console.log('isQRCodeSelected:', qrCodeSelected)
 
     if (selectedObject?.type === 'circle' || selectedObject?.type === 'rect') {
       setActiveMenu('shapes')
