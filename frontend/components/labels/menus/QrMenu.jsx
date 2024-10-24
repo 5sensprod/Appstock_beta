@@ -1,26 +1,43 @@
 import React, { useState, useRef, useEffect } from 'react'
 import IconButton from '../../ui/IconButton'
-import ColorPicker from '../texttool/ColorPicker' // Importer le ColorPicker
-import { faQrcode, faPalette } from '@fortawesome/free-solid-svg-icons' // Importer l'icône QR code et palette
-import { useInstance } from '../../../context/InstanceContext' // Utiliser InstanceContext pour gérer les couleurs
+import ColorPicker from '../texttool/ColorPicker'
+import { faQrcode, faPalette, faSyncAlt } from '@fortawesome/free-solid-svg-icons' // Ajouter l'icône de rafraîchissement
+import { useInstance } from '../../../context/InstanceContext'
 
-export default function QrMenu({ onAddQrCode, selectedQrText }) {
-  const { selectedColor, handleColorChange } = useInstance() // Récupérer la couleur sélectionnée et la fonction de changement de couleur
-  const [qrText, setQrText] = useState(selectedQrText || '') // État pour stocker le texte à encoder dans le QR
+export default function QrMenu({ onAddQrCode, selectedQrText, onUpdateQrCode }) {
+  const { selectedColor, handleColorChange } = useInstance()
+  const [qrText, setQrText] = useState(selectedQrText || '') // État pour stocker le texte QR
+  const [isModified, setIsModified] = useState(false) // Nouvel état pour suivre les modifications du texte
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false) // État pour gérer l'ouverture du ColorPicker
-  const pickerRef = useRef(null) // Référence pour le ColorPicker
+  const pickerRef = useRef(null)
 
   useEffect(() => {
     if (selectedQrText) {
-      setQrText(selectedQrText) // Mettre à jour si un texte est sélectionné
+      setQrText(selectedQrText)
+      setIsModified(false) // Réinitialiser l'état de modification quand on sélectionne un nouveau QR code
     }
   }, [selectedQrText])
 
   // Gestion de la validation du texte et de la génération du QR code
   const handleValidate = () => {
     if (qrText.trim()) {
-      onAddQrCode(qrText) // Ajouter le QR code avec le texte fourni dans le canevas
-      setQrText('') // Réinitialiser le champ après validation
+      onAddQrCode(qrText)
+      setQrText('')
+    }
+  }
+
+  // Détecter les changements de texte pour activer l'icône de rafraîchissement
+  const handleInputChange = (e) => {
+    const newText = e.target.value
+    setQrText(newText)
+    setIsModified(newText !== selectedQrText) // Activer/désactiver l'icône selon si le texte est modifié
+  }
+
+  // Gestion de la mise à jour du QR code
+  const handleUpdate = () => {
+    if (isModified && qrText.trim()) {
+      onUpdateQrCode(qrText) // Appeler la fonction de mise à jour avec le nouveau texte
+      setIsModified(false) // Désactiver l'icône de rafraîchissement après mise à jour
     }
   }
 
@@ -50,7 +67,7 @@ export default function QrMenu({ onAddQrCode, selectedQrText }) {
         type="text"
         placeholder="Entrez votre texte ou URL"
         value={qrText}
-        onChange={(e) => setQrText(e.target.value)}
+        onChange={handleInputChange} // Détecter les changements
         className="w-64 rounded border p-2"
       />
 
@@ -62,6 +79,17 @@ export default function QrMenu({ onAddQrCode, selectedQrText }) {
         className="bg-blue-500 text-white hover:bg-blue-600"
         size="w-9 h-12"
         iconSize="text-xl"
+      />
+
+      {/* Bouton pour mettre à jour le QR code */}
+      <IconButton
+        onClick={handleUpdate}
+        icon={faSyncAlt}
+        title="Mettre à jour QR Code"
+        className={`bg-gray-500 text-white hover:bg-gray-600 ${isModified ? 'opacity-100' : 'cursor-not-allowed opacity-50'}`}
+        size="w-9 h-12"
+        iconSize="text-xl"
+        disabled={!isModified} // Désactiver le bouton si rien n'est modifié
       />
 
       {/* Bouton pour ouvrir le ColorPicker */}

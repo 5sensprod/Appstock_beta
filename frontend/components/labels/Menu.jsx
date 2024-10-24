@@ -24,7 +24,8 @@ const Menu = () => {
     onAddImage,
     onAddQrCode,
     selectedObject,
-    isQRCodeSelected
+    isQRCodeSelected,
+    onUpdateQrCode // Ajoutez la fonction pour mettre à jour le QR code
   } = useCanvas()
 
   useEffect(() => {
@@ -45,12 +46,16 @@ const Menu = () => {
     } else {
       setActiveMenu(null)
     }
-  }, [selectedObject, isQRCodeSelected]) // Maintenant vous pouvez inclure `isQRCodeSelected`
+  }, [selectedObject, isQRCodeSelected])
 
   const toggleMenu = (menu) => {
     if (activeMenu === menu) {
       setActiveMenu(null)
+      setSelectedQrText('') // Réinitialiser le texte lorsque le menu se ferme
     } else {
+      if (menu === 'qrcode' && !isQRCodeSelected()) {
+        setSelectedQrText('') // Si vous ouvrez le menu QR pour un nouveau code, réinitialiser le texte
+      }
       setActiveMenu(menu)
     }
   }
@@ -138,7 +143,11 @@ const Menu = () => {
         />
         {activeMenu === 'qrcode' && (
           <div className="absolute left-full top-0 ml-2" style={{ width: `${qrMenuWidth}px` }}>
-            <QrMenu onAddQrCode={onAddQrCode} selectedQrText={selectedQrText} />
+            <QrMenu
+              onAddQrCode={onAddQrCode}
+              selectedQrText={selectedQrText}
+              onUpdateQrCode={onUpdateQrCode} // Passer la fonction de mise à jour
+            />
           </div>
         )}
       </div>

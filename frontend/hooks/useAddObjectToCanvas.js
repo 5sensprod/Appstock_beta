@@ -206,12 +206,50 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
     },
     [selectedColor, labelConfig, addObjectToCanvas, canvas]
   )
+
+  const onUpdateQrCode = useCallback(
+    (newText) => {
+      const activeObject = canvas.getActiveObject()
+      if (activeObject && activeObject.isQRCode) {
+        QRCode.toDataURL(
+          newText,
+          {
+            width: activeObject.width, // Garder la même taille que l'original
+            margin: 2,
+            color: { dark: rgbToHex(selectedColor) || '#000000', light: '#ffffff' }
+          },
+          (err, url) => {
+            if (err) {
+              console.error('Erreur lors de la génération du QR code :', err)
+              return
+            }
+
+            const imgElement = new Image()
+            imgElement.src = url
+
+            imgElement.onload = () => {
+              activeObject.setElement(imgElement) // Remplacer l'image du QR code avec la nouvelle
+              activeObject.qrText = newText // Mettre à jour le texte associé au QR code
+              canvas.renderAll() // Re-rendu du canevas pour appliquer les changements
+            }
+
+            imgElement.onerror = () => {
+              console.error("Erreur lors du chargement de l'image QR code.")
+            }
+          }
+        )
+      }
+    },
+    [canvas, selectedColor]
+  )
+
   return {
     onAddCircle,
     onAddRectangle,
     onAddText,
     onAddImage,
     selectedFont,
+    onUpdateQrCode,
     onAddQrCode,
     onDeleteObject
   }
