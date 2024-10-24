@@ -122,7 +122,7 @@ const CanvasProvider = ({ children }) => {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Delete' || event.key === 'Backspace') {
+      if (event.key === 'Delete') {
         onDeleteObject() // Appeler la fonction de suppression
       }
     }
