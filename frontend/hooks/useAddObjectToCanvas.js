@@ -109,7 +109,7 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
           const scaleFactor = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight)
 
           // Créer une instance de fabric.Image avec les dimensions ajustées
-          const fabricImg = new fabric.Image(imgElement, {
+          const fabricImg = new fabric.FabricImage(imgElement, {
             scaleX: scaleFactor, // Appliquer le facteur de réduction
             scaleY: scaleFactor
           })
@@ -178,8 +178,8 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
             // Calculer le facteur de réduction pour conserver les proportions
             const scaleFactor = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight)
 
-            // Créer une instance de fabric.Image avec les dimensions ajustées
-            const fabricImg = new fabric.Image(imgElement, {
+            // Créer une instance de fabric.FabricImage avec les dimensions ajustées
+            const fabricImg = new fabric.FabricImage(imgElement, {
               scaleX: scaleFactor, // Appliquer le facteur de réduction
               scaleY: scaleFactor
             })
@@ -196,6 +196,7 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
     },
     [selectedColor, labelConfig, addObjectToCanvas, canvas]
   )
+
   return {
     onAddCircle,
     onAddRectangle,
