@@ -107,6 +107,11 @@ const CanvasProvider = ({ children }) => {
     return selectedObject.type === 'image'
   }
 
+  const isQRCodeSelected = () => {
+    if (!selectedObject) return false
+    return selectedObject.isQRCode === true // Vérifier si l'objet sélectionné est un QR code
+  }
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Delete' || event.key === 'Backspace') {
@@ -141,6 +146,7 @@ const CanvasProvider = ({ children }) => {
     isShapeSelected,
     isTextSelected,
     isImageSelected,
+    isQRCodeSelected,
     updateSelectedColor,
     selectedFont,
     setSelectedFont,

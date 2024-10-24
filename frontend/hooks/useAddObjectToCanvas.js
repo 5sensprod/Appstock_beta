@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import * as fabric from 'fabric'
-import { mmToPx } from '../utils/conversionUtils' // Assure-toi que tu as la fonction de conversion
+import { mmToPx, rgbToHex } from '../utils/conversionUtils' // Assure-toi que tu as la fonction de conversion
 import FontFaceObserver from 'fontfaceobserver'
 import QRCode from 'qrcode'
 
@@ -14,7 +14,7 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
       const centerY = mmToPx(labelConfig.labelHeight / 2)
 
       object.set({
-        left: centerX - object.getScaledWidth() / 2, // Centre horizontalement
+        left: centerX - object.getScaledWidth() / 2,
         top: centerY - object.getScaledHeight() / 2 // Centre verticalement
       })
 
@@ -69,7 +69,7 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
           fontSize: fontSize,
           fill: selectedColor,
           textAlign: 'left',
-          fontFamily: selectedFont // Appliquer la police sélectionnée
+          fontFamily: selectedFont
         })
 
         // Ajouter l'objet texte une fois la police chargée
@@ -146,15 +146,17 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
       if (!canvas) return
 
       const minDimension = Math.min(labelConfig.labelWidth, labelConfig.labelHeight)
-      const qrSize = minDimension / 2 // Taille du QR code proportionnelle
+      const qrSize = minDimension / 2
 
-      // Générer le QR code au format base64
+      // Assurez-vous que la couleur est bien en format hexadécimal
+      const validColor = rgbToHex(selectedColor)
+
       QRCode.toDataURL(
         text,
         {
           width: qrSize,
           margin: 2,
-          color: { dark: selectedColor || '#000000', light: '#ffffff' }
+          color: { dark: validColor || '#000000', light: '#ffffff' }
         },
         (err, url) => {
           if (err) {
@@ -162,29 +164,35 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
             return
           }
 
-          // Créer une image DOM à partir de l'URL base64
           const imgElement = new Image()
           imgElement.src = url
 
           imgElement.onload = () => {
-            // Obtenir les dimensions de l'image chargée
             const imgWidth = imgElement.naturalWidth
             const imgHeight = imgElement.naturalHeight
 
-            // Obtenir les dimensions du canevas
             const canvasWidth = mmToPx(labelConfig.labelWidth)
             const canvasHeight = mmToPx(labelConfig.labelHeight)
 
-            // Calculer le facteur de réduction pour conserver les proportions
             const scaleFactor = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight)
 
-            // Créer une instance de fabric.FabricImage avec les dimensions ajustées
             const fabricImg = new fabric.FabricImage(imgElement, {
-              scaleX: scaleFactor, // Appliquer le facteur de réduction
+              scaleX: scaleFactor,
               scaleY: scaleFactor
             })
 
-            // Ajouter le QR code au canevas
+            fabricImg.set({ isQRCode: true })
+
+            fabricImg.toObject = (function (toObject) {
+              return function () {
+                return Object.assign(toObject.call(this), {
+                  isQRCode: true
+                })
+              }
+            })(fabricImg.toObject)
+
+            console.log('QR code ajouté avec la propriété isQRCode:', fabricImg)
+
             addObjectToCanvas(fabricImg)
           }
 

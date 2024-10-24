@@ -4,31 +4,51 @@ import IconButton from '../ui/IconButton'
 import ShapeMenu from './menus/ShapeMenu'
 import TextMenu from './menus/TextMenu'
 import ImageMenu from './menus/ImageMenu'
-import QrMenu from './menus/QrMenu' // Importation du composant QrMenu
+import QrMenu from './menus/QrMenu'
 import { useCanvas } from '../../context/CanvasContext'
 
 const Menu = () => {
-  const [activeMenu, setActiveMenu] = useState(null) // Un seul état pour gérer quel menu est ouvert
+  const [activeMenu, setActiveMenu] = useState(null)
 
   // Largeurs fixes pour chaque sous-menu
-  const shapeMenuWidth = 135 // Largeur du ShapeMenu (en pixels)
-  const textMenuWidth = 250 // Largeur du TextMenu (en pixels)
-  const imageMenuWidth = 275 // Largeur du ImageMenu (en pixels)
-  const qrMenuWidth = 300 // Largeur du QrMenu (en pixels)
+  const shapeMenuWidth = 135
+  const textMenuWidth = 250
+  const imageMenuWidth = 275
+  const qrMenuWidth = 300
 
-  const { onAddCircle, onAddRectangle, onAddText, onAddImage, onAddQrCode, selectedObject } =
-    useCanvas()
+  const {
+    onAddCircle,
+    onAddRectangle,
+    onAddText,
+    onAddImage,
+    onAddQrCode,
+    selectedObject,
+    isQRCodeSelected
+  } = useCanvas()
+
   useEffect(() => {
+    console.log('selectedObject après sélection:', selectedObject)
+    console.log('isQRCodeSelected:', isQRCodeSelected())
+
     if (selectedObject?.type === 'circle' || selectedObject?.type === 'rect') {
       setActiveMenu('shapes')
+      console.log('Menu actif : shapes')
     } else if (selectedObject?.type === 'i-text' || selectedObject?.type === 'textbox') {
       setActiveMenu('text')
+      console.log('Menu actif : text')
     } else if (selectedObject?.type === 'image') {
-      setActiveMenu('images')
+      if (isQRCodeSelected()) {
+        setActiveMenu('qrcode')
+        console.log('Menu actif : qrcode')
+      } else {
+        setActiveMenu('images')
+        console.log('Menu actif : images')
+      }
     } else {
       setActiveMenu(null)
+      console.log('Menu désactivé')
     }
-  }, [selectedObject])
+  }, [selectedObject, isQRCodeSelected])
 
   const toggleMenu = (menu) => {
     if (activeMenu === menu) {
@@ -112,16 +132,15 @@ const Menu = () => {
         }}
       >
         <IconButton
-          onClick={() => toggleMenu('qr')}
+          onClick={() => toggleMenu('qrcode')}
           icon={faQrcode}
           title="Ajouter un QR Code"
-          className={`${activeMenu === 'qr' ? 'bg-blue-300' : 'bg-blue-500'}`}
+          className={`${activeMenu === 'qrcode' ? 'bg-blue-300' : 'bg-blue-500'}`}
           size="w-16 h-16"
           iconSize="text-3xl"
         />
-        {activeMenu === 'qr' && (
+        {activeMenu === 'qrcode' && (
           <div className="absolute left-full top-0 ml-2" style={{ width: `${qrMenuWidth}px` }}>
-            {/* Passer la fonction `onAddQrCode` en prop */}
             <QrMenu onAddQrCode={onAddQrCode} />
           </div>
         )}
