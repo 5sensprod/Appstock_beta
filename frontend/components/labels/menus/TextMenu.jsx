@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { faTextHeight, faPalette, faTrash } from '@fortawesome/free-solid-svg-icons' // Ajoute faTrash pour le bouton de suppression
-import IconButton from '../../ui/IconButton' // Importer IconButton
+import { faTextHeight, faPalette } from '@fortawesome/free-solid-svg-icons'
+import IconButton from '../../ui/IconButton'
 import ColorPicker from '../texttool/ColorPicker'
 import { useInstance } from '../../../context/InstanceContext'
 
@@ -10,9 +10,9 @@ export default function TextMenu({ onAddText }) {
     selectedColor,
     handleColorChange,
     handleFontChange,
-    selectedFont,
-    onDeleteObject,
-    isTextSelected
+    selectedFont
+    // onDeleteObject,
+    // isTextSelected
   } = useInstance()
   const pickerRef = useRef(null)
 
@@ -45,7 +45,7 @@ export default function TextMenu({ onAddText }) {
       />
 
       {/* Afficher le bouton de suppression uniquement si un texte est sélectionné */}
-      {isTextSelected() && (
+      {/* {isTextSelected() && (
         <IconButton
           onClick={onDeleteObject}
           icon={faTrash}
@@ -54,7 +54,7 @@ export default function TextMenu({ onAddText }) {
           size="w-9 h-12"
           iconSize="text-xl"
         />
-      )}
+      )} */}
 
       {/* Utilisation d'IconButton pour le ColorPicker */}
       <IconButton
