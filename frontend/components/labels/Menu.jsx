@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { faShapes, faTextHeight, faImage } from '@fortawesome/free-solid-svg-icons'
+import { faShapes, faTextHeight, faImage, faQrcode } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../ui/IconButton'
 import ShapeMenu from './menus/ShapeMenu'
 import TextMenu from './menus/TextMenu'
 import ImageMenu from './menus/ImageMenu'
+import QrMenu from './menus/QrMenu' // Importation du composant QrMenu
 import { useCanvas } from '../../context/CanvasContext'
 
 const Menu = () => {
@@ -13,9 +14,10 @@ const Menu = () => {
   const shapeMenuWidth = 135 // Largeur du ShapeMenu (en pixels)
   const textMenuWidth = 250 // Largeur du TextMenu (en pixels)
   const imageMenuWidth = 275 // Largeur du ImageMenu (en pixels)
+  const qrMenuWidth = 300 // Largeur du QrMenu (en pixels)
 
-  const { onAddCircle, onAddRectangle, onAddText, onAddImage, selectedObject } = useCanvas()
-
+  const { onAddCircle, onAddRectangle, onAddText, onAddImage, onAddQrCode, selectedObject } =
+    useCanvas()
   useEffect(() => {
     if (selectedObject?.type === 'circle' || selectedObject?.type === 'rect') {
       setActiveMenu('shapes')
@@ -44,15 +46,12 @@ const Menu = () => {
           onClick={() => toggleMenu('shapes')}
           icon={faShapes}
           title="Afficher les formes"
-          className={`${activeMenu === 'shapes' ? 'bg-blue-300' : 'bg-blue-500'}`} // Changer de couleur si le menu est actif
-          size="w-16 h-16" // Taille du bouton
-          iconSize="text-3xl" // Taille de l'icône
+          className={`${activeMenu === 'shapes' ? 'bg-blue-300' : 'bg-blue-500'}`}
+          size="w-16 h-16"
+          iconSize="text-3xl"
         />
         {activeMenu === 'shapes' && (
-          <div
-            className="absolute left-full top-0 ml-2"
-            style={{ width: `${shapeMenuWidth}px` }} // Largeur fixe du sous-menu "shapes"
-          >
+          <div className="absolute left-full top-0 ml-2" style={{ width: `${shapeMenuWidth}px` }}>
             <ShapeMenu onAddCircle={onAddCircle} onAddRectangle={onAddRectangle} />
           </div>
         )}
@@ -70,15 +69,12 @@ const Menu = () => {
           onClick={() => toggleMenu('text')}
           icon={faTextHeight}
           title="Afficher le texte"
-          className={`${activeMenu === 'text' ? 'bg-blue-300' : 'bg-blue-500'}`} // Changer de couleur si le menu est actif
+          className={`${activeMenu === 'text' ? 'bg-blue-300' : 'bg-blue-500'}`}
           size="w-16 h-16"
           iconSize="text-3xl"
         />
         {activeMenu === 'text' && (
-          <div
-            className="absolute left-full top-0 ml-2"
-            style={{ width: `${textMenuWidth}px` }} // Largeur fixe du sous-menu "text"
-          >
+          <div className="absolute left-full top-0 ml-2" style={{ width: `${textMenuWidth}px` }}>
             <TextMenu onAddText={onAddText} />
           </div>
         )}
@@ -96,16 +92,37 @@ const Menu = () => {
           onClick={() => toggleMenu('images')}
           icon={faImage}
           title="Afficher les images"
-          className={`${activeMenu === 'images' ? 'bg-blue-300' : 'bg-blue-500'}`} // Changer de couleur si le menu est actif
+          className={`${activeMenu === 'images' ? 'bg-blue-300' : 'bg-blue-500'}`}
           size="w-16 h-16"
           iconSize="text-3xl"
         />
         {activeMenu === 'images' && (
-          <div
-            className="absolute left-full top-0 ml-2"
-            style={{ width: `${imageMenuWidth}px` }} // Largeur fixe du sous-menu "images"
-          >
+          <div className="absolute left-full top-0 ml-2" style={{ width: `${imageMenuWidth}px` }}>
             <ImageMenu onAddImage={onAddImage} />
+          </div>
+        )}
+      </div>
+
+      {/* Bouton et menu pour les QR codes */}
+      <div
+        className="relative"
+        style={{
+          marginLeft: activeMenu === 'images' ? `${imageMenuWidth}px` : '0px',
+          transition: 'margin-left 0.3s ease'
+        }}
+      >
+        <IconButton
+          onClick={() => toggleMenu('qr')}
+          icon={faQrcode}
+          title="Ajouter un QR Code"
+          className={`${activeMenu === 'qr' ? 'bg-blue-300' : 'bg-blue-500'}`}
+          size="w-16 h-16"
+          iconSize="text-3xl"
+        />
+        {activeMenu === 'qr' && (
+          <div className="absolute left-full top-0 ml-2" style={{ width: `${qrMenuWidth}px` }}>
+            {/* Passer la fonction `onAddQrCode` en prop */}
+            <QrMenu onAddQrCode={onAddQrCode} />
           </div>
         )}
       </div>

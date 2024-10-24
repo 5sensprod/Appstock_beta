@@ -83,7 +83,7 @@ const CanvasProvider = ({ children }) => {
     setSelectedFont(font)
   }
 
-  const { onAddCircle, onAddRectangle, onAddText, onAddImage, onDeleteObject } =
+  const { onAddCircle, onAddRectangle, onAddText, onAddImage, onAddQrCode, onDeleteObject } =
     useAddObjectToCanvas(canvas, labelConfig, selectedColor, selectedFont, setSelectedFont)
 
   useEffect(() => {
@@ -137,6 +137,7 @@ const CanvasProvider = ({ children }) => {
     onAddRectangle,
     onAddText,
     onAddImage,
+    onAddQrCode,
     isShapeSelected,
     isTextSelected,
     isImageSelected,

@@ -2,6 +2,8 @@ import { useCallback } from 'react'
 import * as fabric from 'fabric'
 import { mmToPx } from '../utils/conversionUtils' // Assure-toi que tu as la fonction de conversion
 import FontFaceObserver from 'fontfaceobserver'
+import QRCode from 'qrcode'
+
 const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) => {
   const addObjectToCanvas = useCallback(
     (object) => {
@@ -138,12 +140,69 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
     }
   }, [canvas])
 
+  // Fonction pour ajouter un QR code
+  const onAddQrCode = useCallback(
+    (text) => {
+      if (!canvas) return
+
+      const minDimension = Math.min(labelConfig.labelWidth, labelConfig.labelHeight)
+      const qrSize = minDimension / 2 // Taille du QR code proportionnelle
+
+      // Générer le QR code au format base64
+      QRCode.toDataURL(
+        text,
+        {
+          width: qrSize,
+          margin: 2,
+          color: { dark: selectedColor || '#000000', light: '#ffffff' }
+        },
+        (err, url) => {
+          if (err) {
+            console.error('Erreur lors de la génération du QR code :', err)
+            return
+          }
+
+          // Créer une image DOM à partir de l'URL base64
+          const imgElement = new Image()
+          imgElement.src = url
+
+          imgElement.onload = () => {
+            // Obtenir les dimensions de l'image chargée
+            const imgWidth = imgElement.naturalWidth
+            const imgHeight = imgElement.naturalHeight
+
+            // Obtenir les dimensions du canevas
+            const canvasWidth = mmToPx(labelConfig.labelWidth)
+            const canvasHeight = mmToPx(labelConfig.labelHeight)
+
+            // Calculer le facteur de réduction pour conserver les proportions
+            const scaleFactor = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight)
+
+            // Créer une instance de fabric.Image avec les dimensions ajustées
+            const fabricImg = new fabric.Image(imgElement, {
+              scaleX: scaleFactor, // Appliquer le facteur de réduction
+              scaleY: scaleFactor
+            })
+
+            // Ajouter le QR code au canevas
+            addObjectToCanvas(fabricImg)
+          }
+
+          imgElement.onerror = () => {
+            console.error("Erreur lors du chargement de l'image QR code.")
+          }
+        }
+      )
+    },
+    [selectedColor, labelConfig, addObjectToCanvas, canvas]
+  )
   return {
     onAddCircle,
     onAddRectangle,
     onAddText,
     onAddImage,
     selectedFont,
+    onAddQrCode,
     onDeleteObject
   }
 }
