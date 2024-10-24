@@ -9,6 +9,7 @@ import { useCanvas } from '../../context/CanvasContext'
 
 const Menu = () => {
   const [activeMenu, setActiveMenu] = useState(null)
+  const [selectedQrText, setSelectedQrText] = useState('') // État pour le texte QR code sélectionné
 
   // Largeurs fixes pour chaque sous-menu
   const shapeMenuWidth = 135
@@ -28,27 +29,26 @@ const Menu = () => {
 
   useEffect(() => {
     console.log('selectedObject après sélection:', selectedObject)
-    console.log('isQRCodeSelected:', isQRCodeSelected())
+
+    const qrCodeSelected = isQRCodeSelected() // Appel de la fonction mémorisée
+    console.log('isQRCodeSelected:', qrCodeSelected)
 
     if (selectedObject?.type === 'circle' || selectedObject?.type === 'rect') {
       setActiveMenu('shapes')
-      console.log('Menu actif : shapes')
     } else if (selectedObject?.type === 'i-text' || selectedObject?.type === 'textbox') {
       setActiveMenu('text')
-      console.log('Menu actif : text')
     } else if (selectedObject?.type === 'image') {
-      if (isQRCodeSelected()) {
+      if (qrCodeSelected) {
         setActiveMenu('qrcode')
-        console.log('Menu actif : qrcode')
+        setSelectedQrText(selectedObject.qrText || '') // Récupérer le texte associé au QR code
+        console.log('Menu actif : qrcode', 'Texte QR sélectionné:', selectedObject.qrText)
       } else {
         setActiveMenu('images')
-        console.log('Menu actif : images')
       }
     } else {
       setActiveMenu(null)
-      console.log('Menu désactivé')
     }
-  }, [selectedObject, isQRCodeSelected])
+  }, [selectedObject, isQRCodeSelected]) // Maintenant vous pouvez inclure `isQRCodeSelected`
 
   const toggleMenu = (menu) => {
     if (activeMenu === menu) {
@@ -141,7 +141,7 @@ const Menu = () => {
         />
         {activeMenu === 'qrcode' && (
           <div className="absolute left-full top-0 ml-2" style={{ width: `${qrMenuWidth}px` }}>
-            <QrMenu onAddQrCode={onAddQrCode} />
+            <QrMenu onAddQrCode={onAddQrCode} selectedQrText={selectedQrText} />
           </div>
         )}
       </div>

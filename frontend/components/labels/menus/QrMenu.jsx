@@ -4,11 +4,17 @@ import ColorPicker from '../texttool/ColorPicker' // Importer le ColorPicker
 import { faQrcode, faPalette } from '@fortawesome/free-solid-svg-icons' // Importer l'icône QR code et palette
 import { useInstance } from '../../../context/InstanceContext' // Utiliser InstanceContext pour gérer les couleurs
 
-export default function QrMenu({ onAddQrCode }) {
+export default function QrMenu({ onAddQrCode, selectedQrText }) {
   const { selectedColor, handleColorChange } = useInstance() // Récupérer la couleur sélectionnée et la fonction de changement de couleur
-  const [qrText, setQrText] = useState('') // État pour stocker le texte à encoder dans le QR
+  const [qrText, setQrText] = useState(selectedQrText || '') // État pour stocker le texte à encoder dans le QR
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false) // État pour gérer l'ouverture du ColorPicker
   const pickerRef = useRef(null) // Référence pour le ColorPicker
+
+  useEffect(() => {
+    if (selectedQrText) {
+      setQrText(selectedQrText) // Mettre à jour si un texte est sélectionné
+    }
+  }, [selectedQrText])
 
   // Gestion de la validation du texte et de la génération du QR code
   const handleValidate = () => {

@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useRef, useState, useContext } from 'react'
+import React, { createContext, useEffect, useRef, useState, useContext, useCallback } from 'react'
 import * as fabric from 'fabric'
 import useCanvasObjectHandler from '../hooks/useCanvasObjectHandler'
 import useObjectConstraints from '../hooks/useObjectConstraints'
@@ -107,10 +107,11 @@ const CanvasProvider = ({ children }) => {
     return selectedObject.type === 'image'
   }
 
-  const isQRCodeSelected = () => {
+  // Dans votre CanvasContext ou où `isQRCodeSelected` est défini
+  const isQRCodeSelected = useCallback(() => {
     if (!selectedObject) return false
-    return selectedObject.isQRCode === true // Vérifier si l'objet sélectionné est un QR code
-  }
+    return selectedObject.isQRCode === true
+  }, [selectedObject])
 
   useEffect(() => {
     const handleKeyDown = (event) => {

@@ -4,6 +4,25 @@ import { mmToPx, rgbToHex } from '../utils/conversionUtils' // Assure-toi que tu
 import FontFaceObserver from 'fontfaceobserver'
 import QRCode from 'qrcode'
 
+// const rgbToHex = (rgb) => {
+//   if (rgb.charAt(0) === '#') {
+//     return rgb // Si déjà en hex, renvoyer la couleur telle quelle
+//   }
+
+//   // Si la couleur est en format `rgb(r, g, b)`, la convertir en hex
+//   const rgbValues = rgb.match(/\d+/g)
+//   if (!rgbValues || rgbValues.length < 3) {
+//     return '#000000' // Valeur par défaut en cas d'erreur de parsing
+//   }
+
+//   const hex = rgbValues
+//     .slice(0, 3)
+//     .map((value) => parseInt(value).toString(16).padStart(2, '0'))
+//     .join('')
+
+//   return `#${hex}`
+// }
+
 const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) => {
   const addObjectToCanvas = useCallback(
     (object) => {
@@ -14,7 +33,7 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
       const centerY = mmToPx(labelConfig.labelHeight / 2)
 
       object.set({
-        left: centerX - object.getScaledWidth() / 2,
+        left: centerX - object.getScaledWidth() / 2, // Centre horizontalement
         top: centerY - object.getScaledHeight() / 2 // Centre verticalement
       })
 
@@ -69,7 +88,7 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
           fontSize: fontSize,
           fill: selectedColor,
           textAlign: 'left',
-          fontFamily: selectedFont
+          fontFamily: selectedFont // Appliquer la police sélectionnée
         })
 
         // Ajouter l'objet texte une fois la police chargée
@@ -148,7 +167,7 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
       const minDimension = Math.min(labelConfig.labelWidth, labelConfig.labelHeight)
       const qrSize = minDimension / 2
 
-      // Assurez-vous que la couleur est bien en format hexadécimal
+      // Convertir la couleur en hexadécimal
       const validColor = rgbToHex(selectedColor)
 
       QRCode.toDataURL(
@@ -176,22 +195,24 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
 
             const scaleFactor = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight)
 
-            const fabricImg = new fabric.FabricImage(imgElement, {
+            const fabricImg = new fabric.Image(imgElement, {
               scaleX: scaleFactor,
               scaleY: scaleFactor
             })
 
-            fabricImg.set({ isQRCode: true })
+            fabricImg.set({
+              isQRCode: true,
+              qrText: text
+            })
 
             fabricImg.toObject = (function (toObject) {
               return function () {
                 return Object.assign(toObject.call(this), {
-                  isQRCode: true
+                  isQRCode: true,
+                  qrText: text
                 })
               }
             })(fabricImg.toObject)
-
-            console.log('QR code ajouté avec la propriété isQRCode:', fabricImg)
 
             addObjectToCanvas(fabricImg)
           }
@@ -204,7 +225,6 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
     },
     [selectedColor, labelConfig, addObjectToCanvas, canvas]
   )
-
   return {
     onAddCircle,
     onAddRectangle,
