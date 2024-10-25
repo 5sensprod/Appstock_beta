@@ -26,27 +26,22 @@ const ImportMenu = () => {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
-        let currentTopPosition = 20
-
         results.data.forEach((row) => {
           const { Nom, Tarif, Gencode } = row
 
           // Ajouter le nom du produit au canevas
           if (Nom) {
             onAddTextCsv(Nom)
-            currentTopPosition += 30
           }
 
           // Ajouter le tarif du produit au canevas
           if (Tarif) {
             onAddTextCsv(`${Tarif}€`)
-            currentTopPosition += 30
           }
 
           // Ajouter le QR code pour le gencode
           if (Gencode) {
             onAddQrCode(Gencode)
-            currentTopPosition += 30
           }
         })
       },
