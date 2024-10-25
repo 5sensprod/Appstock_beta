@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react'
-import { faShapes, faTextHeight, faImage, faQrcode } from '@fortawesome/free-solid-svg-icons'
+import {
+  faShapes,
+  faTextHeight,
+  faImage,
+  faQrcode,
+  faFileCsv
+} from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../ui/IconButton'
 import ShapeMenu from './menus/ShapeMenu'
 import TextMenu from './menus/TextMenu'
 import ImageMenu from './menus/ImageMenu'
 import QrMenu from './menus/QrMenu'
+import ImportMenu from './menus/ImportMenu'
 import { useCanvas } from '../../context/CanvasContext'
 
 const Menu = () => {
@@ -16,6 +23,7 @@ const Menu = () => {
   const textMenuWidth = 250
   const imageMenuWidth = 275
   const qrMenuWidth = 300
+  const importMenuWidth = 300
 
   const {
     onAddCircle,
@@ -148,6 +156,23 @@ const Menu = () => {
               selectedQrText={selectedQrText}
               onUpdateQrCode={onUpdateQrCode} // Passer la fonction de mise à jour
             />
+          </div>
+        )}
+      </div>
+
+      {/* Bouton et menu pour importer un fichier CSV */}
+      <div className="relative">
+        <IconButton
+          onClick={() => toggleMenu('import')}
+          icon={faFileCsv}
+          title="Importer CSV"
+          className={`${activeMenu === 'import' ? 'bg-blue-300' : 'bg-blue-500'}`}
+          size="w-16 h-16"
+          iconSize="text-3xl"
+        />
+        {activeMenu === 'import' && (
+          <div className="absolute left-full top-0 ml-2" style={{ width: `${importMenuWidth}px` }}>
+            <ImportMenu />
           </div>
         )}
       </div>
