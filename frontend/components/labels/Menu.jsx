@@ -21,7 +21,7 @@ const Menu = () => {
   // Largeurs fixes pour chaque sous-menu
   const shapeMenuWidth = 135
   const textMenuWidth = 250
-  const imageMenuWidth = 275
+  const imageMenuWidth = 300
   const qrMenuWidth = 300
   const importMenuWidth = 300
 
@@ -161,7 +161,13 @@ const Menu = () => {
       </div>
 
       {/* Bouton et menu pour importer un fichier CSV */}
-      <div className="relative">
+      <div
+        className="relative"
+        style={{
+          marginLeft: activeMenu === 'qrcode' ? `${imageMenuWidth}px` : '0px',
+          transition: 'margin-left 0.3s ease'
+        }}
+      >
         <IconButton
           onClick={() => toggleMenu('import')}
           icon={faFileCsv}
