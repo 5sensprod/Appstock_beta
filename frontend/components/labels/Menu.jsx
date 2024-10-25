@@ -33,7 +33,7 @@ const Menu = () => {
     onAddQrCode,
     selectedObject,
     isQRCodeSelected,
-    onUpdateQrCode // Ajoutez la fonction pour mettre à jour le QR code
+    onUpdateQrCode
   } = useCanvas()
 
   useEffect(() => {

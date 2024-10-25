@@ -5,7 +5,7 @@ import { faFileCsv } from '@fortawesome/free-solid-svg-icons'
 import Papa from 'papaparse' // Utiliser Papaparse pour parser les fichiers CSV
 
 const ImportMenu = () => {
-  const { onAddText, onAddQrCode } = useCanvas()
+  const { onAddTextCsv, onAddQrCode } = useCanvas()
   const [file, setFile] = useState(null)
 
   // Fonction pour gérer le téléchargement du fichier CSV
@@ -23,20 +23,31 @@ const ImportMenu = () => {
 
     // Utiliser Papaparse pour parser le fichier CSV
     Papa.parse(file, {
-      header: true, // Considère la première ligne comme l'en-tête
+      header: true,
       skipEmptyLines: true,
       complete: (results) => {
+        let currentTopPosition = 20
+
         results.data.forEach((row) => {
           const { Nom, Tarif, Gencode } = row
 
-          // Ajouter le texte pour le nom du produit
-          if (Nom) onAddText(Nom)
+          // Ajouter le nom du produit au canevas
+          if (Nom) {
+            onAddTextCsv(Nom)
+            currentTopPosition += 30
+          }
 
-          // Ajouter le texte pour le tarif du produit
-          if (Tarif) onAddText(`Tarif: ${Tarif}€`)
+          // Ajouter le tarif du produit au canevas
+          if (Tarif) {
+            onAddTextCsv(`${Tarif}€`)
+            currentTopPosition += 30
+          }
 
-          // Ajouter un QR code pour le gencode
-          if (Gencode) onAddQrCode(Gencode)
+          // Ajouter le QR code pour le gencode
+          if (Gencode) {
+            onAddQrCode(Gencode)
+            currentTopPosition += 30
+          }
         })
       },
       error: (error) => {

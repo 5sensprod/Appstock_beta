@@ -88,6 +88,31 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
       })
   }, [selectedColor, labelConfig, selectedFont, addObjectToCanvas, canvas])
 
+  const onAddTextCsv = useCallback(
+    (text = 'Votre texte ici') => {
+      const fontSize = labelConfig.labelWidth / 5
+
+      const textBox = new fabric.Textbox(text, {
+        fontSize: fontSize,
+        fill: selectedColor,
+        textAlign: 'left',
+        fontFamily: selectedFont
+      })
+
+      // Ajouter l'objet texte directement au canvas
+      addObjectToCanvas(textBox)
+
+      // Réinitialiser les dimensions et ajuster la sélection
+      textBox.set('dirty', true)
+      textBox.initDimensions()
+      textBox.setCoords()
+
+      canvas.setActiveObject(textBox)
+      canvas.renderAll()
+    },
+    [selectedColor, labelConfig, selectedFont, addObjectToCanvas, canvas]
+  )
+
   // Fonction pour ajouter une image à partir d'une URL
   const onAddImage = useCallback(
     (file) => {
@@ -247,6 +272,7 @@ const useAddObjectToCanvas = (canvas, labelConfig, selectedColor, selectedFont) 
     onAddCircle,
     onAddRectangle,
     onAddText,
+    onAddTextCsv,
     onAddImage,
     selectedFont,
     onUpdateQrCode,
