@@ -90,6 +90,7 @@ const CanvasProvider = ({ children }) => {
     onAddTextCsv,
     onAddImage,
     onAddQrCode,
+    onAddQrCodeCsv,
     onDeleteObject,
     onUpdateQrCode
   } = useAddObjectToCanvas(canvas, labelConfig, selectedColor, selectedFont, setSelectedFont)
@@ -153,6 +154,7 @@ const CanvasProvider = ({ children }) => {
     onAddTextCsv,
     onAddImage,
     onAddQrCode,
+    onAddQrCodeCsv,
     onUpdateQrCode,
     isShapeSelected,
     isTextSelected,

@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useCallback, useEffect } from 'react'
 import { useCanvas } from './CanvasContext'
 import FontFaceObserver from 'fontfaceobserver'
-
+import Papa from 'papaparse'
 const InstanceContext = createContext()
 
 export const useInstance = () => useContext(InstanceContext)
@@ -16,7 +16,9 @@ const InstanceProvider = ({ children }) => {
     selectedFont, // Importer la police depuis CanvasContext
     setSelectedFont,
     onDeleteObject,
-    isTextSelected
+    onAddTextCsv,
+    isTextSelected,
+    onAddQrCodeCsv
   } = useCanvas() // Utiliser directement CanvasContext
 
   const [selectedCell, setSelectedCell] = useState(0)
@@ -48,6 +50,55 @@ const InstanceProvider = ({ children }) => {
       }
     },
     [canvas, cellDesigns]
+  )
+
+  const saveCellDesign = useCallback(
+    async (cellIndex) => {
+      if (!canvas) return
+      const design = JSON.stringify(canvas.toJSON())
+      setCellDesigns((prevDesigns) => ({
+        ...prevDesigns,
+        [cellIndex]: design
+      }))
+    },
+    [canvas]
+  )
+
+  const importData = useCallback(
+    (file) => {
+      if (!canvas) return
+
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+          for (let index = 0; index < results.data.length; index++) {
+            const row = results.data[index]
+            const { Nom, Tarif, Gencode } = row
+
+            const cellIndex = index
+            await loadCellDesign(cellIndex)
+
+            if (Nom) await onAddTextCsv(Nom)
+            if (Tarif) await onAddTextCsv(`${Tarif}€`)
+
+            if (Gencode) {
+              await new Promise((resolve) => {
+                onAddQrCodeCsv(Gencode, resolve) // Utilise le callback pour attendre le rendu
+              })
+            }
+
+            await saveCellDesign(cellIndex)
+            canvas.clear()
+            canvas.renderAll()
+          }
+        },
+        error: (error) => {
+          console.error("Erreur lors de l'importation du fichier CSV", error)
+        }
+      })
+    },
+    [canvas, onAddTextCsv, onAddQrCodeCsv, loadCellDesign, saveCellDesign]
   )
 
   // Fonction pour vérifier si le design a réellement changé
@@ -261,7 +312,8 @@ const InstanceProvider = ({ children }) => {
     unsavedChanges,
     hasDesignChanged,
     onDeleteObject,
-    isTextSelected
+    isTextSelected,
+    importData
   }
 
   return <InstanceContext.Provider value={value}>{children}</InstanceContext.Provider>
