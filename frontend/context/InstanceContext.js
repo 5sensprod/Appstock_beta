@@ -77,7 +77,7 @@ const InstanceProvider = ({ children }) => {
             const { Nom, Tarif, Gencode } = row
 
             const cellIndex = index
-            await loadCellDesign(cellIndex)
+            loadCellDesign(cellIndex)
 
             if (Nom) await onAddTextCsv(Nom)
             if (Tarif) await onAddTextCsv(`${Tarif}€`)
