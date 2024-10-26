@@ -80,10 +80,15 @@ const CanvasProvider = ({ children }) => {
   )
 
   useEffect(() => {
-    if (canvas) {
-      canvas.renderAll()
+    if (
+      canvas &&
+      selectedObject &&
+      (selectedObject.type === 'i-text' || selectedObject.type === 'textbox')
+    ) {
+      selectedObject.set('fontFamily', selectedFont)
+      canvas.renderAll() // Force le rendu pour appliquer la police sélectionnée
     }
-  }, [selectedFont, canvas])
+  }, [selectedFont, canvas, selectedObject])
 
   const isShapeSelected = () => {
     if (!selectedObject) return false
