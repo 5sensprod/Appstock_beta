@@ -1,19 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { faCircle, faSquare, faPalette } from '@fortawesome/free-solid-svg-icons'
-import IconButton from '../../ui/IconButton' // Importer IconButton
+import IconButton from '../../ui/IconButton'
 import ColorPicker from '../texttool/ColorPicker'
-import { useInstance } from '../../../context/InstanceContext'
+import { useCanvas } from '../../../context/CanvasContext'
 
 export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
-  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false) // Gérer l'ouverture du ColorPicker
-  const { selectedColor, handleColorChange } = useInstance() // Obtenir la couleur et la fonction de mise à jour du contexte
-  const pickerRef = useRef(null) // Référence pour le ColorPicker
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
+  const { selectedColor, dispatch } = useCanvas()
+  const pickerRef = useRef(null)
 
   const toggleColorPicker = () => {
     setIsColorPickerOpen((prev) => !prev)
   }
 
-  // Fermer le ColorPicker lorsqu'on clique en dehors
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
@@ -29,39 +28,39 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
-      {/* Utilisation d'IconButton pour ajouter un cercle */}
       <IconButton
         onClick={onAddCircle}
         icon={faCircle}
         title="Ajouter un cercle"
-        className="bg-blue-500 hover:bg-blue-600" // Personnaliser la couleur
-        size="w-12 h-12" // Taille du bouton
-        iconSize="text-xl" // Taille de l'icône
+        className="bg-blue-500 hover:bg-blue-600"
+        size="w-12 h-12"
+        iconSize="text-xl"
       />
 
-      {/* Utilisation d'IconButton pour ajouter un rectangle */}
       <IconButton
         onClick={onAddRectangle}
         icon={faSquare}
         title="Ajouter un rectangle"
-        className="bg-blue-500 hover:bg-blue-600" // Personnaliser la couleur
-        size="w-12 h-12" // Taille du bouton
-        iconSize="text-xl" // Taille de l'icône
+        className="bg-blue-500 hover:bg-blue-600"
+        size="w-12 h-12"
+        iconSize="text-xl"
       />
 
-      {/* Utilisation d'IconButton pour le ColorPicker */}
       <IconButton
         onClick={toggleColorPicker}
         icon={faPalette}
         title="Choisir une couleur"
-        className="bg-gray-500 hover:bg-gray-600" // Personnaliser la couleur
-        size="w-12 h-12" // Taille du bouton
-        iconSize="text-xl" // Taille de l'icône
+        className="bg-gray-500 hover:bg-gray-600"
+        size="w-12 h-12"
+        iconSize="text-xl"
       />
 
       {isColorPickerOpen && (
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
-          <ColorPicker color={selectedColor} setSelectedColor={handleColorChange} />
+          <ColorPicker
+            color={selectedColor}
+            setSelectedColor={(color) => dispatch({ type: 'SET_COLOR', payload: color })}
+          />
         </div>
       )}
     </div>

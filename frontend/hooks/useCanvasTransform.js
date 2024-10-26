@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { mmToPx } from '../utils/conversionUtils'
 
-const useCanvasTransform = (canvas, labelConfig, setLabelConfig, zoomLevel, setZoomLevel) => {
+const useCanvasTransform = (canvas, labelConfig, dispatch) => {
   // Fonction pour mettre à jour la taille du canevas
   const updateCanvasSize = useCallback(
     (newSize) => {
@@ -10,14 +10,17 @@ const useCanvasTransform = (canvas, labelConfig, setLabelConfig, zoomLevel, setZ
         const newHeightPx = mmToPx(newSize.labelHeight || labelConfig.labelHeight)
 
         // Mettre à jour la configuration du label
-        setLabelConfig((prevConfig) => ({
-          ...prevConfig,
-          ...newSize
-        }))
+        dispatch({
+          type: 'SET_LABEL_CONFIG',
+          payload: {
+            ...labelConfig,
+            ...newSize
+          }
+        })
 
         // Réinitialiser le niveau de zoom à 1
         canvas.setZoom(1)
-        setZoomLevel(1)
+        dispatch({ type: 'SET_ZOOM', payload: 1 })
 
         // Réinitialiser la taille du canevas
         canvas.setWidth(newWidthPx)
@@ -35,7 +38,7 @@ const useCanvasTransform = (canvas, labelConfig, setLabelConfig, zoomLevel, setZ
         canvas.renderAll()
       }
     },
-    [canvas, labelConfig, setLabelConfig, setZoomLevel]
+    [canvas, labelConfig, dispatch]
   )
 
   // Fonction pour gérer les changements de zoom
@@ -63,12 +66,12 @@ const useCanvasTransform = (canvas, labelConfig, setLabelConfig, zoomLevel, setZ
         canvas.setViewportTransform(vpt)
 
         // Mettre à jour le niveau de zoom
-        setZoomLevel(newZoom)
+        dispatch({ type: 'SET_ZOOM', payload: newZoom })
 
         canvas.renderAll()
       }
     },
-    [canvas, setZoomLevel]
+    [canvas, dispatch]
   )
 
   return { updateCanvasSize, handleZoomChange }

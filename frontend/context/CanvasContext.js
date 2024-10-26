@@ -1,37 +1,33 @@
-import React, { createContext, useEffect, useRef, useState, useContext, useCallback } from 'react'
+import React, { createContext, useEffect, useRef, useContext, useReducer, useCallback } from 'react'
 import * as fabric from 'fabric'
 import useCanvasObjectHandler from '../hooks/useCanvasObjectHandler'
 import useObjectConstraints from '../hooks/useObjectConstraints'
 import useAddObjectToCanvas from '../hooks/useAddObjectToCanvas'
 import { mmToPx } from '../utils/conversionUtils'
 import useCanvasTransform from '../hooks/useCanvasTransform'
+import { canvasReducer, initialCanvasState } from '../reducers/canvasReducer'
+
+import useAddShape from '../hooks/useAddShape'
+import useAddText from '../hooks/useAddText'
+import useAddImage from '../hooks/useAddImage'
+import useAddQRCode from '../hooks/useAddQRCode'
+
 const CanvasContext = createContext()
 
 const useCanvas = () => useContext(CanvasContext)
 
 const CanvasProvider = ({ children }) => {
   const canvasRef = useRef(null)
-  const [canvas, setCanvas] = useState(null)
-  const [zoomLevel, setZoomLevel] = useState(1)
-  const [selectedColor, setSelectedColor] = useState('#000000')
-  const [selectedFont, setSelectedFont] = useState('Lato')
-  const [selectedObject, setSelectedObject] = useState(null)
+  const [state, dispatch] = useReducer(canvasReducer, initialCanvasState)
 
-  const [labelConfig, setLabelConfig] = useState({
-    labelWidth: 48.5,
-    labelHeight: 25.5,
-    offsetTop: 22,
-    offsetLeft: 8,
-    spacingVertical: 0,
-    spacingHorizontal: 0
-  })
+  const { canvas, zoomLevel, selectedColor, selectedFont, selectedObject, labelConfig } = state
 
   const { updateCanvasSize, handleZoomChange } = useCanvasTransform(
     canvas,
     labelConfig,
-    setLabelConfig,
+    (config) => dispatch({ type: 'SET_LABEL_CONFIG', payload: config }),
     zoomLevel,
-    setZoomLevel
+    (zoom) => dispatch({ type: 'SET_ZOOM', payload: zoom })
   )
 
   // Initialisation du canevas
@@ -43,60 +39,49 @@ const CanvasProvider = ({ children }) => {
         preserveObjectStacking: true
       })
 
-      // Définir la couleur de fond du canevas
       fabricCanvas.backgroundColor = 'white'
       fabricCanvas.renderAll()
 
-      setCanvas(fabricCanvas)
+      dispatch({ type: 'SET_CANVAS', payload: fabricCanvas })
       console.log('Canvas initialisé :', fabricCanvas)
     } else {
       canvas.setWidth(mmToPx(labelConfig.labelWidth))
       canvas.setHeight(mmToPx(labelConfig.labelHeight))
-
       canvas.backgroundColor = 'white'
       canvas.renderAll()
     }
   }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
 
   // Gestion des événements du canevas
-
-  useCanvasObjectHandler(
-    canvas,
-    selectedObject,
-    selectedColor,
-    setSelectedObject,
-    setSelectedColor,
-    selectedFont,
-    setSelectedFont
-  )
-
+  useCanvasObjectHandler(canvas, selectedObject, selectedColor, selectedFont, dispatch)
   useObjectConstraints(canvas)
 
-  // Fonction pour mettre à jour la couleur sélectionnée via InstanceContext
-  const updateSelectedColor = (color) => {
-    setSelectedColor(color)
-  }
-
-  // Fonction pour mettre à jour la police sélectionnée
-  const updateSelectedFont = (font) => {
-    setSelectedFont(font)
-  }
-
-  const {
-    onAddCircle,
-    onAddRectangle,
-    onAddText,
-    onAddTextCsv,
-    onAddImage,
-    onAddQrCode,
-    onAddQrCodeCsv,
-    onDeleteObject,
-    onUpdateQrCode
-  } = useAddObjectToCanvas(canvas, labelConfig, selectedColor, selectedFont, setSelectedFont)
+  // Utilisation des hooks pour ajouter différents objets
+  const { addObjectToCanvas, onDeleteObject } = useAddObjectToCanvas(canvas, labelConfig)
+  const { onAddCircle, onAddRectangle } = useAddShape(
+    canvas,
+    labelConfig,
+    selectedColor,
+    addObjectToCanvas
+  )
+  const { onAddText, onAddTextCsv } = useAddText(
+    canvas,
+    labelConfig,
+    selectedColor,
+    selectedFont,
+    addObjectToCanvas
+  )
+  const onAddImage = useAddImage(canvas, labelConfig, addObjectToCanvas)
+  const { onAddQrCode, onUpdateQrCode, onAddQrCodeCsv } = useAddQRCode(
+    canvas,
+    labelConfig,
+    selectedColor,
+    addObjectToCanvas
+  )
 
   useEffect(() => {
     if (canvas) {
-      canvas.renderAll() // Forcer le re-rendu lorsque la police change
+      canvas.renderAll()
     }
   }, [selectedFont, canvas])
 
@@ -115,7 +100,6 @@ const CanvasProvider = ({ children }) => {
     return selectedObject.type === 'image'
   }
 
-  // Dans votre CanvasContext ou où `isQRCodeSelected` est défini
   const isQRCodeSelected = useCallback(() => {
     if (!selectedObject) return false
     return selectedObject.isQRCode === true
@@ -124,29 +108,40 @@ const CanvasProvider = ({ children }) => {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Delete') {
-        onDeleteObject() // Appeler la fonction de suppression
+        onDeleteObject() // Utiliser la fonction onDeleteObject existante
       }
     }
 
-    document.addEventListener('keydown', handleKeyDown) // Ajouter l'écouteur d'événements au document
+    document.addEventListener('keydown', handleKeyDown)
     return () => {
-      document.removeEventListener('keydown', handleKeyDown) // Nettoyer l'écouteur d'événements lors du démontage
+      document.removeEventListener('keydown', handleKeyDown)
     }
   }, [onDeleteObject])
+
+  const setLabelConfig = (config) => {
+    dispatch({
+      type: 'SET_LABEL_CONFIG',
+      payload: config
+    })
+  }
 
   const value = {
     canvasRef,
     canvas,
     zoomLevel,
-    setZoomLevel,
+    setZoomLevel: (zoom) => dispatch({ type: 'SET_ZOOM', payload: zoom }),
     updateCanvasSize,
     handleZoomChange,
     labelConfig,
     setLabelConfig,
     selectedColor,
-    setSelectedColor,
+    setSelectedColor: (color) => dispatch({ type: 'SET_COLOR', payload: color }),
     selectedObject,
-    setSelectedObject,
+    setSelectedObject: (obj) => dispatch({ type: 'SET_SELECTED_OBJECT', payload: obj }),
+    selectedFont,
+    setSelectedFont: (font) => dispatch({ type: 'SET_FONT', payload: font }),
+
+    // Fonctions pour ajouter des objets
     onAddCircle,
     onAddRectangle,
     onAddText,
@@ -155,15 +150,15 @@ const CanvasProvider = ({ children }) => {
     onAddQrCode,
     onAddQrCodeCsv,
     onUpdateQrCode,
+
+    // Fonctions et vérifications d'état
+    onDeleteObject,
     isShapeSelected,
     isTextSelected,
     isImageSelected,
     isQRCodeSelected,
-    updateSelectedColor,
-    selectedFont,
-    setSelectedFont,
-    updateSelectedFont,
-    onDeleteObject
+
+    dispatch
   }
 
   return <CanvasContext.Provider value={value}>{children}</CanvasContext.Provider>

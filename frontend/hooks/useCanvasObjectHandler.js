@@ -1,32 +1,25 @@
 import { useEffect } from 'react'
 
-const useCanvasObjectHandler = (
-  canvas,
-  selectedObject,
-  selectedColor,
-  setSelectedObject,
-  setSelectedColor,
-  selectedFont,
-  setSelectedFont
-) => {
+const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedFont, dispatch) => {
   useEffect(() => {
     if (!canvas) return
 
     const updateSelectedObject = () => {
       const activeObject = canvas.getActiveObject()
-      setSelectedObject(activeObject)
+      dispatch({ type: 'SET_SELECTED_OBJECT', payload: activeObject })
+
       if (activeObject && activeObject.fill) {
-        setSelectedColor(activeObject.fill)
+        dispatch({ type: 'SET_COLOR', payload: activeObject.fill })
       }
       if (activeObject && activeObject.fontFamily) {
-        setSelectedFont(activeObject.fontFamily)
+        dispatch({ type: 'SET_FONT', payload: activeObject.fontFamily })
       }
     }
 
     canvas.on('selection:created', updateSelectedObject)
     canvas.on('selection:updated', updateSelectedObject)
     canvas.on('selection:cleared', () => {
-      setSelectedObject(null)
+      dispatch({ type: 'SET_SELECTED_OBJECT', payload: null })
     })
 
     return () => {
@@ -34,7 +27,7 @@ const useCanvasObjectHandler = (
       canvas.off('selection:updated', updateSelectedObject)
       canvas.off('selection:cleared')
     }
-  }, [canvas, setSelectedObject, setSelectedColor, setSelectedFont])
+  }, [canvas, dispatch])
 
   useEffect(() => {
     if (selectedObject && 'set' in selectedObject) {

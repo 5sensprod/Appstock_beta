@@ -1,6 +1,9 @@
 import React from 'react'
+import { useCanvas } from '../../context/CanvasContext'
 
-export default function ZoomControl({ zoomLevel, handleZoomChange }) {
+export default function ZoomControl() {
+  const { zoomLevel, handleZoomChange } = useCanvas() // Récupération depuis CanvasContext
+
   return (
     <div className="p-4">
       <label htmlFor="zoom" className="mb-2 block">

@@ -2,18 +2,11 @@ import React, { useState, useEffect, useRef } from 'react'
 import { faTextHeight, faPalette } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../../ui/IconButton'
 import ColorPicker from '../texttool/ColorPicker'
-import { useInstance } from '../../../context/InstanceContext'
+import { useCanvas } from '../../../context/CanvasContext'
 
 export default function TextMenu({ onAddText }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
-  const {
-    selectedColor,
-    handleColorChange,
-    handleFontChange,
-    selectedFont
-    // onDeleteObject,
-    // isTextSelected
-  } = useInstance()
+  const { selectedColor, selectedFont, dispatch } = useCanvas()
 
   const pickerRef = useRef(null)
 
@@ -35,48 +28,36 @@ export default function TextMenu({ onAddText }) {
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
-      {/* Utilisation d'IconButton pour ajouter du texte */}
       <IconButton
         onClick={onAddText}
         icon={faTextHeight}
         title="Ajouter du texte"
-        className="bg-blue-500 hover:bg-blue-600" // Personnaliser la couleur
-        size="w-9 h-12" // Taille du bouton
-        iconSize="text-xl" // Taille de l'icône
+        className="bg-blue-500 hover:bg-blue-600"
+        size="w-9 h-12"
+        iconSize="text-xl"
       />
 
-      {/* Afficher le bouton de suppression uniquement si un texte est sélectionné */}
-      {/* {isTextSelected() && (
-        <IconButton
-          onClick={onDeleteObject}
-          icon={faTrash}
-          title="Supprimer l'élément"
-          className="bg-red-500 hover:bg-red-600"
-          size="w-9 h-12"
-          iconSize="text-xl"
-        />
-      )} */}
-
-      {/* Utilisation d'IconButton pour le ColorPicker */}
       <IconButton
         onClick={toggleColorPicker}
         icon={faPalette}
         title="Choisir une couleur"
-        className="bg-gray-500 hover:bg-gray-600" // Personnaliser la couleur
-        size="w-9 h-12" // Taille du bouton
-        iconSize="text-xl" // Taille de l'icône
+        className="bg-gray-500 hover:bg-gray-600"
+        size="w-9 h-12"
+        iconSize="text-xl"
       />
 
       {isColorPickerOpen && (
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
-          <ColorPicker color={selectedColor} setSelectedColor={handleColorChange} />
+          <ColorPicker
+            color={selectedColor}
+            setSelectedColor={(color) => dispatch({ type: 'SET_COLOR', payload: color })}
+          />
         </div>
       )}
 
-      {/* Sélecteur de police */}
       <select
         value={selectedFont}
-        onChange={(e) => handleFontChange(e.target.value)}
+        onChange={(e) => dispatch({ type: 'SET_FONT', payload: e.target.value })} // Utilisez dispatch directement
         className="rounded border bg-white p-2 shadow"
       >
         <option value="Lato">Lato</option>

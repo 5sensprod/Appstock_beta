@@ -2,22 +2,15 @@ import React from 'react'
 import { useCanvas } from '../../context/CanvasContext'
 
 const ConfigForm = () => {
-  const { labelConfig, updateCanvasSize, setLabelConfig } = useCanvas()
+  const { labelConfig, setLabelConfig } = useCanvas()
 
+  // ConfigForm.js
   const handleInputChange = (e) => {
     const { id, value } = e.target
     const newValue = parseFloat(value)
 
-    // Mise à jour de la taille dans le contexte, en millimètres
-    if (id === 'labelWidth' || id === 'labelHeight') {
-      updateCanvasSize({ [id]: newValue }) // Réinitialiser la taille et le zoom
-    } else {
-      // Pour les autres configurations, mise à jour directement
-      setLabelConfig((prevConfig) => ({
-        ...prevConfig,
-        [id]: newValue
-      }))
-    }
+    // Appeler directement setLabelConfig pour toutes les valeurs, y compris largeur et hauteur
+    setLabelConfig({ [id]: newValue })
   }
 
   const inputs = [

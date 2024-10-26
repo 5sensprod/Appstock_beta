@@ -1,12 +1,11 @@
 import { useCallback, useEffect } from 'react'
-import { useInstance } from '../context/InstanceContext' // Import du contexte des instances
-import { useCanvas } from '../context/CanvasContext' // Import du contexte pour gérer le canvas
+import { useInstance } from '../context/InstanceContext'
+import { useCanvas } from '../context/CanvasContext'
 
 const useCellSelection = () => {
-  const { labelConfig } = useCanvas() // Récupérer la configuration de la grille via CanvasContext
+  const { labelConfig } = useCanvas()
   const { selectedCells, setTotalCells, handleCellClick, cellDesigns } = useInstance()
 
-  // Fonction de mise à jour de la grille
   const updateGrid = useCallback(() => {
     const { labelWidth, labelHeight, offsetTop, offsetLeft, spacingVertical, spacingHorizontal } =
       labelConfig
@@ -28,7 +27,6 @@ const useCellSelection = () => {
     setTotalCells(totalCells)
 
     const gridContainer = document.getElementById('gridContainer')
-    console.log('Grid container trouvé')
     if (gridContainer) {
       gridContainer.innerHTML = '' // Réinitialiser la grille
 
@@ -39,13 +37,12 @@ const useCellSelection = () => {
 
           const hasDesign = Boolean(cellDesigns[labelIndex])
 
-          // Vérifier si la cellule fait partie de selectedCells (sélection multiple)
           label.className = `absolute border ${
             selectedCells.includes(labelIndex)
-              ? 'border-blue-500 bg-blue-500' // Cellules sélectionnées en bleu
+              ? 'border-blue-500 bg-blue-500'
               : hasDesign
-                ? 'border-blue-300 bg-blue-200' // Cellule avec contenu en bleu clair
-                : 'border-gray-300 bg-gray-100' // Cellule vide
+                ? 'border-blue-300 bg-blue-200'
+                : 'border-gray-300 bg-gray-100'
           } cursor-pointer`
 
           label.style.width = `${(labelWidth / pageWidth) * 100}%`
@@ -53,7 +50,6 @@ const useCellSelection = () => {
           label.style.left = `${((offsetLeft + col * (labelWidth + spacingHorizontal)) / pageWidth) * 100}%`
           label.style.top = `${((offsetTop + row * (labelHeight + spacingVertical)) / pageHeight) * 100}%`
 
-          // Passer l'événement du clic pour permettre la sélection multiple
           label.onclick = (event) => handleCellClick(labelIndex, event)
 
           gridContainer.appendChild(label)
@@ -62,18 +58,9 @@ const useCellSelection = () => {
     }
   }, [labelConfig, selectedCells, setTotalCells, handleCellClick, cellDesigns])
 
-  // Mettre à jour la grille chaque fois que les designs ou la sélection multiple changent
-  useEffect(() => {
-    if (cellDesigns.length > 0) {
-      console.log('Cell Designs:', cellDesigns)
-    }
-    console.log('Selected Cells:', selectedCells) // Afficher le tableau des cellules sélectionnées
-    updateGrid() // Recréer la grille à chaque changement
-  }, [updateGrid, cellDesigns, selectedCells])
-
   useEffect(() => {
     updateGrid()
-  }, [updateGrid])
+  }, [updateGrid, cellDesigns, selectedCells])
 
   return { updateGrid, selectedCells }
 }
