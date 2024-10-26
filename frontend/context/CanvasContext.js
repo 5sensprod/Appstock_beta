@@ -13,6 +13,9 @@ const CanvasProvider = ({ children }) => {
   const canvasRef = useRef(null)
   const [canvas, setCanvas] = useState(null)
   const [zoomLevel, setZoomLevel] = useState(1)
+  const [selectedColor, setSelectedColor] = useState('#000000')
+  const [selectedFont, setSelectedFont] = useState('Lato')
+  const [selectedObject, setSelectedObject] = useState(null)
 
   const [labelConfig, setLabelConfig] = useState({
     labelWidth: 48.5,
@@ -30,10 +33,6 @@ const CanvasProvider = ({ children }) => {
     zoomLevel,
     setZoomLevel
   )
-
-  const [selectedColor, setSelectedColor] = useState('#000000')
-  const [selectedFont, setSelectedFont] = useState('Lato')
-  const [selectedObject, setSelectedObject] = useState(null)
 
   // Initialisation du canevas
   useEffect(() => {

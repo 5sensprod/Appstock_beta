@@ -52,55 +52,6 @@ const InstanceProvider = ({ children }) => {
     [canvas, cellDesigns]
   )
 
-  const saveCellDesign = useCallback(
-    async (cellIndex) => {
-      if (!canvas) return
-      const design = JSON.stringify(canvas.toJSON())
-      setCellDesigns((prevDesigns) => ({
-        ...prevDesigns,
-        [cellIndex]: design
-      }))
-    },
-    [canvas]
-  )
-
-  const importData = useCallback(
-    (file) => {
-      if (!canvas) return
-
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: async (results) => {
-          for (let index = 0; index < results.data.length; index++) {
-            const row = results.data[index]
-            const { Nom, Tarif, Gencode } = row
-
-            const cellIndex = index
-            loadCellDesign(cellIndex)
-
-            if (Nom) await onAddTextCsv(Nom)
-            if (Tarif) await onAddTextCsv(`${Tarif}€`)
-
-            if (Gencode) {
-              await new Promise((resolve) => {
-                onAddQrCodeCsv(Gencode, resolve) // Utilise le callback pour attendre le rendu
-              })
-            }
-
-            await saveCellDesign(cellIndex)
-            canvas.clear()
-            canvas.renderAll()
-          }
-        },
-        error: (error) => {
-          console.error("Erreur lors de l'importation du fichier CSV", error)
-        }
-      })
-    },
-    [canvas, onAddTextCsv, onAddQrCodeCsv, loadCellDesign, saveCellDesign]
-  )
-
   // Fonction pour vérifier si le design a réellement changé
   const hasDesignChanged = useCallback(() => {
     if (!canvas) return false
@@ -252,6 +203,55 @@ const InstanceProvider = ({ children }) => {
     })
   }, [canvas, copiedDesign, selectedCells])
 
+  const saveCellDesign = useCallback(
+    async (cellIndex) => {
+      if (!canvas) return
+      const design = JSON.stringify(canvas.toJSON())
+      setCellDesigns((prevDesigns) => ({
+        ...prevDesigns,
+        [cellIndex]: design
+      }))
+    },
+    [canvas]
+  )
+
+  const importData = useCallback(
+    (file) => {
+      if (!canvas) return
+
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+          for (let index = 0; index < results.data.length; index++) {
+            const row = results.data[index]
+            const { Nom, Tarif, Gencode } = row
+
+            const cellIndex = index
+            loadCellDesign(cellIndex)
+
+            if (Nom) await onAddTextCsv(Nom)
+            if (Tarif) await onAddTextCsv(`${Tarif}€`)
+
+            if (Gencode) {
+              await new Promise((resolve) => {
+                onAddQrCodeCsv(Gencode, resolve) // Utilise le callback pour attendre le rendu
+              })
+            }
+
+            await saveCellDesign(cellIndex)
+            canvas.clear()
+            canvas.renderAll()
+          }
+        },
+        error: (error) => {
+          console.error("Erreur lors de l'importation du fichier CSV", error)
+        }
+      })
+    },
+    [canvas, onAddTextCsv, onAddQrCodeCsv, loadCellDesign, saveCellDesign]
+  )
+
   // Détection des modifications sur le canevas
   useEffect(() => {
     if (!canvas) return
@@ -306,7 +306,7 @@ const InstanceProvider = ({ children }) => {
     handleColorChange,
     handleFontChange,
     selectedObject,
-    selectedFont, // Utiliser la police importée depuis CanvasContext
+    selectedFont,
     setSelectedFont,
     updateSelectedFont,
     unsavedChanges,

@@ -14,6 +14,7 @@ export default function TextMenu({ onAddText }) {
     // onDeleteObject,
     // isTextSelected
   } = useInstance()
+
   const pickerRef = useRef(null)
 
   const toggleColorPicker = () => {

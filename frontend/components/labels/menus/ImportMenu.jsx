@@ -21,7 +21,7 @@ const ImportMenu = () => {
   }
 
   return (
-    <div className="relative flex items-center space-x-2">
+    <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
       <input type="file" accept=".csv" onChange={handleFileUpload} className="mb-2" />
       <IconButton
         onClick={handleProcessCSV}

@@ -63,7 +63,7 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode, selectedQrText }) 
   }, [])
 
   return (
-    <div className="relative flex items-center space-x-2">
+    <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
       {/* Input pour entrer le texte à encoder */}
       <input
         type="text"
