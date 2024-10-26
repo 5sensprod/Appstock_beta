@@ -1,25 +1,12 @@
 import React, { createContext, useState, useContext, useCallback, useEffect } from 'react'
 import { useCanvas } from './CanvasContext'
-import FontFaceObserver from 'fontfaceobserver'
 import Papa from 'papaparse'
 const InstanceContext = createContext()
 
 export const useInstance = () => useContext(InstanceContext)
 
 const InstanceProvider = ({ children }) => {
-  const {
-    canvas,
-    updateSelectedColor,
-    updateSelectedFont,
-    selectedColor,
-    selectedObject,
-    selectedFont, // Importer la police depuis CanvasContext
-    setSelectedFont,
-    onDeleteObject,
-    onAddTextCsv,
-    isTextSelected,
-    onAddQrCodeCsv
-  } = useCanvas() // Utiliser directement CanvasContext
+  const { canvas, onAddTextCsv, isTextSelected, onAddQrCodeCsv } = useCanvas()
 
   const [selectedCell, setSelectedCell] = useState(0)
   const [selectedCells, setSelectedCells] = useState([])
@@ -90,58 +77,6 @@ const InstanceProvider = ({ children }) => {
       resolve()
     })
   }, [canvas, selectedCell, selectedCells])
-
-  // Fonction pour gérer le changement de couleur des objets
-  const handleColorChange = useCallback(
-    (color) => {
-      const activeObject = canvas.getActiveObject()
-      if (activeObject) {
-        activeObject.set('fill', color)
-        canvas.renderAll()
-        canvas.fire('object:modified', { target: activeObject })
-        setUnsavedChanges(true)
-      }
-
-      updateSelectedColor(color) // Mettre à jour la couleur dans CanvasContext
-    },
-    [canvas, updateSelectedColor]
-  )
-
-  const handleFontChange = useCallback(
-    (font) => {
-      const activeObject = canvas.getActiveObject()
-
-      // Si aucun objet n'est actif, mettre à jour l'état seulement
-      if (!activeObject || (activeObject.type !== 'i-text' && activeObject.type !== 'textbox')) {
-        updateSelectedFont(font) // Mettre à jour la police dans le contexte
-        return
-      }
-
-      // Charger la police avant de l'appliquer
-      const fontObserver = new FontFaceObserver(font)
-      fontObserver
-        .load()
-        .then(() => {
-          // Appliquer la police si un objet actif existe
-          activeObject.set('fontFamily', font)
-
-          // Réinitialiser les dimensions et forcer le recalcul
-          activeObject.set('dirty', true)
-          activeObject.initDimensions()
-          activeObject.setCoords()
-
-          // Forcer le re-rendu du canevas
-          canvas.renderAll()
-          setUnsavedChanges(true) // Marquer les modifications comme non sauvegardées
-        })
-        .catch((error) => {
-          console.error(`La police ${font} n'a pas pu être chargée :`, error)
-        })
-
-      updateSelectedFont(font) // Mettre à jour la police dans le contexte
-    },
-    [canvas, updateSelectedFont]
-  )
 
   // Gestion du clic sur une cellule (avec sélection multiple ou simple)
   const handleCellClick = useCallback(
@@ -282,13 +217,6 @@ const InstanceProvider = ({ children }) => {
     setSelectedCells([0])
   }, [])
 
-  useEffect(() => {
-    if (canvas && selectedFont) {
-      // Forcer un re-rendu du canevas lorsque la police change
-      canvas.renderAll()
-    }
-  }, [selectedFont, canvas])
-
   const value = {
     selectedCell,
     setSelectedCell,
@@ -302,16 +230,8 @@ const InstanceProvider = ({ children }) => {
     copyDesign,
     pasteDesign,
     saveChanges,
-    selectedColor,
-    handleColorChange,
-    handleFontChange,
-    selectedObject,
-    selectedFont,
-    setSelectedFont,
-    updateSelectedFont,
     unsavedChanges,
     hasDesignChanged,
-    onDeleteObject,
     isTextSelected,
     importData
   }

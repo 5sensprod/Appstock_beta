@@ -79,17 +79,6 @@ const CanvasProvider = ({ children }) => {
     addObjectToCanvas
   )
 
-  useEffect(() => {
-    if (
-      canvas &&
-      selectedObject &&
-      (selectedObject.type === 'i-text' || selectedObject.type === 'textbox')
-    ) {
-      selectedObject.set('fontFamily', selectedFont)
-      canvas.renderAll() // Force le rendu pour appliquer la police sélectionnée
-    }
-  }, [selectedFont, canvas, selectedObject])
-
   const isShapeSelected = () => {
     if (!selectedObject) return false
     return selectedObject.type === 'circle' || selectedObject.type === 'rect'
@@ -129,7 +118,22 @@ const CanvasProvider = ({ children }) => {
       payload: config
     })
   }
+  useEffect(() => {
+    if (canvas) {
+      // Si un objet texte est sélectionné, appliquez la police et forcez le recalcul
+      if (
+        selectedObject &&
+        (selectedObject.type === 'i-text' || selectedObject.type === 'textbox')
+      ) {
+        selectedObject.set('fontFamily', selectedFont)
+        selectedObject.dirty = true // Marque l'objet comme modifié
+        selectedObject.setCoords() // Réinitialise les coordonnées de sélection
+      }
 
+      // Rendu global du canevas pour appliquer les changements visuels immédiatement
+      canvas.requestRenderAll()
+    }
+  }, [selectedFont, canvas, selectedObject])
   const value = {
     canvasRef,
     canvas,
