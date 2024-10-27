@@ -43,16 +43,13 @@ const useCanvasTransform = (canvas, labelConfig, dispatch) => {
   const handleZoomChange = useCallback(
     (newZoom) => {
       if (canvas) {
-        // Calculer les dimensions d'origine si elles ne sont pas définies
-        const initialWidth = canvas.originalWidth || canvas.getWidth()
-        const initialHeight = canvas.originalHeight || canvas.getHeight()
-
-        if (!canvas.originalWidth) canvas.originalWidth = initialWidth
-        if (!canvas.originalHeight) canvas.originalHeight = initialHeight
+        // Utiliser les valeurs actuelles de labelConfig pour le calcul des nouvelles dimensions
+        const width = mmToPx(labelConfig.labelWidth)
+        const height = mmToPx(labelConfig.labelHeight)
 
         // Appliquer le zoom au canevas et redimensionner
-        const newWidth = initialWidth * newZoom
-        const newHeight = initialHeight * newZoom
+        const newWidth = width * newZoom
+        const newHeight = height * newZoom
         canvas.setWidth(newWidth)
         canvas.setHeight(newHeight)
 
@@ -61,8 +58,8 @@ const useCanvasTransform = (canvas, labelConfig, dispatch) => {
 
         // Centrer les objets en ajustant la transformation de la vue
         const vpt = canvas.viewportTransform
-        vpt[4] = (newWidth - initialWidth * newZoom) / 2 // Décalage horizontal
-        vpt[5] = (newHeight - initialHeight * newZoom) / 2 // Décalage vertical
+        vpt[4] = (newWidth - width * newZoom) / 2 // Décalage horizontal
+        vpt[5] = (newHeight - height * newZoom) / 2 // Décalage vertical
         canvas.setViewportTransform(vpt)
 
         // Mettre à jour le niveau de zoom global via dispatch pour synchroniser avec le curseur
@@ -72,7 +69,7 @@ const useCanvasTransform = (canvas, labelConfig, dispatch) => {
         canvas.requestRenderAll()
       }
     },
-    [canvas, dispatch]
+    [canvas, dispatch, labelConfig] // Ajouter labelConfig aux dépendances
   )
 
   return { updateCanvasSize, handleZoomChange }
