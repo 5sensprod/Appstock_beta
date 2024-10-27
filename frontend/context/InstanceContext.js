@@ -21,7 +21,6 @@ const InstanceProvider = ({ children }) => {
   const [selectedCells, setSelectedCells] = useState([])
   const [totalCells, setTotalCells] = useState(0)
   const [copiedDesign, setCopiedDesign] = useState(null)
-  const [unsavedChanges, setUnsavedChanges] = useState(false)
 
   const [state, dispatch] = useReducer(canvasReducer, initialCanvasState)
 
@@ -49,15 +48,6 @@ const InstanceProvider = ({ children }) => {
     [canvas, state.objects]
   )
 
-  // Fonction pour vérifier si le design a réellement changé
-  const hasDesignChanged = useCallback(() => {
-    if (!canvas) return false
-
-    const currentDesign = JSON.stringify(canvas.toJSON())
-    const savedDesign = state.objects[selectedCell]
-    return currentDesign !== savedDesign
-  }, [canvas, state.objects, selectedCell])
-
   const saveChanges = useCallback(() => {
     if (!canvas) return
 
@@ -73,7 +63,7 @@ const InstanceProvider = ({ children }) => {
       })
     })
 
-    setUnsavedChanges(false)
+    dispatch({ type: 'SET_UNSAVED_CHANGES', payload: false })
   }, [canvas, dispatch, selectedCells])
 
   // Gestion du clic sur une cellule
@@ -81,7 +71,7 @@ const InstanceProvider = ({ children }) => {
     (labelIndex, event) => {
       if (labelIndex === selectedCell) return
 
-      if (unsavedChanges && hasDesignChanged()) {
+      if (state.unsavedChanges) {
         saveChanges()
       }
 
@@ -99,9 +89,9 @@ const InstanceProvider = ({ children }) => {
       })
 
       setSelectedCell(labelIndex)
-      setUnsavedChanges(false)
+      dispatch({ type: 'SET_UNSAVED_CHANGES', payload: false })
     },
-    [canvas, hasDesignChanged, saveChanges, selectedCell, unsavedChanges]
+    [canvas, saveChanges, selectedCell, state.unsavedChanges, dispatch]
   )
 
   // Copier et coller le design
@@ -173,9 +163,7 @@ const InstanceProvider = ({ children }) => {
     if (!canvas) return
 
     const handleObjectModified = () => {
-      if (hasDesignChanged()) {
-        setUnsavedChanges(true)
-      }
+      dispatch({ type: 'SET_UNSAVED_CHANGES', payload: true })
     }
 
     canvas.on('object:modified', handleObjectModified)
@@ -185,7 +173,7 @@ const InstanceProvider = ({ children }) => {
       canvas.off('object:modified', handleObjectModified)
       canvas.off('object:added', handleObjectModified)
     }
-  }, [canvas, hasDesignChanged])
+  }, [canvas, dispatch])
 
   // Charger le design de la cellule au changement de sélection
   useEffect(() => {
@@ -210,8 +198,7 @@ const InstanceProvider = ({ children }) => {
     copyDesign,
     pasteDesign,
     saveChanges,
-    unsavedChanges,
-    hasDesignChanged,
+    unsavedChanges: state.unsavedChanges,
     isTextSelected,
     importData,
     state
