@@ -4,7 +4,7 @@ import { useCanvas } from '../context/CanvasContext'
 
 const useCellSelection = () => {
   const { labelConfig } = useCanvas()
-  const { selectedCells, setTotalCells, handleCellClick, state } = useInstance()
+  const { selectedCells, handleCellClick, dispatch, state } = useInstance() // Récupère dispatch et state
 
   const updateGrid = useCallback(() => {
     const { labelWidth, labelHeight, offsetTop, offsetLeft, spacingVertical, spacingHorizontal } =
@@ -24,7 +24,7 @@ const useCellSelection = () => {
     )
 
     const totalCells = labelsPerRow * labelsPerColumn
-    setTotalCells(totalCells)
+    dispatch({ type: 'SET_TOTAL_CELLS', payload: totalCells }) // Mise à jour via dispatch
 
     const gridContainer = document.getElementById('gridContainer')
     if (gridContainer) {
@@ -56,7 +56,7 @@ const useCellSelection = () => {
         }
       }
     }
-  }, [labelConfig, selectedCells, setTotalCells, handleCellClick, state?.objects])
+  }, [labelConfig, selectedCells, handleCellClick, dispatch, state?.objects])
 
   useEffect(() => {
     updateGrid()

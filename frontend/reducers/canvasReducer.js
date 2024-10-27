@@ -15,8 +15,7 @@ export const initialCanvasState = {
     spacingVertical: 0,
     spacingHorizontal: 0
   },
-  objects: [],
-  unsavedChanges: false
+  objects: []
 }
 
 export const canvasReducer = (state, action) => {
@@ -40,8 +39,6 @@ export const canvasReducer = (state, action) => {
           [cellIndex]: design
         }
       }
-    case 'SET_UNSAVED_CHANGES':
-      return { ...state, unsavedChanges: action.payload }
     case 'SET_OBJECTS':
       console.log('Action SET_OBJECTS déclenchée avec payload :', action.payload)
       return {

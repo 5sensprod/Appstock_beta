@@ -1,13 +1,13 @@
 import React, {
   createContext,
-  useState,
   useContext,
   useCallback,
   useEffect,
-  useReducer
+  useReducer,
+  useState
 } from 'react'
 import { useCanvas } from './CanvasContext'
-import { canvasReducer, initialCanvasState } from '../reducers/canvasReducer'
+import { instanceReducer, initialInstanceState } from '../reducers/instanceReducer'
 import Papa from 'papaparse'
 
 const InstanceContext = createContext()
@@ -15,16 +15,10 @@ const InstanceContext = createContext()
 export const useInstance = () => useContext(InstanceContext)
 
 const InstanceProvider = ({ children }) => {
-  const { canvas, onAddTextCsv, isTextSelected, onAddQrCodeCsv } = useCanvas()
+  const { canvas, onAddTextCsv, onAddQrCodeCsv } = useCanvas()
 
-  // État spécifique aux cellules
-  const [selectedCell, setSelectedCell] = useState(0)
-  const [selectedCells, setSelectedCells] = useState([])
-  const [totalCells, setTotalCells] = useState(0)
-  const [copiedDesign, setCopiedDesign] = useState(null)
-
-  // Reducer pour la gestion des objets et forcer le rafraîchissement
-  const [state, localDispatch] = useReducer(canvasReducer, initialCanvasState)
+  // Reducer pour gérer l’état des cellules
+  const [state, dispatch] = useReducer(instanceReducer, initialInstanceState)
   const [refresh, setRefresh] = useState(false) // État pour forcer le rendu
 
   // Fonction pour charger le design de la cellule sélectionnée
@@ -50,49 +44,51 @@ const InstanceProvider = ({ children }) => {
     if (!canvas) return
     const currentDesign = JSON.stringify(canvas.toJSON())
     const updatedObjects = { ...state.objects }
-    selectedCells.forEach((cellIndex) => {
+    state.selectedCells.forEach((cellIndex) => {
       updatedObjects[cellIndex] = canvas.getObjects().length > 0 ? currentDesign : null
     })
-    localDispatch({ type: 'SET_OBJECTS', payload: updatedObjects })
+    dispatch({ type: 'SET_OBJECTS', payload: updatedObjects })
     setRefresh((prev) => !prev) // Inversion pour déclencher le rendu
-  }, [canvas, selectedCells, state.objects])
+  }, [canvas, state.selectedCells, state.objects])
 
   // Gestion du clic sur une cellule
   const handleCellClick = useCallback(
     (labelIndex, event) => {
-      if (labelIndex === selectedCell) return
+      if (labelIndex === state.selectedCell) return
       saveChanges() // Appelle `saveChanges` lors du changement de cellule
-      setSelectedCells((prevSelectedCells) =>
-        event.ctrlKey || event.metaKey
-          ? prevSelectedCells.includes(labelIndex)
-            ? prevSelectedCells.filter((index) => index !== labelIndex)
-            : [...prevSelectedCells, labelIndex]
-          : [labelIndex]
-      )
-      setSelectedCell(labelIndex)
+      dispatch({
+        type: 'SET_SELECTED_CELLS',
+        payload:
+          event.ctrlKey || event.metaKey
+            ? state.selectedCells.includes(labelIndex)
+              ? state.selectedCells.filter((index) => index !== labelIndex)
+              : [...state.selectedCells, labelIndex]
+            : [labelIndex]
+      })
+      dispatch({ type: 'SET_SELECTED_CELL', payload: labelIndex })
     },
-    [saveChanges, selectedCell]
+    [saveChanges, state.selectedCell, state.selectedCells]
   )
 
   // Copier et coller le design
   const copyDesign = useCallback(() => {
-    if (canvas) setCopiedDesign(JSON.stringify(canvas.toJSON()))
+    if (canvas) dispatch({ type: 'SET_COPIED_DESIGN', payload: JSON.stringify(canvas.toJSON()) })
   }, [canvas])
 
   const pasteDesign = useCallback(() => {
-    if (!canvas || !copiedDesign) return
-    selectedCells.forEach((cellIndex) => {
+    if (!canvas || !state.copiedDesign) return
+    state.selectedCells.forEach((cellIndex) => {
       canvas.clear()
-      canvas.loadFromJSON(copiedDesign, () => {
+      canvas.loadFromJSON(state.copiedDesign, () => {
         canvas.requestRenderAll() // Forcer le rendu
       })
-      localDispatch({
+      dispatch({
         type: 'SAVE_CELL_DESIGN',
-        payload: { cellIndex, design: copiedDesign }
+        payload: { cellIndex, design: state.copiedDesign }
       })
     })
     setRefresh((prev) => !prev) // Inversion pour déclencher le rendu
-  }, [canvas, copiedDesign, selectedCells])
+  }, [canvas, state.copiedDesign, state.selectedCells])
 
   // Importer des données
   const importData = useCallback(
@@ -122,29 +118,24 @@ const InstanceProvider = ({ children }) => {
 
   // Charger automatiquement le design de la cellule sélectionnée
   useEffect(() => {
-    if (selectedCell !== null) loadCellDesign(selectedCell)
-  }, [selectedCell, loadCellDesign, refresh])
+    if (state.selectedCell !== null) loadCellDesign(state.selectedCell)
+  }, [state.selectedCell, loadCellDesign, refresh])
 
   // Initialisation des cellules au chargement
   useEffect(() => {
-    setSelectedCell(0)
-    setSelectedCells([0])
+    dispatch({ type: 'SET_SELECTED_CELL', payload: 0 })
+    dispatch({ type: 'SET_SELECTED_CELLS', payload: [0] })
   }, [])
 
   const value = {
-    selectedCell,
-    setSelectedCell,
+    ...state,
     handleCellClick,
-    selectedCells,
-    setSelectedCells,
     loadCellDesign,
-    totalCells,
-    setTotalCells,
     copyDesign,
     pasteDesign,
     saveChanges,
-    isTextSelected,
     importData,
+    dispatch,
     state
   }
 
