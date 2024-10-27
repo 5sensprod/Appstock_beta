@@ -1,6 +1,15 @@
-import React, { createContext, useState, useContext, useCallback, useEffect } from 'react'
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useCallback,
+  useEffect,
+  useReducer
+} from 'react'
 import { useCanvas } from './CanvasContext'
+import { canvasReducer, initialCanvasState } from '../reducers/canvasReducer'
 import Papa from 'papaparse'
+
 const InstanceContext = createContext()
 
 export const useInstance = () => useContext(InstanceContext)
@@ -10,10 +19,12 @@ const InstanceProvider = ({ children }) => {
 
   const [selectedCell, setSelectedCell] = useState(0)
   const [selectedCells, setSelectedCells] = useState([])
-  const [cellDesigns, setCellDesigns] = useState({})
   const [totalCells, setTotalCells] = useState(0)
   const [copiedDesign, setCopiedDesign] = useState(null)
   const [unsavedChanges, setUnsavedChanges] = useState(false)
+
+  // Utilisation de useReducer pour gérer l'état du canvas avec canvasReducer
+  const [state, dispatch] = useReducer(canvasReducer, initialCanvasState)
 
   // Fonction pour charger le design de la cellule sélectionnée
   const loadCellDesign = useCallback(
@@ -21,22 +32,20 @@ const InstanceProvider = ({ children }) => {
       console.log(`Chargement du design pour la cellule ${cellIndex}`)
       if (!canvas) return
 
-      // Effacer le contenu du canevas mais réappliquer la couleur de fond
       canvas.clear()
-      canvas.backgroundColor = 'white' // Réappliquer la couleur de fond blanche
+      canvas.backgroundColor = 'white'
 
-      if (cellDesigns[cellIndex]) {
-        // Charger le design à partir de JSON
-        canvas.loadFromJSON(cellDesigns[cellIndex], () => {
+      if (state.objects[cellIndex]) {
+        canvas.loadFromJSON(state.objects[cellIndex], () => {
           setTimeout(() => {
-            canvas.renderAll() // Re-rendu du canevas après un léger délai
+            canvas.renderAll()
           }, 10)
         })
       } else {
-        canvas.renderAll() // Forcer le rendu même si la cellule est vide
+        canvas.renderAll()
       }
     },
-    [canvas, cellDesigns]
+    [canvas, state.objects]
   )
 
   // Fonction pour vérifier si le design a réellement changé
@@ -44,39 +53,27 @@ const InstanceProvider = ({ children }) => {
     if (!canvas) return false
 
     const currentDesign = JSON.stringify(canvas.toJSON())
-    const savedDesign = cellDesigns[selectedCell]
+    const savedDesign = state.objects[selectedCell]
     return currentDesign !== savedDesign
-  }, [canvas, cellDesigns, selectedCell])
+  }, [canvas, state.objects, selectedCell])
 
   // Sauvegarder manuellement les modifications pour les cellules sélectionnées
   const saveChanges = useCallback(() => {
-    return new Promise((resolve) => {
-      if (!canvas) return resolve()
+    if (!canvas) return
 
-      const currentDesign = JSON.stringify(canvas)
+    const currentDesign = JSON.stringify(canvas.toJSON())
 
-      console.log('Sauvegarde du design pour la cellule', selectedCell)
+    selectedCells.forEach((cellIndex) => {
+      const updatedObjects = {
+        ...state.objects,
+        [cellIndex]: canvas.getObjects().length > 0 ? currentDesign : null
+      }
 
-      setCellDesigns((prevDesigns) => {
-        const updatedDesigns = { ...prevDesigns }
-
-        selectedCells.forEach((cellIndex) => {
-          if (canvas.getObjects().length > 0) {
-            updatedDesigns[cellIndex] = currentDesign
-            console.log(`Design sauvegardé pour la cellule ${cellIndex}`)
-          } else {
-            delete updatedDesigns[cellIndex]
-            console.log('Suppression du design pour la cellule', cellIndex)
-          }
-        })
-
-        return updatedDesigns
-      })
-
-      setUnsavedChanges(false)
-      resolve()
+      dispatch({ type: 'SET_OBJECTS', payload: updatedObjects })
     })
-  }, [canvas, selectedCell, selectedCells])
+
+    setUnsavedChanges(false)
+  }, [canvas, selectedCells, state.objects])
 
   // Gestion du clic sur une cellule (avec sélection multiple ou simple)
   const handleCellClick = useCallback(
@@ -86,11 +83,9 @@ const InstanceProvider = ({ children }) => {
         return
       }
 
+      // Si des modifications non sauvegardées sont détectées, on les sauvegarde automatiquement
       if (unsavedChanges && hasDesignChanged()) {
-        const confirmSave = window.confirm(
-          'Vous avez des modifications non sauvegardées. Voulez-vous sauvegarder avant de quitter ?'
-        )
-        if (confirmSave) saveChanges()
+        saveChanges() // Sauvegarde automatique sans demande de confirmation
       }
 
       if (canvas) {
@@ -112,16 +107,13 @@ const InstanceProvider = ({ children }) => {
     [selectedCell, unsavedChanges, hasDesignChanged, saveChanges, canvas]
   )
 
-  // Copier le design actuel du canevas
+  // Copier et coller le design
   const copyDesign = useCallback(() => {
     if (canvas && typeof canvas.toJSON === 'function') {
-      const currentDesign = JSON.stringify(canvas.toJSON())
-      setCopiedDesign(currentDesign)
-      console.log('Design copié:', currentDesign)
+      setCopiedDesign(JSON.stringify(canvas.toJSON()))
     }
   }, [canvas])
 
-  // Coller le design dans les cellules sélectionnées
   const pasteDesign = useCallback(() => {
     if (!canvas || !copiedDesign) return
 
@@ -131,25 +123,15 @@ const InstanceProvider = ({ children }) => {
         setTimeout(() => canvas.renderAll(), 10)
       })
 
-      setCellDesigns((prevDesigns) => ({
-        ...prevDesigns,
+      const updatedObjects = {
+        ...state.objects,
         [cellIndex]: copiedDesign
-      }))
+      }
+      dispatch({ type: 'SET_OBJECTS', payload: updatedObjects })
     })
-  }, [canvas, copiedDesign, selectedCells])
+  }, [canvas, copiedDesign, selectedCells, state.objects])
 
-  const saveCellDesign = useCallback(
-    async (cellIndex) => {
-      if (!canvas) return
-      const design = JSON.stringify(canvas.toJSON())
-      setCellDesigns((prevDesigns) => ({
-        ...prevDesigns,
-        [cellIndex]: design
-      }))
-    },
-    [canvas]
-  )
-
+  // Importer des données
   const importData = useCallback(
     (file) => {
       if (!canvas) return
@@ -170,11 +152,11 @@ const InstanceProvider = ({ children }) => {
 
             if (Gencode) {
               await new Promise((resolve) => {
-                onAddQrCodeCsv(Gencode, resolve) // Utilise le callback pour attendre le rendu
+                onAddQrCodeCsv(Gencode, resolve)
               })
             }
 
-            await saveCellDesign(cellIndex)
+            await saveChanges()
             canvas.clear()
             canvas.renderAll()
           }
@@ -184,7 +166,7 @@ const InstanceProvider = ({ children }) => {
         }
       })
     },
-    [canvas, onAddTextCsv, onAddQrCodeCsv, loadCellDesign, saveCellDesign]
+    [canvas, onAddTextCsv, onAddQrCodeCsv, loadCellDesign, saveChanges]
   )
 
   // Détection des modifications sur le canevas
@@ -223,7 +205,6 @@ const InstanceProvider = ({ children }) => {
     handleCellClick,
     selectedCells,
     setSelectedCells,
-    cellDesigns,
     loadCellDesign,
     totalCells,
     setTotalCells,
@@ -233,7 +214,8 @@ const InstanceProvider = ({ children }) => {
     unsavedChanges,
     hasDesignChanged,
     isTextSelected,
-    importData
+    importData,
+    state
   }
 
   return <InstanceContext.Provider value={value}>{children}</InstanceContext.Provider>

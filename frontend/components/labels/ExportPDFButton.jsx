@@ -7,37 +7,28 @@ import IconButton from '../ui/IconButton'
 
 const ExportPDFButton = () => {
   const { labelConfig } = useCanvas()
-  const { cellDesigns, saveChanges, unsavedChanges, hasDesignChanged } = useInstance()
+  const { state, saveChanges, unsavedChanges, hasDesignChanged } = useInstance()
 
   // Ajouter un état pour déclencher l'export PDF une fois la sauvegarde terminée
   const [shouldExport, setShouldExport] = useState(false)
 
-  // Utiliser useEffect pour surveiller les changements dans cellDesigns et déclencher l'export PDF
+  // Utiliser useEffect pour surveiller les changements dans `state.objects` et déclencher l'export PDF
   useEffect(() => {
-    if (shouldExport && Object.keys(cellDesigns).length > 0) {
-      // Exporter le PDF uniquement lorsque `cellDesigns` est mis à jour
-      exportGridToPDF(labelConfig, cellDesigns)
+    if (shouldExport && Object.keys(state.objects).length > 0) {
+      // Exporter le PDF uniquement lorsque `state.objects` est mis à jour
+      exportGridToPDF(labelConfig, state.objects)
       setShouldExport(false) // Réinitialiser shouldExport après l'export
     }
-  }, [cellDesigns, shouldExport, labelConfig])
+  }, [state.objects, shouldExport, labelConfig])
 
   const handleExportPDF = async () => {
-    // Vérification des modifications non sauvegardées
+    // Sauvegarder automatiquement les modifications non sauvegardées avant l'export
     if (unsavedChanges && hasDesignChanged()) {
-      const confirmSave = window.confirm(
-        'Vous avez des modifications non sauvegardées. Voulez-vous les sauvegarder avant de continuer ?'
-      )
-
-      if (confirmSave) {
-        // Sauvegarder les modifications avant l'export
-        await saveChanges() // Attendre que la sauvegarde soit terminée
-        setShouldExport(true) // Indiquer que nous voulons exporter le PDF après la mise à jour de cellDesigns
-        return
-      }
+      await saveChanges() // Sauvegarde automatique des modifications
     }
 
-    // Si aucune sauvegarde n'est nécessaire, exporter immédiatement
-    exportGridToPDF(labelConfig, cellDesigns)
+    // Déclencher l'export après la sauvegarde si nécessaire
+    setShouldExport(true)
   }
 
   return (

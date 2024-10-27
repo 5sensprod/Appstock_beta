@@ -4,7 +4,7 @@ import { useCanvas } from '../context/CanvasContext' // Import du contexte pour 
 
 const useCellSelection = () => {
   const { labelConfig } = useCanvas() // Récupérer la configuration de la grille via CanvasContext
-  const { selectedCells, setTotalCells, handleCellClick, cellDesigns } = useInstance()
+  const { selectedCells, setTotalCells, handleCellClick, state } = useInstance() // Accès à `state.objects`
 
   // Fonction de mise à jour de la grille
   const updateGrid = useCallback(() => {
@@ -37,7 +37,7 @@ const useCellSelection = () => {
           const labelIndex = row * labelsPerRow + col
           const label = document.createElement('div')
 
-          const hasDesign = Boolean(cellDesigns[labelIndex])
+          const hasDesign = Boolean(state?.objects?.[labelIndex])
 
           // Vérifier si la cellule fait partie de selectedCells (sélection multiple)
           label.className = `absolute border ${
@@ -60,16 +60,16 @@ const useCellSelection = () => {
         }
       }
     }
-  }, [labelConfig, selectedCells, setTotalCells, handleCellClick, cellDesigns])
+  }, [labelConfig, selectedCells, setTotalCells, handleCellClick, state?.objects])
 
   // Mettre à jour la grille chaque fois que les designs ou la sélection multiple changent
   useEffect(() => {
-    if (cellDesigns.length > 0) {
-      console.log('Cell Designs:', cellDesigns)
+    if (Object.keys(state?.objects || {}).length > 0) {
+      console.log('Cell Designs:', state.objects)
     }
     console.log('Selected Cells:', selectedCells) // Afficher le tableau des cellules sélectionnées
     updateGrid() // Recréer la grille à chaque changement
-  }, [updateGrid, cellDesigns, selectedCells])
+  }, [updateGrid, state?.objects, selectedCells])
 
   useEffect(() => {
     updateGrid()
