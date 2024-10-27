@@ -22,13 +22,8 @@ const CanvasProvider = ({ children }) => {
 
   const { canvas, zoomLevel, selectedColor, selectedFont, selectedObject, labelConfig } = state
 
-  const { updateCanvasSize, handleZoomChange } = useCanvasTransform(
-    canvas,
-    labelConfig,
-    (config) => dispatch({ type: 'SET_LABEL_CONFIG', payload: config }),
-    zoomLevel,
-    (zoom) => dispatch({ type: 'SET_ZOOM', payload: zoom })
-  )
+  // Gestion du zoom et de la taille via useCanvasTransform
+  const { updateCanvasSize, handleZoomChange } = useCanvasTransform(canvas, labelConfig, dispatch)
 
   // Initialisation du canevas
   useEffect(() => {
@@ -118,6 +113,7 @@ const CanvasProvider = ({ children }) => {
       payload: config
     })
   }
+
   useEffect(() => {
     if (canvas) {
       // Si un objet texte est sélectionné, appliquez la police et forcez le recalcul
@@ -134,11 +130,11 @@ const CanvasProvider = ({ children }) => {
       canvas.requestRenderAll()
     }
   }, [selectedFont, canvas, selectedObject])
+
   const value = {
     canvasRef,
     canvas,
-    zoomLevel,
-    setZoomLevel: (zoom) => dispatch({ type: 'SET_ZOOM', payload: zoom }),
+    zoomLevel, // Seul `zoomLevel` est passé, sans `setZoomLevel`
     updateCanvasSize,
     handleZoomChange,
     labelConfig,

@@ -2,15 +2,19 @@ import React from 'react'
 import { useCanvas } from '../../context/CanvasContext'
 
 const ConfigForm = () => {
-  const { labelConfig, setLabelConfig } = useCanvas()
+  const { labelConfig, setLabelConfig, handleZoomChange } = useCanvas() // Ajout de handleZoomChange
 
-  // ConfigForm.js
   const handleInputChange = (e) => {
     const { id, value } = e.target
     const newValue = parseFloat(value)
 
-    // Appeler directement setLabelConfig pour toutes les valeurs, y compris largeur et hauteur
+    // Appeler setLabelConfig pour mettre à jour la configuration du canevas
     setLabelConfig({ [id]: newValue })
+
+    // Ramener le zoom à 1 si largeur ou hauteur est modifiée
+    if (id === 'labelWidth' || id === 'labelHeight') {
+      handleZoomChange(1) // Réinitialise le zoom à 1
+    }
   }
 
   const inputs = [

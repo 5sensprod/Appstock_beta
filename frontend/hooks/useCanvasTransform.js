@@ -2,7 +2,6 @@ import { useCallback } from 'react'
 import { mmToPx } from '../utils/conversionUtils'
 
 const useCanvasTransform = (canvas, labelConfig, dispatch) => {
-  // Fonction pour mettre à jour la taille du canevas
   const updateCanvasSize = useCallback(
     (newSize) => {
       if (canvas) {
@@ -41,34 +40,36 @@ const useCanvasTransform = (canvas, labelConfig, dispatch) => {
     [canvas, labelConfig, dispatch]
   )
 
-  // Fonction pour gérer les changements de zoom
   const handleZoomChange = useCallback(
     (newZoom) => {
       if (canvas) {
+        // Calculer les dimensions d'origine si elles ne sont pas définies
         const initialWidth = canvas.originalWidth || canvas.getWidth()
         const initialHeight = canvas.originalHeight || canvas.getHeight()
 
         if (!canvas.originalWidth) canvas.originalWidth = initialWidth
         if (!canvas.originalHeight) canvas.originalHeight = initialHeight
 
-        // Appliquer le zoom aux objets du canevas
-        canvas.setZoom(newZoom)
-
+        // Appliquer le zoom au canevas et redimensionner
         const newWidth = initialWidth * newZoom
         const newHeight = initialHeight * newZoom
         canvas.setWidth(newWidth)
         canvas.setHeight(newHeight)
 
-        // Appliquer la transformation de la vue pour centrer
+        // Appliquer le zoom à la vue globale
+        canvas.setZoom(newZoom)
+
+        // Centrer les objets en ajustant la transformation de la vue
         const vpt = canvas.viewportTransform
-        vpt[4] = (canvas.getWidth() - newWidth) / 2
-        vpt[5] = (canvas.getHeight() - newHeight) / 2
+        vpt[4] = (newWidth - initialWidth * newZoom) / 2 // Décalage horizontal
+        vpt[5] = (newHeight - initialHeight * newZoom) / 2 // Décalage vertical
         canvas.setViewportTransform(vpt)
 
-        // Mettre à jour le niveau de zoom
+        // Mettre à jour le niveau de zoom global via dispatch pour synchroniser avec le curseur
         dispatch({ type: 'SET_ZOOM', payload: newZoom })
 
-        canvas.renderAll()
+        // Rendu de tous les changements
+        canvas.requestRenderAll()
       }
     },
     [canvas, dispatch]
