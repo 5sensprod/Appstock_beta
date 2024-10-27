@@ -57,7 +57,6 @@ const InstanceProvider = ({ children }) => {
     return currentDesign !== savedDesign
   }, [canvas, state.objects, selectedCell])
 
-  // Sauvegarder manuellement les modifications pour les cellules sélectionnées
   const saveChanges = useCallback(() => {
     if (!canvas) return
 
