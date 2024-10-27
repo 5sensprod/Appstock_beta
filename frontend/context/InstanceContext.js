@@ -23,7 +23,6 @@ const InstanceProvider = ({ children }) => {
   const [copiedDesign, setCopiedDesign] = useState(null)
   const [unsavedChanges, setUnsavedChanges] = useState(false)
 
-  // Utilisation de useReducer pour gérer l'état du canvas avec canvasReducer
   const [state, dispatch] = useReducer(canvasReducer, initialCanvasState)
 
   // Fonction pour charger le design de la cellule sélectionnée
@@ -35,8 +34,10 @@ const InstanceProvider = ({ children }) => {
       canvas.clear()
       canvas.backgroundColor = 'white'
 
-      if (state.objects[cellIndex]) {
-        canvas.loadFromJSON(state.objects[cellIndex], () => {
+      const design = state.objects[cellIndex]
+
+      if (design) {
+        canvas.loadFromJSON(design, () => {
           setTimeout(() => {
             canvas.renderAll()
           }, 10)
@@ -63,28 +64,25 @@ const InstanceProvider = ({ children }) => {
     const currentDesign = JSON.stringify(canvas.toJSON())
 
     selectedCells.forEach((cellIndex) => {
-      const updatedObjects = {
-        ...state.objects,
-        [cellIndex]: canvas.getObjects().length > 0 ? currentDesign : null
-      }
-
-      dispatch({ type: 'SET_OBJECTS', payload: updatedObjects })
+      dispatch({
+        type: 'SAVE_CELL_DESIGN',
+        payload: {
+          cellIndex,
+          design: canvas.getObjects().length > 0 ? currentDesign : null
+        }
+      })
     })
 
     setUnsavedChanges(false)
-  }, [canvas, selectedCells, state.objects])
+  }, [canvas, dispatch, selectedCells])
 
-  // Gestion du clic sur une cellule (avec sélection multiple ou simple)
+  // Gestion du clic sur une cellule
   const handleCellClick = useCallback(
     (labelIndex, event) => {
-      if (labelIndex === selectedCell) {
-        console.log('Clic sur la même cellule, aucune action nécessaire')
-        return
-      }
+      if (labelIndex === selectedCell) return
 
-      // Si des modifications non sauvegardées sont détectées, on les sauvegarde automatiquement
       if (unsavedChanges && hasDesignChanged()) {
-        saveChanges() // Sauvegarde automatique sans demande de confirmation
+        saveChanges()
       }
 
       if (canvas) {
@@ -101,9 +99,9 @@ const InstanceProvider = ({ children }) => {
       })
 
       setSelectedCell(labelIndex)
-      setUnsavedChanges(false) // Réinitialiser l'état des modifications non sauvegardées
+      setUnsavedChanges(false)
     },
-    [selectedCell, unsavedChanges, hasDesignChanged, saveChanges, canvas]
+    [canvas, hasDesignChanged, saveChanges, selectedCell, unsavedChanges]
   )
 
   // Copier et coller le design
@@ -122,13 +120,15 @@ const InstanceProvider = ({ children }) => {
         setTimeout(() => canvas.renderAll(), 10)
       })
 
-      const updatedObjects = {
-        ...state.objects,
-        [cellIndex]: copiedDesign
-      }
-      dispatch({ type: 'SET_OBJECTS', payload: updatedObjects })
+      dispatch({
+        type: 'SAVE_CELL_DESIGN',
+        payload: {
+          cellIndex,
+          design: copiedDesign
+        }
+      })
     })
-  }, [canvas, copiedDesign, selectedCells, state.objects])
+  }, [canvas, copiedDesign, dispatch, selectedCells])
 
   // Importer des données
   const importData = useCallback(
@@ -165,7 +165,7 @@ const InstanceProvider = ({ children }) => {
         }
       })
     },
-    [canvas, onAddTextCsv, onAddQrCodeCsv, loadCellDesign, saveChanges]
+    [canvas, loadCellDesign, onAddQrCodeCsv, onAddTextCsv, saveChanges]
   )
 
   // Détection des modifications sur le canevas

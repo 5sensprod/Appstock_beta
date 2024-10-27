@@ -30,6 +30,15 @@ export const canvasReducer = (state, action) => {
           ...action.payload // Mise à jour partielle de labelConfig
         }
       }
+    case 'SAVE_CELL_DESIGN':
+      const { cellIndex, design } = action.payload
+      return {
+        ...state,
+        objects: {
+          ...state.objects,
+          [cellIndex]: design
+        }
+      }
     case 'SET_OBJECTS':
       console.log('Action SET_OBJECTS déclenchée avec payload :', action.payload)
       return {
