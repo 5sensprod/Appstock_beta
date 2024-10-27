@@ -48,7 +48,6 @@ const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedF
   useEffect(() => {
     if (selectedObject && 'set' in selectedObject) {
       selectedObject.set('fill', selectedColor)
-      canvas.renderAll()
       canvas.requestRenderAll()
 
       // Met à jour l'état des objets après modification de couleur
@@ -68,7 +67,6 @@ const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedF
         dirty: true
       })
 
-      canvas.calcOffset()
       canvas.requestRenderAll()
 
       // Met à jour l'état des objets après modification de la police

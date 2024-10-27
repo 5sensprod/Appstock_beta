@@ -17,170 +17,115 @@ export const useInstance = () => useContext(InstanceContext)
 const InstanceProvider = ({ children }) => {
   const { canvas, onAddTextCsv, isTextSelected, onAddQrCodeCsv } = useCanvas()
 
+  // État spécifique aux cellules
   const [selectedCell, setSelectedCell] = useState(0)
   const [selectedCells, setSelectedCells] = useState([])
   const [totalCells, setTotalCells] = useState(0)
   const [copiedDesign, setCopiedDesign] = useState(null)
 
-  const [state, dispatch] = useReducer(canvasReducer, initialCanvasState)
+  // Reducer pour la gestion des objets et forcer le rafraîchissement
+  const [state, localDispatch] = useReducer(canvasReducer, initialCanvasState)
+  const [refresh, setRefresh] = useState(false) // État pour forcer le rendu
 
   // Fonction pour charger le design de la cellule sélectionnée
   const loadCellDesign = useCallback(
     (cellIndex) => {
-      console.log(`Chargement du design pour la cellule ${cellIndex}`)
       if (!canvas) return
-
       canvas.clear()
       canvas.backgroundColor = 'white'
-
       const design = state.objects[cellIndex]
-
       if (design) {
         canvas.loadFromJSON(design, () => {
-          setTimeout(() => {
-            canvas.renderAll()
-          }, 10)
+          canvas.requestRenderAll() // Forcer le rendu
         })
       } else {
-        canvas.renderAll()
+        canvas.requestRenderAll()
       }
     },
     [canvas, state.objects]
   )
 
+  // Sauvegarde des modifications pour les cellules sélectionnées
   const saveChanges = useCallback(() => {
     if (!canvas) return
-
     const currentDesign = JSON.stringify(canvas.toJSON())
-
+    const updatedObjects = { ...state.objects }
     selectedCells.forEach((cellIndex) => {
-      dispatch({
-        type: 'SAVE_CELL_DESIGN',
-        payload: {
-          cellIndex,
-          design: canvas.getObjects().length > 0 ? currentDesign : null
-        }
-      })
+      updatedObjects[cellIndex] = canvas.getObjects().length > 0 ? currentDesign : null
     })
-
-    dispatch({ type: 'SET_UNSAVED_CHANGES', payload: false })
-  }, [canvas, dispatch, selectedCells])
+    localDispatch({ type: 'SET_OBJECTS', payload: updatedObjects })
+    setRefresh((prev) => !prev) // Inversion pour déclencher le rendu
+  }, [canvas, selectedCells, state.objects])
 
   // Gestion du clic sur une cellule
   const handleCellClick = useCallback(
     (labelIndex, event) => {
       if (labelIndex === selectedCell) return
-
-      if (state.unsavedChanges) {
-        saveChanges()
-      }
-
-      if (canvas) {
-        canvas.discardActiveObject()
-        canvas.renderAll()
-      }
-
-      setSelectedCells((prevSelectedCells) => {
-        return event.ctrlKey || event.metaKey
+      saveChanges() // Appelle `saveChanges` lors du changement de cellule
+      setSelectedCells((prevSelectedCells) =>
+        event.ctrlKey || event.metaKey
           ? prevSelectedCells.includes(labelIndex)
             ? prevSelectedCells.filter((index) => index !== labelIndex)
             : [...prevSelectedCells, labelIndex]
           : [labelIndex]
-      })
-
+      )
       setSelectedCell(labelIndex)
-      dispatch({ type: 'SET_UNSAVED_CHANGES', payload: false })
     },
-    [canvas, saveChanges, selectedCell, state.unsavedChanges, dispatch]
+    [saveChanges, selectedCell]
   )
 
   // Copier et coller le design
   const copyDesign = useCallback(() => {
-    if (canvas && typeof canvas.toJSON === 'function') {
-      setCopiedDesign(JSON.stringify(canvas.toJSON()))
-    }
+    if (canvas) setCopiedDesign(JSON.stringify(canvas.toJSON()))
   }, [canvas])
 
   const pasteDesign = useCallback(() => {
     if (!canvas || !copiedDesign) return
-
     selectedCells.forEach((cellIndex) => {
       canvas.clear()
       canvas.loadFromJSON(copiedDesign, () => {
-        setTimeout(() => canvas.renderAll(), 10)
+        canvas.requestRenderAll() // Forcer le rendu
       })
-
-      dispatch({
+      localDispatch({
         type: 'SAVE_CELL_DESIGN',
-        payload: {
-          cellIndex,
-          design: copiedDesign
-        }
+        payload: { cellIndex, design: copiedDesign }
       })
     })
-  }, [canvas, copiedDesign, dispatch, selectedCells])
+    setRefresh((prev) => !prev) // Inversion pour déclencher le rendu
+  }, [canvas, copiedDesign, selectedCells])
 
   // Importer des données
   const importData = useCallback(
     (file) => {
       if (!canvas) return
-
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
         complete: async (results) => {
           for (let index = 0; index < results.data.length; index++) {
-            const row = results.data[index]
-            const { Nom, Tarif, Gencode } = row
-
+            const { Nom, Tarif, Gencode } = results.data[index]
             const cellIndex = index
             loadCellDesign(cellIndex)
-
             if (Nom) await onAddTextCsv(Nom)
             if (Tarif) await onAddTextCsv(`${Tarif}€`)
-
-            if (Gencode) {
-              await new Promise((resolve) => {
-                onAddQrCodeCsv(Gencode, resolve)
-              })
-            }
-
-            await saveChanges()
+            if (Gencode) await new Promise((resolve) => onAddQrCodeCsv(Gencode, resolve))
+            saveChanges()
             canvas.clear()
-            canvas.renderAll()
+            canvas.requestRenderAll()
           }
         },
-        error: (error) => {
-          console.error("Erreur lors de l'importation du fichier CSV", error)
-        }
+        error: (error) => console.error("Erreur lors de l'importation du fichier CSV", error)
       })
     },
     [canvas, loadCellDesign, onAddQrCodeCsv, onAddTextCsv, saveChanges]
   )
 
-  // Détection des modifications sur le canevas
-  useEffect(() => {
-    if (!canvas) return
-
-    const handleObjectModified = () => {
-      dispatch({ type: 'SET_UNSAVED_CHANGES', payload: true })
-    }
-
-    canvas.on('object:modified', handleObjectModified)
-    canvas.on('object:added', handleObjectModified)
-
-    return () => {
-      canvas.off('object:modified', handleObjectModified)
-      canvas.off('object:added', handleObjectModified)
-    }
-  }, [canvas, dispatch])
-
-  // Charger le design de la cellule au changement de sélection
+  // Charger automatiquement le design de la cellule sélectionnée
   useEffect(() => {
     if (selectedCell !== null) loadCellDesign(selectedCell)
-  }, [selectedCell, loadCellDesign])
+  }, [selectedCell, loadCellDesign, refresh])
 
-  // Sélectionner automatiquement la première cellule au chargement
+  // Initialisation des cellules au chargement
   useEffect(() => {
     setSelectedCell(0)
     setSelectedCells([0])
@@ -198,7 +143,6 @@ const InstanceProvider = ({ children }) => {
     copyDesign,
     pasteDesign,
     saveChanges,
-    unsavedChanges: state.unsavedChanges,
     isTextSelected,
     importData,
     state
