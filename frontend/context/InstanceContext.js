@@ -4,7 +4,8 @@ import React, {
   useCallback,
   useEffect,
   useReducer,
-  useState
+  useState,
+  useRef
 } from 'react'
 import { useCanvas } from './CanvasContext'
 import { instanceReducer, initialInstanceState } from '../reducers/instanceReducer'
@@ -20,6 +21,7 @@ const InstanceProvider = ({ children }) => {
   // Reducer pour gérer l’état des cellules
   const [state, dispatch] = useReducer(instanceReducer, initialInstanceState)
   const [refresh, setRefresh] = useState(false) // État pour forcer le rendu
+  const objectsRef = useRef(state.objects)
 
   // Fonction pour charger le design de la cellule sélectionnée
   const loadCellDesign = useCallback(
@@ -107,29 +109,53 @@ const InstanceProvider = ({ children }) => {
   )
 
   // Importer des données
+  // Met à jour `objectsRef` lorsque `state.objects` change
+  useEffect(() => {
+    objectsRef.current = state.objects
+  }, [state.objects])
+
   const importData = useCallback(
     (file) => {
       if (!canvas) return
+
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
         complete: async (results) => {
+          const newObjects = { ...objectsRef.current } // Utilisation de `objectsRef`
+
           for (let index = 0; index < results.data.length; index++) {
             const { Nom, Tarif, Gencode } = results.data[index]
             const cellIndex = index
-            loadCellDesign(cellIndex)
+
+            // Efface le canevas avant d'ajouter du contenu
+            canvas.getObjects().forEach((obj) => canvas.remove(obj))
+            canvas.backgroundColor = 'white'
+            canvas.renderAll()
+
+            // Ajouter les données pour chaque cellule
             if (Nom) await onAddTextCsv(Nom)
             if (Tarif) await onAddTextCsv(`${Tarif}€`)
             if (Gencode) await new Promise((resolve) => onAddQrCodeCsv(Gencode, resolve))
-            saveChanges()
-            canvas.clear()
-            canvas.requestRenderAll()
+
+            // Sauvegarder le design JSON pour la cellule en cours
+            const currentDesign = JSON.stringify(canvas.toJSON())
+            newObjects[cellIndex] = currentDesign
+
+            // Nettoyer le canevas pour la cellule suivante
+            canvas.getObjects().forEach((obj) => canvas.remove(obj))
+            canvas.backgroundColor = 'white'
+            canvas.renderAll()
           }
+
+          // Mettre à jour `objects` dans l’état global
+          dispatch({ type: 'SET_OBJECTS', payload: newObjects })
+          setRefresh((prev) => !prev)
         },
         error: (error) => console.error("Erreur lors de l'importation du fichier CSV", error)
       })
     },
-    [canvas, loadCellDesign, onAddQrCodeCsv, onAddTextCsv, saveChanges]
+    [canvas, onAddTextCsv, onAddQrCodeCsv, dispatch]
   )
 
   // Charger automatiquement le design de la cellule sélectionnée
