@@ -20,12 +20,22 @@ export const instanceReducer = (state, action) => {
       return { ...state, copiedDesign: action.payload }
     case 'SET_OBJECTS': // Ajoutez une action pour gérer `objects`
       return { ...state, objects: action.payload }
-    case 'SAVE_CELL_DESIGN':
+    case 'SAVE_CELL_DESIGN': {
       const { cellIndex, design } = action.payload
       return {
         ...state,
         objects: { ...state.objects, [cellIndex]: design }
       }
+    }
+    case 'CLEAR_CELL_DESIGN': {
+      const updatedObjects = { ...state.objects }
+      delete updatedObjects[action.payload.cellIndex] // Retire l'entrée pour la cellule
+
+      return {
+        ...state,
+        objects: updatedObjects
+      }
+    }
     default:
       return state
   }

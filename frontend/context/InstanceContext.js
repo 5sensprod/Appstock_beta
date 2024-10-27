@@ -90,6 +90,22 @@ const InstanceProvider = ({ children }) => {
     setRefresh((prev) => !prev) // Inversion pour déclencher le rendu
   }, [canvas, state.copiedDesign, state.selectedCells])
 
+  // Fonction pour vider le design de la cellule sélectionnée
+  const clearCellDesign = useCallback(
+    (cellIndex) => {
+      if (!canvas) return
+      canvas.clear()
+      canvas.backgroundColor = 'white'
+      canvas.requestRenderAll() // Forcer le rendu visuel
+
+      dispatch({
+        type: 'CLEAR_CELL_DESIGN',
+        payload: { cellIndex }
+      })
+    },
+    [canvas, dispatch]
+  )
+
   // Importer des données
   const importData = useCallback(
     (file) => {
@@ -133,6 +149,7 @@ const InstanceProvider = ({ children }) => {
     loadCellDesign,
     copyDesign,
     pasteDesign,
+    clearCellDesign,
     saveChanges,
     importData,
     dispatch,

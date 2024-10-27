@@ -5,6 +5,7 @@ import Menu from './Menu'
 import ZoomControl from './ZoomControl'
 import CopyDesignButton from './CopyDesignButton'
 import PasteDesignButton from './PasteDesignButton'
+import ClearCellButton from './ClearCellButton'
 
 export default function FabricDesigner() {
   return (
@@ -13,6 +14,7 @@ export default function FabricDesigner() {
       <div className="flex items-center space-x-2">
         <CopyDesignButton />
         <PasteDesignButton />
+        <ClearCellButton />
         <ZoomControl />
       </div>
       <CanvasControl />
