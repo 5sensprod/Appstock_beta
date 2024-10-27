@@ -12,17 +12,23 @@ import useAddText from '../hooks/useAddText'
 import useAddImage from '../hooks/useAddImage'
 import useAddQRCode from '../hooks/useAddQRCode'
 
+// Création du contexte pour le canevas
 const CanvasContext = createContext()
 
-const useCanvas = () => useContext(CanvasContext)
+// Hook pour accéder au contexte facilement
+const useCanvas = () => {
+  const context = useContext(CanvasContext)
+  if (!context) throw new Error('useCanvas must be used within a CanvasProvider')
+  return context
+}
 
 const CanvasProvider = ({ children }) => {
-  const canvasRef = useRef(null)
+  const canvasRef = useRef(null) // Référence au canevas dans le DOM
   const [state, dispatch] = useReducer(canvasReducer, initialCanvasState)
 
   const { canvas, zoomLevel, selectedColor, selectedFont, selectedObject, labelConfig } = state
 
-  // Gestion du zoom et de la taille via useCanvasTransform
+  // Hook pour gérer la taille et le zoom du canevas
   const { updateCanvasSize, handleZoomChange } = useCanvasTransform(canvas, labelConfig, dispatch)
 
   // Initialisation du canevas
@@ -36,10 +42,9 @@ const CanvasProvider = ({ children }) => {
 
       fabricCanvas.backgroundColor = 'white'
       fabricCanvas.renderAll()
-
       dispatch({ type: 'SET_CANVAS', payload: fabricCanvas })
-      console.log('Canvas initialisé :', fabricCanvas)
     } else {
+      // Met à jour les dimensions si le canevas est déjà défini
       canvas.setWidth(mmToPx(labelConfig.labelWidth))
       canvas.setHeight(mmToPx(labelConfig.labelHeight))
       canvas.backgroundColor = 'white'
@@ -47,11 +52,11 @@ const CanvasProvider = ({ children }) => {
     }
   }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
 
-  // Gestion des événements du canevas
+  // Utilise les hooks de gestion d'objets du canevas
   useCanvasObjectHandler(canvas, selectedObject, selectedColor, selectedFont, dispatch)
   useObjectConstraints(canvas)
 
-  // Utilisation des hooks pour ajouter différents objets
+  // Hooks pour ajouter différents types d'objets
   const { addObjectToCanvas, onDeleteObject } = useAddObjectToCanvas(canvas, labelConfig)
   const { onAddCircle, onAddRectangle } = useAddShape(
     canvas,
@@ -74,31 +79,17 @@ const CanvasProvider = ({ children }) => {
     addObjectToCanvas
   )
 
-  const isShapeSelected = () => {
-    if (!selectedObject) return false
-    return selectedObject.type === 'circle' || selectedObject.type === 'rect'
-  }
+  // Fonctions de vérification de type d'objet
+  const isShapeSelected = () => selectedObject?.type === 'circle' || selectedObject?.type === 'rect'
+  const isTextSelected = () =>
+    selectedObject?.type === 'i-text' || selectedObject?.type === 'textbox'
+  const isImageSelected = () => selectedObject?.type === 'image'
+  const isQRCodeSelected = useCallback(() => selectedObject?.isQRCode === true, [selectedObject])
 
-  const isTextSelected = () => {
-    if (!selectedObject) return false
-    return selectedObject.type === 'i-text' || selectedObject.type === 'textbox'
-  }
-
-  const isImageSelected = () => {
-    if (!selectedObject) return false
-    return selectedObject.type === 'image'
-  }
-
-  const isQRCodeSelected = useCallback(() => {
-    if (!selectedObject) return false
-    return selectedObject.isQRCode === true
-  }, [selectedObject])
-
+  // Gestion de la suppression d'objet avec la touche "Delete"
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Delete') {
-        onDeleteObject() // Utiliser la fonction onDeleteObject existante
-      }
+      if (event.key === 'Delete') onDeleteObject()
     }
 
     document.addEventListener('keydown', handleKeyDown)
@@ -107,20 +98,13 @@ const CanvasProvider = ({ children }) => {
     }
   }, [onDeleteObject])
 
-  const setLabelConfig = (config) => {
-    dispatch({
-      type: 'SET_LABEL_CONFIG',
-      payload: config
-    })
-  }
+  // Mise à jour de la configuration du label
+  const setLabelConfig = (config) => dispatch({ type: 'SET_LABEL_CONFIG', payload: config })
 
+  // Application de la police à l'objet sélectionné
   useEffect(() => {
     const applyFontToSelectedObject = async () => {
-      if (
-        canvas &&
-        selectedObject &&
-        (selectedObject.type === 'i-text' || selectedObject.type === 'textbox')
-      ) {
+      if (canvas && selectedObject && ['i-text', 'textbox'].includes(selectedObject.type)) {
         const fontObserver = new FontFaceObserver(selectedFont)
         try {
           await fontObserver.load()
@@ -128,20 +112,19 @@ const CanvasProvider = ({ children }) => {
           selectedObject.dirty = true
           selectedObject.setCoords()
           canvas.requestRenderAll()
-          console.log(`Police ${selectedFont} appliquée avec succès à l'objet sélectionné`)
         } catch (error) {
           console.error(`Erreur lors du chargement de la police ${selectedFont}:`, error)
         }
       }
     }
-
     applyFontToSelectedObject()
   }, [selectedFont, canvas, selectedObject])
 
+  // Valeurs à exposer dans le contexte
   const value = {
     canvasRef,
     canvas,
-    zoomLevel, // Seul `zoomLevel` est passé, sans `setZoomLevel`
+    zoomLevel,
     updateCanvasSize,
     handleZoomChange,
     labelConfig,
@@ -152,8 +135,6 @@ const CanvasProvider = ({ children }) => {
     setSelectedObject: (obj) => dispatch({ type: 'SET_SELECTED_OBJECT', payload: obj }),
     selectedFont,
     setSelectedFont: (font) => dispatch({ type: 'SET_FONT', payload: font }),
-
-    // Fonctions pour ajouter des objets
     onAddCircle,
     onAddRectangle,
     onAddText,
@@ -162,14 +143,11 @@ const CanvasProvider = ({ children }) => {
     onAddQrCode,
     onAddQrCodeCsv,
     onUpdateQrCode,
-
-    // Fonctions et vérifications d'état
     onDeleteObject,
     isShapeSelected,
     isTextSelected,
     isImageSelected,
     isQRCodeSelected,
-
     dispatch
   }
 
