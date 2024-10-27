@@ -6,7 +6,7 @@ import useAddObjectToCanvas from '../hooks/useAddObjectToCanvas'
 import { mmToPx } from '../utils/conversionUtils'
 import useCanvasTransform from '../hooks/useCanvasTransform'
 import { canvasReducer, initialCanvasState } from '../reducers/canvasReducer'
-
+import FontFaceObserver from 'fontfaceobserver'
 import useAddShape from '../hooks/useAddShape'
 import useAddText from '../hooks/useAddText'
 import useAddImage from '../hooks/useAddImage'
@@ -115,20 +115,27 @@ const CanvasProvider = ({ children }) => {
   }
 
   useEffect(() => {
-    if (canvas) {
-      // Si un objet texte est sélectionné, appliquez la police et forcez le recalcul
+    const applyFontToSelectedObject = async () => {
       if (
+        canvas &&
         selectedObject &&
         (selectedObject.type === 'i-text' || selectedObject.type === 'textbox')
       ) {
-        selectedObject.set('fontFamily', selectedFont)
-        selectedObject.dirty = true // Marque l'objet comme modifié
-        selectedObject.setCoords() // Réinitialise les coordonnées de sélection
+        const fontObserver = new FontFaceObserver(selectedFont)
+        try {
+          await fontObserver.load()
+          selectedObject.set('fontFamily', selectedFont)
+          selectedObject.dirty = true
+          selectedObject.setCoords()
+          canvas.requestRenderAll()
+          console.log(`Police ${selectedFont} appliquée avec succès à l'objet sélectionné`)
+        } catch (error) {
+          console.error(`Erreur lors du chargement de la police ${selectedFont}:`, error)
+        }
       }
-
-      // Rendu global du canevas pour appliquer les changements visuels immédiatement
-      canvas.requestRenderAll()
     }
+
+    applyFontToSelectedObject()
   }, [selectedFont, canvas, selectedObject])
 
   const value = {

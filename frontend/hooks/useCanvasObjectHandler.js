@@ -16,6 +16,18 @@ const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedF
       }
     }
 
+    // Fonction pour sauvegarder l'état complet des objets sur le canevas
+    const updateCanvasObjects = () => {
+      const objectsData = canvas.getObjects().map((obj) => obj.toObject())
+      dispatch({ type: 'SET_OBJECTS', payload: objectsData }) // Met à jour l'état `objects` dans le reducer
+    }
+
+    // Écoute les événements pour synchroniser l'état des objets
+    canvas.on('object:modified', updateCanvasObjects)
+    canvas.on('object:added', updateCanvasObjects)
+    canvas.on('object:removed', updateCanvasObjects)
+
+    // Gestion des événements de sélection
     canvas.on('selection:created', updateSelectedObject)
     canvas.on('selection:updated', updateSelectedObject)
     canvas.on('selection:cleared', () => {
@@ -23,6 +35,10 @@ const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedF
     })
 
     return () => {
+      // Nettoyage des écouteurs d'événements
+      canvas.off('object:modified', updateCanvasObjects)
+      canvas.off('object:added', updateCanvasObjects)
+      canvas.off('object:removed', updateCanvasObjects)
       canvas.off('selection:created', updateSelectedObject)
       canvas.off('selection:updated', updateSelectedObject)
       canvas.off('selection:cleared')
@@ -33,8 +49,13 @@ const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedF
     if (selectedObject && 'set' in selectedObject) {
       selectedObject.set('fill', selectedColor)
       canvas.renderAll()
+      canvas.requestRenderAll()
+
+      // Met à jour l'état des objets après modification de couleur
+      const objectsData = canvas.getObjects().map((obj) => obj.toObject())
+      dispatch({ type: 'SET_OBJECTS', payload: objectsData })
     }
-  }, [selectedColor, selectedObject, canvas])
+  }, [selectedColor, selectedObject, canvas, dispatch])
 
   useEffect(() => {
     if (
@@ -42,55 +63,19 @@ const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedF
       'set' in selectedObject &&
       (selectedObject.type === 'i-text' || selectedObject.type === 'textbox')
     ) {
-      // Stocker les valeurs originales importantes
-      const originalText = selectedObject.text
-      const originalLeft = selectedObject.left
-      const originalTop = selectedObject.top
-      const originalFontSize = selectedObject.fontSize
-      const originalScaleX = selectedObject.scaleX
-      const originalScaleY = selectedObject.scaleY
-
-      // Réinitialiser temporairement les échelles
-      selectedObject.set({
-        scaleX: 1,
-        scaleY: 1
-      })
-
-      // Mettre à jour la police
       selectedObject.set({
         fontFamily: selectedFont,
         dirty: true
       })
 
-      // Forcer une réinitialisation complète
-      selectedObject.set({
-        text: originalText,
-        left: originalLeft,
-        top: originalTop,
-        fontSize: originalFontSize,
-        scaleX: originalScaleX,
-        scaleY: originalScaleY
-      })
-
-      // Forcer la mise à jour des dimensions
-      selectedObject.set('dirty', true)
-      selectedObject.initDimensions()
-      selectedObject.setCoords()
-
-      // Si le texte est en mode édition, le rafraîchir
-      if (selectedObject.isEditing) {
-        const isEditing = selectedObject.isEditing
-        if (isEditing) {
-          selectedObject.exitEditing()
-          selectedObject.enterEditing()
-        }
-      }
-
-      // Force un recalcul complet du canvas
       canvas.calcOffset()
       canvas.requestRenderAll()
+
+      // Met à jour l'état des objets après modification de la police
+      const objectsData = canvas.getObjects().map((obj) => obj.toObject())
+      dispatch({ type: 'SET_OBJECTS', payload: objectsData })
     }
-  }, [selectedFont, selectedObject, canvas])
+  }, [selectedFont, selectedObject, canvas, dispatch])
 }
 
 export default useCanvasObjectHandler

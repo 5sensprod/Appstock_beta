@@ -14,7 +14,8 @@ export const initialCanvasState = {
     offsetLeft: 8,
     spacingVertical: 0,
     spacingHorizontal: 0
-  }
+  },
+  objects: []
 }
 
 export const canvasReducer = (state, action) => {
@@ -29,24 +30,21 @@ export const canvasReducer = (state, action) => {
           ...action.payload // Mise à jour partielle de labelConfig
         }
       }
+    case 'SET_OBJECTS':
+      console.log('Action SET_OBJECTS déclenchée avec payload :', action.payload)
+      return {
+        ...state,
+        objects: action.payload
+      }
+
     case 'SET_ZOOM':
       return { ...state, zoomLevel: action.payload }
     case 'SET_SELECTED_OBJECT':
       return { ...state, selectedObject: action.payload }
     case 'SET_COLOR':
-      if (state.selectedObject) {
-        state.selectedObject.set('fill', action.payload)
-        state.canvas.renderAll()
-      }
       return { ...state, selectedColor: action.payload }
+
     case 'SET_FONT':
-      if (
-        state.selectedObject &&
-        (state.selectedObject.type === 'i-text' || state.selectedObject.type === 'textbox')
-      ) {
-        state.selectedObject.set('fontFamily', action.payload)
-        state.canvas.renderAll()
-      }
       return { ...state, selectedFont: action.payload }
     default:
       return state

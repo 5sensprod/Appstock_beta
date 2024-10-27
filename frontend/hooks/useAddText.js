@@ -6,57 +6,47 @@ import useAddObjectToCanvas from './useAddObjectToCanvas'
 const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
   const { addObjectToCanvas } = useAddObjectToCanvas(canvas, labelConfig)
 
-  const onAddText = useCallback(() => {
+  const loadAndApplyFont = useCallback(async (fontFamily) => {
+    const fontObserver = new FontFaceObserver(fontFamily)
+    try {
+      await fontObserver.load()
+      console.log(`Police ${fontFamily} chargée avec succès`)
+    } catch (error) {
+      console.error(`Erreur lors du chargement de la police ${fontFamily}:`, error)
+    }
+  }, [])
+
+  const onAddText = useCallback(async () => {
     const fontSize = labelConfig.labelWidth / 5
-    const fontObserver = new FontFaceObserver(selectedFont)
+    await loadAndApplyFont(selectedFont)
 
-    fontObserver
-      .load()
-      .then(() => {
-        const textBox = new fabric.Textbox('Votre texte ici', {
-          fontSize,
-          fill: selectedColor,
-          textAlign: 'left',
-          fontFamily: selectedFont
-        })
+    const textBox = new fabric.Textbox('Votre texte ici', {
+      fontSize,
+      fill: selectedColor,
+      textAlign: 'left',
+      fontFamily: selectedFont
+    })
 
-        addObjectToCanvas(textBox)
-
-        // Force le rendu du canevas
-        canvas.renderAll()
-      })
-      .catch((error) => {
-        console.error(`Erreur lors du chargement de la police ${selectedFont}:`, error)
-      })
-  }, [selectedColor, labelConfig, selectedFont, addObjectToCanvas, canvas])
+    addObjectToCanvas(textBox)
+    canvas.renderAll()
+  }, [selectedColor, labelConfig, selectedFont, addObjectToCanvas, canvas, loadAndApplyFont])
 
   const onAddTextCsv = useCallback(
-    (text = 'Votre texte ici') => {
+    async (text = 'Votre texte ici') => {
       const fontSize = labelConfig.labelWidth / 5
+      await loadAndApplyFont(selectedFont)
 
-      // Charger la police avant d'ajouter l'élément texte
-      const fontObserver = new FontFaceObserver(selectedFont)
+      const textBox = new fabric.Textbox(text, {
+        fontSize,
+        fill: selectedColor,
+        textAlign: 'left',
+        fontFamily: selectedFont
+      })
 
-      fontObserver
-        .load()
-        .then(() => {
-          const textBox = new fabric.Textbox(text, {
-            fontSize,
-            fill: selectedColor,
-            textAlign: 'left',
-            fontFamily: selectedFont
-          })
-
-          addObjectToCanvas(textBox)
-
-          // Force le rendu du canevas
-          canvas.renderAll()
-        })
-        .catch((error) => {
-          console.error(`Erreur lors du chargement de la police ${selectedFont}:`, error)
-        })
+      addObjectToCanvas(textBox)
+      canvas.renderAll()
     },
-    [selectedColor, labelConfig, selectedFont, addObjectToCanvas, canvas]
+    [selectedColor, labelConfig, selectedFont, addObjectToCanvas, canvas, loadAndApplyFont]
   )
 
   return { onAddText, onAddTextCsv }
