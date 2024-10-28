@@ -47,7 +47,6 @@ const CanvasProvider = ({ children }) => {
       // Met à jour les dimensions si le canevas est déjà défini
       canvas.setWidth(mmToPx(labelConfig.labelWidth))
       canvas.setHeight(mmToPx(labelConfig.labelHeight))
-      canvas.backgroundColor = 'white'
       canvas.renderAll()
     }
   }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
