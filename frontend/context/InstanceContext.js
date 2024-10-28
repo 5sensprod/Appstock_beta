@@ -11,6 +11,7 @@ export const useInstance = () => useContext(InstanceContext)
 const InstanceProvider = ({ children }) => {
   const { canvas, onAddTextCsv, onAddQrCodeCsv } = useCanvas()
   const [state, dispatch] = useReducer(instanceReducer, initialInstanceState)
+  // const [refresh, setRefresh] = useState(false)
 
   const { loadCellDesign, saveChanges, copyDesign, pasteDesign, clearCellDesign } =
     useCellCanvasManager(canvas, state, dispatch)
