@@ -44,14 +44,35 @@ const InstanceProvider = ({ children }) => {
   // Sauvegarde des modifications pour les cellules sélectionnées
   const saveChanges = useCallback(() => {
     if (!canvas) return
+
     const currentDesign = JSON.stringify(canvas.toJSON())
     const updatedObjects = { ...state.objects }
+
     state.selectedCells.forEach((cellIndex) => {
-      updatedObjects[cellIndex] = canvas.getObjects().length > 0 ? currentDesign : null
+      // Vérifier si le canvas a du contenu avant de sauvegarder
+      if (canvas.getObjects().length > 0) {
+        updatedObjects[cellIndex] = currentDesign
+      } else {
+        // Si la cellule est vide, la retirer de `objects`
+        delete updatedObjects[cellIndex]
+      }
+
+      // Vérifiez si cette cellule a des instances liées
+      if (state.linkedCells[cellIndex]) {
+        dispatch({
+          type: 'UPDATE_LINKED_CELLS',
+          payload: { primaryCell: cellIndex, design: currentDesign }
+        })
+      }
     })
+
     dispatch({ type: 'SET_OBJECTS', payload: updatedObjects })
-    setRefresh((prev) => !prev) // Inversion pour déclencher le rendu
-  }, [canvas, state.selectedCells, state.objects])
+    setRefresh((prev) => !prev)
+  }, [canvas, state.selectedCells, state.linkedCells, state.objects, dispatch])
+
+  useEffect(() => {
+    objectsRef.current = state.objects
+  }, [state.objects])
 
   // Gestion du clic sur une cellule
   const handleCellClick = useCallback(
@@ -122,40 +143,78 @@ const InstanceProvider = ({ children }) => {
         header: true,
         skipEmptyLines: true,
         complete: async (results) => {
-          const newObjects = { ...objectsRef.current } // On utilise la référence pour stocker les objets actuels
+          const newObjects = { ...objectsRef.current }
+          const importedCellIndices = [] // Stocker les indices des cellules importées
 
           for (let index = 0; index < results.data.length; index++) {
             const { Nom, Tarif, Gencode } = results.data[index]
             const cellIndex = index
 
-            // Efface le canvas avant d'ajouter du contenu
+            // Efface le canevas avant d'ajouter du contenu
             canvas.clear()
             canvas.backgroundColor = 'white'
             canvas.renderAll()
 
-            // Ajoute le texte et le QR code si présents dans la ligne CSV
+            // Ajoute les données pour chaque cellule importée
             if (Nom) await onAddTextCsv(Nom)
             if (Tarif) await onAddTextCsv(`${Tarif}€`)
             if (Gencode) await new Promise((resolve) => onAddQrCodeCsv(Gencode, resolve))
 
-            // Sauvegarde le design actuel du canvas dans `newObjects`
+            // Sauvegarder le design JSON de la cellule courante
             const currentDesign = JSON.stringify(canvas.toJSON())
             newObjects[cellIndex] = currentDesign
+            importedCellIndices.push(cellIndex) // Ajouter l'index à la liste des cellules importées
 
-            // Nettoie le canvas pour la cellule suivante
+            // Nettoyer le canevas pour la cellule suivante
             canvas.clear()
             canvas.backgroundColor = 'white'
             canvas.renderAll()
           }
 
-          // Met à jour `objects` dans l’état global en dispatchant l'action `IMPORT_CSV_DATA`
-          dispatch({ type: 'IMPORT_CSV_DATA', payload: newObjects })
-          setRefresh((prev) => !prev) // Déclenche un rendu
+          // Met à jour `objects` dans le reducer
+          dispatch({ type: 'SET_OBJECTS', payload: newObjects })
+
+          // Vérifie si des cellules ont été importées pour les lier ensemble
+          if (importedCellIndices.length > 1) {
+            // Associe les cellules importées entre elles
+            dispatch({
+              type: 'ADD_LINKED_CELLS',
+              payload: {
+                primaryCell: importedCellIndices[0],
+                linkedCellIndices: importedCellIndices.slice(1)
+              }
+            })
+          }
+
+          // Rafraîchit l'affichage
+          setRefresh((prev) => !prev)
         },
         error: (error) => console.error("Erreur lors de l'importation du fichier CSV", error)
       })
     },
     [canvas, onAddTextCsv, onAddQrCodeCsv, dispatch]
+  )
+
+  const createLinkedCells = useCallback(
+    (primaryCell, linkedCellIndices) => {
+      const primaryDesign = state.objects[primaryCell]
+      if (!primaryDesign) return
+
+      // Ajouter les cellules liées dans l’état global
+      dispatch({
+        type: 'ADD_LINKED_CELLS',
+        payload: { primaryCell, linkedCellIndices }
+      })
+
+      // Appliquer le design de la cellule principale aux cellules liées
+      linkedCellIndices.forEach((cellIndex) => {
+        dispatch({
+          type: 'SAVE_CELL_DESIGN',
+          payload: { cellIndex, design: primaryDesign }
+        })
+      })
+    },
+    [dispatch, state.objects]
   )
 
   // Charger automatiquement le design de la cellule sélectionnée
@@ -179,6 +238,7 @@ const InstanceProvider = ({ children }) => {
     saveChanges,
     importData,
     dispatch,
+    createLinkedCells,
     state
   }
 

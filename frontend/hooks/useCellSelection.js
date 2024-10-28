@@ -24,7 +24,7 @@ const useCellSelection = () => {
     )
 
     const totalCells = labelsPerRow * labelsPerColumn
-    dispatch({ type: 'SET_TOTAL_CELLS', payload: totalCells }) // Mise à jour via dispatch
+    dispatch({ type: 'SET_TOTAL_CELLS', payload: totalCells })
 
     const gridContainer = document.getElementById('gridContainer')
     if (gridContainer) {
@@ -36,13 +36,23 @@ const useCellSelection = () => {
           const label = document.createElement('div')
 
           const hasDesign = Boolean(state?.objects?.[labelIndex])
+          const isLinkedCell = Object.keys(state.linkedCells).some(
+            (primaryCell) =>
+              parseInt(primaryCell) === labelIndex ||
+              state.linkedCells[primaryCell].includes(labelIndex)
+          )
+          console.log('Label Index:', labelIndex, 'Is Linked:', isLinkedCell)
 
           label.className = `absolute border ${
-            selectedCells.includes(labelIndex)
-              ? 'border-blue-500 bg-blue-500'
-              : hasDesign
-                ? 'border-blue-300 bg-blue-200'
-                : 'border-gray-300 bg-gray-100'
+            selectedCells.includes(labelIndex) && isLinkedCell
+              ? 'border-red-500 bg-red-500'
+              : selectedCells.includes(labelIndex)
+                ? 'border-blue-500 bg-blue-500'
+                : isLinkedCell
+                  ? 'border-red-100 bg-red-200'
+                  : hasDesign
+                    ? 'border-blue-300 bg-blue-200'
+                    : 'border-gray-300 bg-gray-100'
           } cursor-pointer`
 
           label.style.width = `${(labelWidth / pageWidth) * 100}%`
@@ -56,11 +66,11 @@ const useCellSelection = () => {
         }
       }
     }
-  }, [labelConfig, selectedCells, handleCellClick, dispatch, state?.objects])
+  }, [labelConfig, selectedCells, handleCellClick, dispatch, state?.objects, state.linkedCells])
 
   useEffect(() => {
     updateGrid()
-  }, [updateGrid, state?.objects, selectedCells])
+  }, [updateGrid, state?.objects, selectedCells, state?.linkedCells]) //
 
   return { updateGrid, selectedCells }
 }

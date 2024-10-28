@@ -5,7 +5,8 @@ export const initialInstanceState = {
   selectedCells: [],
   totalCells: 0,
   copiedDesign: null,
-  objects: {} // Assurez-vous que `objects` est initialisé ici
+  objects: {},
+  linkedCells: {}
 }
 
 export const instanceReducer = (state, action) => {
@@ -38,6 +39,34 @@ export const instanceReducer = (state, action) => {
     }
     case 'IMPORT_CSV_DATA':
       return { ...state, objects: { ...state.objects, ...action.payload } }
+
+    case 'ADD_LINKED_CELLS': {
+      const { primaryCell, linkedCellIndices } = action.payload
+      console.log('Linked Cells Added:', primaryCell, [primaryCell, ...linkedCellIndices]) // Vérification de la structure complète
+      return {
+        ...state,
+        linkedCells: {
+          ...state.linkedCells,
+          [primaryCell]: [primaryCell, ...linkedCellIndices] // Inclure la cellule principale elle-même
+        }
+      }
+    }
+    case 'UPDATE_LINKED_CELLS': {
+      const { primaryCell, design } = action.payload
+      const updatedObjects = { ...state.objects }
+
+      // Mettez à jour chaque cellule associée avec le nouveau design
+      if (state.linkedCells[primaryCell]) {
+        state.linkedCells[primaryCell].forEach((cellIndex) => {
+          updatedObjects[cellIndex] = design
+        })
+      }
+
+      return {
+        ...state,
+        objects: updatedObjects
+      }
+    }
 
     default:
       return state

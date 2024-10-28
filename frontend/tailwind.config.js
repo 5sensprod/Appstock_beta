@@ -3,7 +3,9 @@ module.exports = {
   darkMode: 'class', // Active le mode sombre via la classe 'dark'
   content: [
     './pages/**/*.{js,ts,jsx,tsx}',
-    './components/**/*.{js,ts,jsx,tsx}'
+    './components/**/*.{js,ts,jsx,tsx}',
+    './context/**/*.{js,ts,jsx,tsx}', // Ajoutez des dossiers supplémentaires si nécessaire
+    './hooks/**/*.{js,ts,jsx,tsx}'
   ],
   theme: {
     extend: {
@@ -15,10 +17,7 @@ module.exports = {
         pacifico: ['Pacifico', 'cursive'],
         playfair: ['Playfair Display', 'serif'],
         roboto: ['Roboto', 'sans-serif'],
-        sourcecodepro: [
-          'Source Code Pro',
-          'monospace'
-        ]
+        sourcecodepro: ['Source Code Pro', 'monospace']
       },
       colors: {
         'light-background': '#ffffff', // Couleur de fond pour le mode clair
