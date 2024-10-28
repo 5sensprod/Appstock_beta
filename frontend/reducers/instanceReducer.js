@@ -36,6 +36,9 @@ export const instanceReducer = (state, action) => {
         objects: updatedObjects
       }
     }
+    case 'IMPORT_CSV_DATA':
+      return { ...state, objects: { ...state.objects, ...action.payload } }
+
     default:
       return state
   }

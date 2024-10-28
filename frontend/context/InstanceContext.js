@@ -122,35 +122,35 @@ const InstanceProvider = ({ children }) => {
         header: true,
         skipEmptyLines: true,
         complete: async (results) => {
-          const newObjects = { ...objectsRef.current } // Utilisation de `objectsRef`
+          const newObjects = { ...objectsRef.current } // On utilise la référence pour stocker les objets actuels
 
           for (let index = 0; index < results.data.length; index++) {
             const { Nom, Tarif, Gencode } = results.data[index]
             const cellIndex = index
 
-            // Efface le canevas avant d'ajouter du contenu
-            canvas.getObjects().forEach((obj) => canvas.remove(obj))
+            // Efface le canvas avant d'ajouter du contenu
+            canvas.clear()
             canvas.backgroundColor = 'white'
             canvas.renderAll()
 
-            // Ajouter les données pour chaque cellule
+            // Ajoute le texte et le QR code si présents dans la ligne CSV
             if (Nom) await onAddTextCsv(Nom)
             if (Tarif) await onAddTextCsv(`${Tarif}€`)
             if (Gencode) await new Promise((resolve) => onAddQrCodeCsv(Gencode, resolve))
 
-            // Sauvegarder le design JSON pour la cellule en cours
+            // Sauvegarde le design actuel du canvas dans `newObjects`
             const currentDesign = JSON.stringify(canvas.toJSON())
             newObjects[cellIndex] = currentDesign
 
-            // Nettoyer le canevas pour la cellule suivante
-            canvas.getObjects().forEach((obj) => canvas.remove(obj))
+            // Nettoie le canvas pour la cellule suivante
+            canvas.clear()
             canvas.backgroundColor = 'white'
             canvas.renderAll()
           }
 
-          // Mettre à jour `objects` dans l’état global
-          dispatch({ type: 'SET_OBJECTS', payload: newObjects })
-          setRefresh((prev) => !prev)
+          // Met à jour `objects` dans l’état global en dispatchant l'action `IMPORT_CSV_DATA`
+          dispatch({ type: 'IMPORT_CSV_DATA', payload: newObjects })
+          setRefresh((prev) => !prev) // Déclenche un rendu
         },
         error: (error) => console.error("Erreur lors de l'importation du fichier CSV", error)
       })
