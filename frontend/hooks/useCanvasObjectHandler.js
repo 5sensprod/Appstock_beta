@@ -1,60 +1,61 @@
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 
 const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedFont, dispatch) => {
-  useEffect(() => {
-    if (!canvas) return
-
-    const updateSelectedObject = () => {
-      const activeObject = canvas.getActiveObject()
-      dispatch({ type: 'SET_SELECTED_OBJECT', payload: activeObject })
-
-      if (activeObject && activeObject.fill) {
-        dispatch({ type: 'SET_COLOR', payload: activeObject.fill })
+  const updateCanvasObjects = useCallback(() => {
+    const objectsData = canvas.getObjects().map((obj, index) => ({
+      id: obj.id || `temp-${index}`,
+      design: {
+        fill: obj.fill,
+        fontFamily: obj.fontFamily
+        // Ajoutez ici d'autres propriétés de design si nécessaire
+      },
+      data: {
+        content: obj.type === 'i-text' || obj.type === 'textbox' ? obj.text : obj.data
       }
-      if (activeObject && activeObject.fontFamily) {
-        dispatch({ type: 'SET_FONT', payload: activeObject.fontFamily })
-      }
-    }
+    }))
 
-    // Fonction pour sauvegarder l'état complet des objets sur le canevas
-    const updateCanvasObjects = () => {
-      const objectsData = canvas.getObjects().map((obj) => obj.toObject())
-      dispatch({ type: 'SET_OBJECTS', payload: objectsData }) // Met à jour l'état `objects` dans le reducer
-    }
+    dispatch({ type: 'SET_OBJECTS', payload: objectsData })
+  }, [canvas, dispatch])
 
-    // Écoute les événements pour synchroniser l'état des objets
-    canvas.on('object:modified', updateCanvasObjects)
-    canvas.on('object:added', updateCanvasObjects)
-    canvas.on('object:removed', updateCanvasObjects)
+  const updateSelectedObject = useCallback(() => {
+    const activeObject = canvas.getActiveObject()
+    dispatch({ type: 'SET_SELECTED_OBJECT', payload: activeObject })
 
-    // Gestion des événements de sélection
-    canvas.on('selection:created', updateSelectedObject)
-    canvas.on('selection:updated', updateSelectedObject)
-    canvas.on('selection:cleared', () => {
-      dispatch({ type: 'SET_SELECTED_OBJECT', payload: null })
-    })
-
-    return () => {
-      // Nettoyage des écouteurs d'événements
-      canvas.off('object:modified', updateCanvasObjects)
-      canvas.off('object:added', updateCanvasObjects)
-      canvas.off('object:removed', updateCanvasObjects)
-      canvas.off('selection:created', updateSelectedObject)
-      canvas.off('selection:updated', updateSelectedObject)
-      canvas.off('selection:cleared')
+    if (activeObject) {
+      dispatch({ type: 'SET_COLOR', payload: activeObject.fill })
+      dispatch({ type: 'SET_FONT', payload: activeObject.fontFamily })
     }
   }, [canvas, dispatch])
+
+  const addCanvasListeners = useCallback(() => {
+    if (!canvas) return
+
+    const listeners = [
+      { event: 'object:modified', handler: updateCanvasObjects },
+      { event: 'object:added', handler: updateCanvasObjects },
+      { event: 'object:removed', handler: updateCanvasObjects },
+      { event: 'selection:created', handler: updateSelectedObject },
+      { event: 'selection:updated', handler: updateSelectedObject },
+      {
+        event: 'selection:cleared',
+        handler: () => dispatch({ type: 'SET_SELECTED_OBJECT', payload: null })
+      }
+    ]
+
+    listeners.forEach(({ event, handler }) => canvas.on(event, handler))
+
+    return () => listeners.forEach(({ event, handler }) => canvas.off(event, handler))
+  }, [canvas, updateCanvasObjects, updateSelectedObject, dispatch])
+
+  useEffect(addCanvasListeners, [addCanvasListeners])
 
   useEffect(() => {
     if (selectedObject && 'set' in selectedObject) {
       selectedObject.set('fill', selectedColor)
       canvas.requestRenderAll()
-
-      // Met à jour l'état des objets après modification de couleur
-      const objectsData = canvas.getObjects().map((obj) => obj.toObject())
-      dispatch({ type: 'SET_OBJECTS', payload: objectsData })
+      updateCanvasObjects()
     }
-  }, [selectedColor, selectedObject, canvas, dispatch])
+  }, [selectedColor, selectedObject, canvas, updateCanvasObjects])
 
   useEffect(() => {
     if (
@@ -62,18 +63,11 @@ const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedF
       'set' in selectedObject &&
       (selectedObject.type === 'i-text' || selectedObject.type === 'textbox')
     ) {
-      selectedObject.set({
-        fontFamily: selectedFont,
-        dirty: true
-      })
-
+      selectedObject.set({ fontFamily: selectedFont, dirty: true })
       canvas.requestRenderAll()
-
-      // Met à jour l'état des objets après modification de la police
-      const objectsData = canvas.getObjects().map((obj) => obj.toObject())
-      dispatch({ type: 'SET_OBJECTS', payload: objectsData })
+      updateCanvasObjects()
     }
-  }, [selectedFont, selectedObject, canvas, dispatch])
+  }, [selectedFont, selectedObject, canvas, updateCanvasObjects])
 }
 
 export default useCanvasObjectHandler

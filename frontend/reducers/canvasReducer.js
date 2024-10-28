@@ -15,7 +15,8 @@ export const initialCanvasState = {
     spacingVertical: 0,
     spacingHorizontal: 0
   },
-  objects: []
+  objects: [],
+  nextObjectId: 1
 }
 
 export const canvasReducer = (state, action) => {
@@ -27,7 +28,7 @@ export const canvasReducer = (state, action) => {
         ...state,
         labelConfig: {
           ...state.labelConfig,
-          ...action.payload // Mise à jour partielle de labelConfig
+          ...action.payload
         }
       }
     case 'SET_OBJECTS':
