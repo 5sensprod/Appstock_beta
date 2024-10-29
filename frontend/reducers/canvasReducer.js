@@ -34,7 +34,7 @@ export const canvasReducer = (state, action) => {
       }
 
     case 'SET_OBJECTS':
-      console.log('Action SET_OBJECTS déclenchée avec payload :', action.payload)
+      console.log('Action CanvasReducer SET_OBJECTS déclenchée avec payload :', action.payload)
       return {
         ...state,
         objects: action.payload

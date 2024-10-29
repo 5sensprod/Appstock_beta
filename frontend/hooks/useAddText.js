@@ -34,7 +34,7 @@ const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
       fontSize,
       fill: selectedColor || 'black', // Fallback color
       textAlign: 'left',
-      fontFamily: selectedFont || 'Arial' // Fallback font
+      fontFamily: selectedFont || 'Lato' // Fallback font
     })
 
     addObjectToCanvas(textBox)
@@ -55,7 +55,7 @@ const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
         fontSize,
         fill: selectedColor || 'black',
         textAlign: 'left',
-        fontFamily: selectedFont || 'Arial'
+        fontFamily: selectedFont || 'Lato'
       })
 
       addObjectToCanvas(textBox)
