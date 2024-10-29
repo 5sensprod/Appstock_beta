@@ -9,8 +9,34 @@ const useCellCanvasManager = (canvas, state, dispatch) => {
       canvas.clear()
       canvas.backgroundColor = 'white'
       const design = state.objects[cellIndex]
+
       if (design) {
-        canvas.loadFromJSON(design, () => canvas.requestRenderAll())
+        // Charger les objets à partir du JSON
+        canvas.loadFromJSON(design, () => {
+          // Redéfinir les propriétés spécifiques pour chaque objet QR code
+          canvas.getObjects().forEach((obj) => {
+            if (obj.isQRCode) {
+              obj.set({
+                selectable: true,
+                evented: true,
+                hasControls: true,
+                hasBorders: true
+              })
+
+              // Redéfinir `toObject` pour sauvegarder ces propriétés de nouveau
+              obj.toObject = (function (toObject) {
+                return function () {
+                  return {
+                    ...toObject.call(this),
+                    isQRCode: this.isQRCode,
+                    qrText: this.qrText
+                  }
+                }
+              })(obj.toObject)
+            }
+          })
+          canvas.requestRenderAll()
+        })
       } else {
         canvas.requestRenderAll()
       }
@@ -21,6 +47,23 @@ const useCellCanvasManager = (canvas, state, dispatch) => {
   // Sauvegarder les modifications pour les cellules sélectionnées
   const saveChanges = useCallback(() => {
     if (!canvas) return
+
+    // Étendre la fonction toObject pour inclure des propriétés spécifiques au QR code
+    canvas.getObjects().forEach((obj) => {
+      if (obj.isQRCode) {
+        obj.toObject = (function (toObject) {
+          return function () {
+            return {
+              ...toObject.call(this),
+              isQRCode: this.isQRCode,
+              qrText: this.qrText
+            }
+          }
+        })(obj.toObject)
+      }
+    })
+
+    // Sauvegarder le design actuel en JSON avec les propriétés étendues
     const currentDesign = JSON.stringify(canvas.toJSON())
     const updatedObjects = { ...state.objects }
 
