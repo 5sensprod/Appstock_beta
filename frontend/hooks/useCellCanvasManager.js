@@ -1,8 +1,6 @@
-// hooks/useCellCanvasManager.js
 import { useCallback } from 'react'
 
 const useCellCanvasManager = (canvas, state, dispatch) => {
-  // Charger le design d’une cellule dans le canevas
   const loadCellDesign = useCallback(
     (cellIndex) => {
       if (!canvas) return
@@ -11,9 +9,7 @@ const useCellCanvasManager = (canvas, state, dispatch) => {
       const design = state.objects[cellIndex]
 
       if (design) {
-        // Charger les objets à partir du JSON
         canvas.loadFromJSON(design, () => {
-          // Redéfinir les propriétés spécifiques pour chaque objet QR code
           canvas.getObjects().forEach((obj) => {
             if (obj.isQRCode) {
               obj.set({
@@ -22,8 +18,6 @@ const useCellCanvasManager = (canvas, state, dispatch) => {
                 hasControls: true,
                 hasBorders: true
               })
-
-              // Redéfinir `toObject` pour sauvegarder ces propriétés de nouveau
               obj.toObject = (function (toObject) {
                 return function () {
                   return {
@@ -44,11 +38,9 @@ const useCellCanvasManager = (canvas, state, dispatch) => {
     [canvas, state.objects]
   )
 
-  // Sauvegarder les modifications pour les cellules sélectionnées
   const saveChanges = useCallback(() => {
     if (!canvas) return
 
-    // Étendre la fonction toObject pour inclure des propriétés spécifiques au QR code
     canvas.getObjects().forEach((obj) => {
       if (obj.isQRCode) {
         obj.toObject = (function (toObject) {
@@ -63,8 +55,7 @@ const useCellCanvasManager = (canvas, state, dispatch) => {
       }
     })
 
-    // Sauvegarder le design actuel en JSON avec les propriétés étendues
-    const currentDesign = JSON.stringify(canvas.toJSON())
+    const currentDesign = canvas.toJSON()
     const updatedObjects = { ...state.objects }
 
     state.selectedCells.forEach((cellIndex) => {
@@ -85,9 +76,8 @@ const useCellCanvasManager = (canvas, state, dispatch) => {
     dispatch({ type: 'SET_OBJECTS', payload: updatedObjects })
   }, [canvas, state.selectedCells, state.linkedCells, state.objects, dispatch])
 
-  // Copier et coller le design
   const copyDesign = useCallback(() => {
-    if (canvas) dispatch({ type: 'SET_COPIED_DESIGN', payload: JSON.stringify(canvas.toJSON()) })
+    if (canvas) dispatch({ type: 'SET_COPIED_DESIGN', payload: canvas.toJSON() })
   }, [canvas, dispatch])
 
   const pasteDesign = useCallback(() => {
@@ -99,7 +89,6 @@ const useCellCanvasManager = (canvas, state, dispatch) => {
     })
   }, [canvas, state.copiedDesign, state.selectedCells, dispatch])
 
-  // Fonction pour vider le design d’une cellule
   const clearCellDesign = useCallback(
     (cellIndex) => {
       if (!canvas) return

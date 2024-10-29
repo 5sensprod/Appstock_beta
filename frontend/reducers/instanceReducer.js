@@ -5,7 +5,7 @@ export const initialInstanceState = {
   selectedCells: [],
   totalCells: 0,
   copiedDesign: null,
-  objects: {},
+  objects: {}, // Directement en tant qu'objets Fabric.js
   linkedCells: {}
 }
 
@@ -31,8 +31,7 @@ export const instanceReducer = (state, action) => {
     }
     case 'CLEAR_CELL_DESIGN': {
       const updatedObjects = { ...state.objects }
-      delete updatedObjects[action.payload.cellIndex] // Retire l'entrée pour la cellule
-
+      delete updatedObjects[action.payload.cellIndex]
       return {
         ...state,
         objects: updatedObjects
@@ -43,12 +42,12 @@ export const instanceReducer = (state, action) => {
 
     case 'ADD_LINKED_CELLS': {
       const { primaryCell, linkedCellIndices } = action.payload
-      console.log('Linked Cells Added:', primaryCell, [primaryCell, ...linkedCellIndices]) // Vérification de la structure complète
+      console.log('Linked Cells Added:', primaryCell, [primaryCell, ...linkedCellIndices])
       return {
         ...state,
         linkedCells: {
           ...state.linkedCells,
-          [primaryCell]: [primaryCell, ...linkedCellIndices] // Inclure la cellule principale elle-même
+          [primaryCell]: [primaryCell, ...linkedCellIndices]
         }
       }
     }
@@ -56,7 +55,6 @@ export const instanceReducer = (state, action) => {
       const { primaryCell, design } = action.payload
       const updatedObjects = { ...state.objects }
 
-      // Mettez à jour chaque cellule associée avec le nouveau design
       if (state.linkedCells[primaryCell]) {
         state.linkedCells[primaryCell].forEach((cellIndex) => {
           updatedObjects[cellIndex] = design
