@@ -19,7 +19,8 @@ export const instanceReducer = (state, action) => {
       return { ...state, totalCells: action.payload }
     case 'SET_COPIED_DESIGN':
       return { ...state, copiedDesign: action.payload }
-    case 'SET_OBJECTS': // Ajoutez une action pour gérer `objects`
+    case 'SET_OBJECTS':
+      console.log('Instance SET_OBJECTS déclenchée avec payload :', action.payload)
       return { ...state, objects: action.payload }
     case 'SAVE_CELL_DESIGN': {
       const { cellIndex, design } = action.payload

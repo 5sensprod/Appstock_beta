@@ -2,17 +2,22 @@ import { useCallback } from 'react'
 import * as fabric from 'fabric'
 import FontFaceObserver from 'fontfaceobserver'
 import useAddObjectToCanvas from './useAddObjectToCanvas'
+import { loadedFonts } from '../utils/fontCache' // Import du cache
 
 const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
   const { addObjectToCanvas } = useAddObjectToCanvas(canvas, labelConfig)
 
   const loadAndApplyFont = useCallback(async (fontFamily) => {
-    const fontObserver = new FontFaceObserver(fontFamily)
-    try {
-      await fontObserver.load()
-      console.log(`Police ${fontFamily} chargée avec succès`)
-    } catch (error) {
-      console.error(`Erreur lors du chargement de la police ${fontFamily}:`, error)
+    // Vérifie si la police est déjà chargée dans le cache
+    if (!loadedFonts.has(fontFamily)) {
+      const fontObserver = new FontFaceObserver(fontFamily)
+      try {
+        await fontObserver.load()
+        loadedFonts.add(fontFamily) // Ajouter la police au cache une fois chargée
+        console.log(`Police ${fontFamily} chargée avec succès`)
+      } catch (error) {
+        console.error(`Erreur lors du chargement de la police ${fontFamily}:`, error)
+      }
     }
   }, [])
 
