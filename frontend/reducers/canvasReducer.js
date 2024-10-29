@@ -23,6 +23,7 @@ export const canvasReducer = (state, action) => {
   switch (action.type) {
     case 'SET_CANVAS':
       return { ...state, canvas: action.payload }
+
     case 'SET_LABEL_CONFIG':
       return {
         ...state,
@@ -31,6 +32,7 @@ export const canvasReducer = (state, action) => {
           ...action.payload
         }
       }
+
     case 'SET_OBJECTS':
       console.log('Action SET_OBJECTS déclenchée avec payload :', action.payload)
       return {
@@ -40,13 +42,25 @@ export const canvasReducer = (state, action) => {
 
     case 'SET_ZOOM':
       return { ...state, zoomLevel: action.payload }
+
     case 'SET_SELECTED_OBJECT':
       return { ...state, selectedObject: action.payload }
+
     case 'SET_COLOR':
       return { ...state, selectedColor: action.payload }
 
     case 'SET_FONT':
       return { ...state, selectedFont: action.payload }
+
+    // Nouvelle action pour regrouper la mise à jour de l'objet sélectionné, couleur et police
+    case 'UPDATE_SELECTED_OBJECT':
+      return {
+        ...state,
+        selectedObject: action.payload.object,
+        selectedColor: action.payload.color,
+        selectedFont: action.payload.font
+      }
+
     default:
       return state
   }

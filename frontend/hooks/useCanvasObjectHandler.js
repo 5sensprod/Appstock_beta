@@ -7,23 +7,27 @@ const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedF
       design: {
         fill: obj.fill,
         fontFamily: obj.fontFamily
-        // Ajoutez ici d'autres propriétés de design si nécessaire
       },
       data: {
         content: obj.type === 'i-text' || obj.type === 'textbox' ? obj.text : obj.data
       }
     }))
-
     dispatch({ type: 'SET_OBJECTS', payload: objectsData })
   }, [canvas, dispatch])
 
   const updateSelectedObject = useCallback(() => {
     const activeObject = canvas.getActiveObject()
-    dispatch({ type: 'SET_SELECTED_OBJECT', payload: activeObject })
-
     if (activeObject) {
-      dispatch({ type: 'SET_COLOR', payload: activeObject.fill })
-      dispatch({ type: 'SET_FONT', payload: activeObject.fontFamily })
+      dispatch({
+        type: 'UPDATE_SELECTED_OBJECT',
+        payload: {
+          object: activeObject,
+          color: activeObject.fill,
+          font: activeObject.fontFamily
+        }
+      })
+    } else {
+      dispatch({ type: 'SET_SELECTED_OBJECT', payload: null })
     }
   }, [canvas, dispatch])
 
@@ -51,23 +55,15 @@ const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedF
 
   useEffect(() => {
     if (selectedObject && 'set' in selectedObject) {
-      selectedObject.set('fill', selectedColor)
+      selectedObject.set({
+        fill: selectedColor,
+        fontFamily: selectedFont,
+        dirty: true
+      })
       canvas.requestRenderAll()
       updateCanvasObjects()
     }
-  }, [selectedColor, selectedObject, canvas, updateCanvasObjects])
-
-  useEffect(() => {
-    if (
-      selectedObject &&
-      'set' in selectedObject &&
-      (selectedObject.type === 'i-text' || selectedObject.type === 'textbox')
-    ) {
-      selectedObject.set({ fontFamily: selectedFont, dirty: true })
-      canvas.requestRenderAll()
-      updateCanvasObjects()
-    }
-  }, [selectedFont, selectedObject, canvas, updateCanvasObjects])
+  }, [selectedColor, selectedFont, selectedObject, canvas, updateCanvasObjects])
 }
 
 export default useCanvasObjectHandler

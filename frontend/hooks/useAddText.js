@@ -2,34 +2,39 @@ import { useCallback } from 'react'
 import * as fabric from 'fabric'
 import FontFaceObserver from 'fontfaceobserver'
 import useAddObjectToCanvas from './useAddObjectToCanvas'
-import { loadedFonts } from '../utils/fontCache' // Import du cache
 
 const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
   const { addObjectToCanvas } = useAddObjectToCanvas(canvas, labelConfig)
 
   const loadAndApplyFont = useCallback(async (fontFamily) => {
-    // Vérifie si la police est déjà chargée dans le cache
-    if (!loadedFonts.has(fontFamily)) {
-      const fontObserver = new FontFaceObserver(fontFamily)
-      try {
-        await fontObserver.load()
-        loadedFonts.add(fontFamily) // Ajouter la police au cache une fois chargée
-        console.log(`Police ${fontFamily} chargée avec succès`)
-      } catch (error) {
-        console.error(`Erreur lors du chargement de la police ${fontFamily}:`, error)
-      }
+    if (!fontFamily) {
+      console.warn('No font family provided, skipping font load.')
+      return
+    }
+    const fontObserver = new FontFaceObserver(fontFamily)
+    try {
+      // Increase timeout to 10 seconds (or as needed)
+      await fontObserver.load(null, 10000) // 10000ms = 10 seconds
+      console.log(`Font ${fontFamily} loaded successfully`)
+    } catch (error) {
+      console.error(`Error loading font ${fontFamily}:`, error)
     }
   }, [])
 
   const onAddText = useCallback(async () => {
-    const fontSize = labelConfig.labelWidth / 5
+    const fontSize = labelConfig?.labelWidth / 5 || 16
     await loadAndApplyFont(selectedFont)
+
+    if (!canvas) {
+      console.error('Canvas is not initialized.')
+      return
+    }
 
     const textBox = new fabric.Textbox('Votre texte ici', {
       fontSize,
-      fill: selectedColor,
+      fill: selectedColor || 'black', // Fallback color
       textAlign: 'left',
-      fontFamily: selectedFont
+      fontFamily: selectedFont || 'Arial' // Fallback font
     })
 
     addObjectToCanvas(textBox)
@@ -38,14 +43,19 @@ const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
 
   const onAddTextCsv = useCallback(
     async (text = 'Votre texte ici') => {
-      const fontSize = labelConfig.labelWidth / 5
+      const fontSize = labelConfig?.labelWidth / 5 || 16
       await loadAndApplyFont(selectedFont)
+
+      if (!canvas) {
+        console.error('Canvas is not initialized.')
+        return
+      }
 
       const textBox = new fabric.Textbox(text, {
         fontSize,
-        fill: selectedColor,
+        fill: selectedColor || 'black',
         textAlign: 'left',
-        fontFamily: selectedFont
+        fontFamily: selectedFont || 'Arial'
       })
 
       addObjectToCanvas(textBox)
