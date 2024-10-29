@@ -5,10 +5,9 @@ const useCellCanvasManager = (canvas, state, dispatch) => {
   // Charger le design d’une cellule dans le canevas
   const loadCellDesign = useCallback(
     (cellIndex) => {
-      if (!canvas || state.selectedCell === cellIndex) return // Évite de recharger le même design
+      if (!canvas) return
       canvas.clear()
       canvas.backgroundColor = 'white'
-
       const design = state.objects[cellIndex]
       if (design) {
         canvas.loadFromJSON(design, () => canvas.requestRenderAll())
@@ -16,22 +15,18 @@ const useCellCanvasManager = (canvas, state, dispatch) => {
         canvas.requestRenderAll()
       }
     },
-    [canvas, state.selectedCell, state.objects]
+    [canvas, state.objects]
   )
 
-  // Sauvegarder les modifications, seulement si le design est modifié
+  // Sauvegarder les modifications pour les cellules sélectionnées
   const saveChanges = useCallback(() => {
     if (!canvas) return
-
     const currentDesign = JSON.stringify(canvas.toJSON())
     const updatedObjects = { ...state.objects }
 
     state.selectedCells.forEach((cellIndex) => {
       if (canvas.getObjects().length > 0) {
-        if (updatedObjects[cellIndex] !== currentDesign) {
-          // Sauvegarde seulement si modifié
-          updatedObjects[cellIndex] = currentDesign
-        }
+        updatedObjects[cellIndex] = currentDesign
       } else {
         delete updatedObjects[cellIndex]
       }

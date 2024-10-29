@@ -28,6 +28,10 @@ const useCsvImporter = (canvas, onAddTextCsv, onAddQrCodeCsv, dispatch) => {
 
             newObjects[cellIndex] = JSON.stringify(canvas.toJSON())
             importedCellIndices.push(cellIndex)
+
+            canvas.clear()
+            canvas.backgroundColor = 'white'
+            canvas.renderAll()
           }
 
           dispatch({ type: 'SET_OBJECTS', payload: newObjects })
