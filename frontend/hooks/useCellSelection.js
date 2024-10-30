@@ -4,7 +4,7 @@ import { useCanvas } from '../context/CanvasContext'
 
 const useCellSelection = () => {
   const { labelConfig } = useCanvas()
-  const { selectedCells, handleCellClick, dispatch, state } = useInstance() // Récupère dispatch et state
+  const { selectedCells, handleCellClick, dispatchInstanceAction, instanceState } = useInstance() // Récupère dispatchInstanceAction et instanceState
 
   const updateGrid = useCallback(() => {
     const { labelWidth, labelHeight, offsetTop, offsetLeft, spacingVertical, spacingHorizontal } =
@@ -24,7 +24,7 @@ const useCellSelection = () => {
     )
 
     const totalCells = labelsPerRow * labelsPerColumn
-    dispatch({ type: 'SET_TOTAL_CELLS', payload: totalCells })
+    dispatchInstanceAction({ type: 'SET_TOTAL_CELLS', payload: totalCells })
 
     const gridContainer = document.getElementById('gridContainer')
     if (gridContainer) {
@@ -35,11 +35,11 @@ const useCellSelection = () => {
           const labelIndex = row * labelsPerRow + col
           const label = document.createElement('div')
 
-          const hasDesign = Boolean(state?.objects?.[labelIndex])
-          const isLinkedCell = Object.keys(state.linkedCells).some(
+          const hasDesign = Boolean(instanceState?.objects?.[labelIndex])
+          const isLinkedCell = Object.keys(instanceState.linkedCells).some(
             (primaryCell) =>
               parseInt(primaryCell) === labelIndex ||
-              state.linkedCells[primaryCell].includes(labelIndex)
+              instanceState.linkedCells[primaryCell].includes(labelIndex)
           )
           console.log('Label Index:', labelIndex, 'Is Linked:', isLinkedCell)
 
@@ -66,11 +66,18 @@ const useCellSelection = () => {
         }
       }
     }
-  }, [labelConfig, selectedCells, handleCellClick, dispatch, state?.objects, state.linkedCells])
+  }, [
+    labelConfig,
+    selectedCells,
+    handleCellClick,
+    dispatchInstanceAction,
+    instanceState?.objects,
+    instanceState.linkedCells
+  ])
 
   useEffect(() => {
     updateGrid()
-  }, [updateGrid, state?.objects, selectedCells, state?.linkedCells]) //
+  }, [updateGrid, instanceState?.objects, selectedCells, instanceState?.linkedCells]) //
 
   return { updateGrid, selectedCells }
 }

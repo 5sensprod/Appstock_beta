@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { mmToPx } from '../utils/conversionUtils'
 
-const useCanvasTransform = (canvas, labelConfig, dispatch) => {
+const useCanvasTransform = (canvas, labelConfig, dispatchCanvasAction) => {
   const updateCanvasSize = useCallback(
     (newSize) => {
       if (canvas) {
@@ -9,7 +9,7 @@ const useCanvasTransform = (canvas, labelConfig, dispatch) => {
         const newHeightPx = mmToPx(newSize.labelHeight || labelConfig.labelHeight)
 
         // Mettre à jour la configuration du label
-        dispatch({
+        dispatchCanvasAction({
           type: 'SET_LABEL_CONFIG',
           payload: {
             ...labelConfig,
@@ -19,7 +19,7 @@ const useCanvasTransform = (canvas, labelConfig, dispatch) => {
 
         // Réinitialiser le niveau de zoom à 1
         canvas.setZoom(1)
-        dispatch({ type: 'SET_ZOOM', payload: 1 })
+        dispatchCanvasAction({ type: 'SET_ZOOM', payload: 1 })
 
         // Réinitialiser la taille du canevas
         canvas.setWidth(newWidthPx)
@@ -37,7 +37,7 @@ const useCanvasTransform = (canvas, labelConfig, dispatch) => {
         canvas.renderAll()
       }
     },
-    [canvas, labelConfig, dispatch]
+    [canvas, labelConfig, dispatchCanvasAction]
   )
 
   const handleZoomChange = useCallback(
@@ -62,14 +62,14 @@ const useCanvasTransform = (canvas, labelConfig, dispatch) => {
         vpt[5] = (newHeight - height * newZoom) / 2 // Décalage vertical
         canvas.setViewportTransform(vpt)
 
-        // Mettre à jour le niveau de zoom global via dispatch pour synchroniser avec le curseur
-        dispatch({ type: 'SET_ZOOM', payload: newZoom })
+        // Mettre à jour le niveau de zoom global via dispatchCanvasAction pour synchroniser avec le curseur
+        dispatchCanvasAction({ type: 'SET_ZOOM', payload: newZoom })
 
         // Rendu de tous les changements
         canvas.requestRenderAll()
       }
     },
-    [canvas, dispatch, labelConfig] // Ajouter labelConfig aux dépendances
+    [canvas, dispatchCanvasAction, labelConfig] // Ajouter labelConfig aux dépendances
   )
 
   return { updateCanvasSize, handleZoomChange }

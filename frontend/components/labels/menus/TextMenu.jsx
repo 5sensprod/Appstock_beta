@@ -6,7 +6,7 @@ import { useCanvas } from '../../../context/CanvasContext'
 
 export default function TextMenu({ onAddText }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
-  const { selectedColor, selectedFont, dispatch } = useCanvas()
+  const { selectedColor, selectedFont, dispatchCanvasAction } = useCanvas()
 
   const pickerRef = useRef(null)
 
@@ -50,14 +50,16 @@ export default function TextMenu({ onAddText }) {
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
           <ColorPicker
             color={selectedColor}
-            setSelectedColor={(color) => dispatch({ type: 'SET_COLOR', payload: color })}
+            setSelectedColor={(color) =>
+              dispatchCanvasAction({ type: 'SET_COLOR', payload: color })
+            }
           />
         </div>
       )}
 
       <select
         value={selectedFont}
-        onChange={(e) => dispatch({ type: 'SET_FONT', payload: e.target.value })} // Utilisez dispatch directement
+        onChange={(e) => dispatchCanvasAction({ type: 'SET_FONT', payload: e.target.value })} // Utilisez dispatchCanvasAction directement
         className="rounded border bg-white p-2 shadow"
       >
         <option value="Lato">Lato</option>

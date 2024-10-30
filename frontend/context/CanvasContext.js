@@ -18,16 +18,21 @@ const useCanvas = () => {
 
 const CanvasProvider = ({ children }) => {
   const canvasRef = useRef(null)
-  const [state, dispatch] = useReducer(canvasReducer, initialCanvasState)
+  const [canvasState, dispatchCanvasAction] = useReducer(canvasReducer, initialCanvasState)
 
-  const { canvas, zoomLevel, selectedColor, selectedFont, selectedObject, labelConfig } = state
+  const { canvas, zoomLevel, selectedColor, selectedFont, selectedObject, labelConfig } =
+    canvasState
 
   // Initialisation et transformations du canevas
-  useInitializeCanvas(canvas, labelConfig, dispatch, canvasRef)
-  const { updateCanvasSize, handleZoomChange } = useCanvasTransform(canvas, labelConfig, dispatch)
+  useInitializeCanvas(canvas, labelConfig, dispatchCanvasAction, canvasRef)
+  const { updateCanvasSize, handleZoomChange } = useCanvasTransform(
+    canvas,
+    labelConfig,
+    dispatchCanvasAction
+  )
 
   // Gestion des objets sur le canevas
-  useCanvasObjectHandler(canvas, selectedObject, selectedColor, selectedFont, dispatch)
+  useCanvasObjectHandler(canvas, selectedObject, selectedColor, selectedFont, dispatchCanvasAction)
   useObjectConstraints(canvas)
 
   // Utilisation de useCanvasObjectActions pour gérer l'ajout/suppression d'objets
@@ -58,13 +63,13 @@ const CanvasProvider = ({ children }) => {
     updateCanvasSize,
     handleZoomChange,
     labelConfig,
-    setLabelConfig: (config) => dispatch({ type: 'SET_LABEL_CONFIG', payload: config }),
+    setLabelConfig: (config) => dispatchCanvasAction({ type: 'SET_LABEL_CONFIG', payload: config }),
     selectedColor,
-    setSelectedColor: (color) => dispatch({ type: 'SET_COLOR', payload: color }),
+    setSelectedColor: (color) => dispatchCanvasAction({ type: 'SET_COLOR', payload: color }),
     selectedObject,
-    setSelectedObject: (obj) => dispatch({ type: 'SET_SELECTED_OBJECT', payload: obj }),
+    setSelectedObject: (obj) => dispatchCanvasAction({ type: 'SET_SELECTED_OBJECT', payload: obj }),
     selectedFont,
-    setSelectedFont: (font) => dispatch({ type: 'SET_FONT', payload: font }),
+    setSelectedFont: (font) => dispatchCanvasAction({ type: 'SET_FONT', payload: font }),
     // Actions centralisées pour les objets
     onAddCircle,
     onAddRectangle,
@@ -80,7 +85,8 @@ const CanvasProvider = ({ children }) => {
     isTextSelected,
     isImageSelected,
     isQRCodeSelected,
-    dispatch
+    dispatchCanvasAction,
+    canvasState
   }
 
   return <CanvasContext.Provider value={value}>{children}</CanvasContext.Provider>

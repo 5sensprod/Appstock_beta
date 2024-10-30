@@ -5,7 +5,7 @@ import { faQrcode, faPalette, faSync } from '@fortawesome/free-solid-svg-icons'
 import { useCanvas } from '../../../context/CanvasContext'
 
 export default function QrMenu({ onAddQrCode, onUpdateQrCode, selectedQrText }) {
-  const { selectedColor, dispatch } = useCanvas()
+  const { selectedColor, dispatchCanvasAction } = useCanvas()
   const [qrText, setQrText] = useState(selectedQrText || '')
   const [isModified, setIsModified] = useState(false)
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
@@ -39,7 +39,7 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode, selectedQrText }) 
   }
 
   const handleColorChangeAndUpdate = (color) => {
-    dispatch({ type: 'SET_COLOR', payload: color })
+    dispatchCanvasAction({ type: 'SET_COLOR', payload: color })
     if (qrText.trim()) {
       onUpdateQrCode(qrText, color)
     }

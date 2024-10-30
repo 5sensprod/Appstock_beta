@@ -1,12 +1,12 @@
 import { useCallback } from 'react'
 
-const useCellCanvasManager = (canvas, state, dispatch) => {
+const useCellCanvasManager = (canvas, instanceState, dispatchInstanceAction) => {
   const loadCellDesign = useCallback(
     (cellIndex) => {
       if (!canvas) return
       canvas.clear()
       canvas.backgroundColor = 'white'
-      const design = state.objects[cellIndex]
+      const design = instanceState.objects[cellIndex]
 
       if (design) {
         canvas.loadFromJSON(design, () => {
@@ -35,7 +35,7 @@ const useCellCanvasManager = (canvas, state, dispatch) => {
         canvas.requestRenderAll()
       }
     },
-    [canvas, state.objects]
+    [canvas, instanceState.objects]
   )
 
   const saveChanges = useCallback(() => {
@@ -56,38 +56,47 @@ const useCellCanvasManager = (canvas, state, dispatch) => {
     })
 
     const currentDesign = canvas.toJSON()
-    const updatedObjects = { ...state.objects }
+    const updatedObjects = { ...instanceState.objects }
 
-    state.selectedCells.forEach((cellIndex) => {
+    instanceState.selectedCells.forEach((cellIndex) => {
       if (canvas.getObjects().length > 0) {
         updatedObjects[cellIndex] = currentDesign
       } else {
         delete updatedObjects[cellIndex]
       }
 
-      if (state.linkedCells[cellIndex]) {
-        dispatch({
+      if (instanceState.linkedCells[cellIndex]) {
+        dispatchInstanceAction({
           type: 'UPDATE_LINKED_CELLS',
           payload: { primaryCell: cellIndex, design: currentDesign }
         })
       }
     })
 
-    dispatch({ type: 'SET_OBJECTS', payload: updatedObjects })
-  }, [canvas, state.selectedCells, state.linkedCells, state.objects, dispatch])
+    dispatchInstanceAction({ type: 'SET_OBJECTS', payload: updatedObjects })
+  }, [
+    canvas,
+    instanceState.selectedCells,
+    instanceState.linkedCells,
+    instanceState.objects,
+    dispatchInstanceAction
+  ])
 
   const copyDesign = useCallback(() => {
-    if (canvas) dispatch({ type: 'SET_COPIED_DESIGN', payload: canvas.toJSON() })
-  }, [canvas, dispatch])
+    if (canvas) dispatchInstanceAction({ type: 'SET_COPIED_DESIGN', payload: canvas.toJSON() })
+  }, [canvas, dispatchInstanceAction])
 
   const pasteDesign = useCallback(() => {
-    if (!canvas || !state.copiedDesign) return
-    state.selectedCells.forEach((cellIndex) => {
+    if (!canvas || !instanceState.copiedDesign) return
+    instanceState.selectedCells.forEach((cellIndex) => {
       canvas.clear()
-      canvas.loadFromJSON(state.copiedDesign, () => canvas.requestRenderAll())
-      dispatch({ type: 'SAVE_CELL_DESIGN', payload: { cellIndex, design: state.copiedDesign } })
+      canvas.loadFromJSON(instanceState.copiedDesign, () => canvas.requestRenderAll())
+      dispatchInstanceAction({
+        type: 'SAVE_CELL_DESIGN',
+        payload: { cellIndex, design: instanceState.copiedDesign }
+      })
     })
-  }, [canvas, state.copiedDesign, state.selectedCells, dispatch])
+  }, [canvas, instanceState.copiedDesign, instanceState.selectedCells, dispatchInstanceAction])
 
   const clearCellDesign = useCallback(
     (cellIndex) => {
@@ -95,9 +104,9 @@ const useCellCanvasManager = (canvas, state, dispatch) => {
       canvas.clear()
       canvas.backgroundColor = 'white'
       canvas.requestRenderAll()
-      dispatch({ type: 'CLEAR_CELL_DESIGN', payload: { cellIndex } })
+      dispatchInstanceAction({ type: 'CLEAR_CELL_DESIGN', payload: { cellIndex } })
     },
-    [canvas, dispatch]
+    [canvas, dispatchInstanceAction]
   )
 
   return {

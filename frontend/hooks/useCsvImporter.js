@@ -2,7 +2,7 @@
 import { useCallback } from 'react'
 import Papa from 'papaparse'
 
-const useCsvImporter = (canvas, onAddTextCsv, onAddQrCodeCsv, dispatch) => {
+const useCsvImporter = (canvas, onAddTextCsv, onAddQrCodeCsv, dispatchInstanceAction) => {
   const importData = useCallback(
     (file) => {
       if (!canvas) return
@@ -34,10 +34,10 @@ const useCsvImporter = (canvas, onAddTextCsv, onAddQrCodeCsv, dispatch) => {
             canvas.renderAll()
           }
 
-          dispatch({ type: 'SET_OBJECTS', payload: newObjects })
+          dispatchInstanceAction({ type: 'SET_OBJECTS', payload: newObjects })
 
           if (importedCellIndices.length > 1) {
-            dispatch({
+            dispatchInstanceAction({
               type: 'ADD_LINKED_CELLS',
               payload: {
                 primaryCell: importedCellIndices[0],
@@ -49,7 +49,7 @@ const useCsvImporter = (canvas, onAddTextCsv, onAddQrCodeCsv, dispatch) => {
         error: (error) => console.error("Erreur lors de l'importation du fichier CSV", error)
       })
     },
-    [canvas, onAddTextCsv, onAddQrCodeCsv, dispatch]
+    [canvas, onAddTextCsv, onAddQrCodeCsv, dispatchInstanceAction]
   )
 
   return { importData }

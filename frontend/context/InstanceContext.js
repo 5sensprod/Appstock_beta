@@ -9,44 +9,49 @@ const InstanceContext = createContext()
 export const useInstance = () => useContext(InstanceContext)
 
 const InstanceProvider = ({ children }) => {
-  const { canvas, onAddTextCsv, onAddQrCodeCsv } = useCanvas()
-  const [state, dispatch] = useReducer(instanceReducer, initialInstanceState)
-  // const [refresh, setRefresh] = useState(false)
+  const { canvas, canvasState, onAddTextCsv, onAddQrCodeCsv } = useCanvas()
+  const [instanceState, dispatchInstanceAction] = useReducer(instanceReducer, initialInstanceState)
 
   const { loadCellDesign, saveChanges, copyDesign, pasteDesign, clearCellDesign } =
-    useCellCanvasManager(canvas, state, dispatch)
-  const { importData } = useCsvImporter(canvas, onAddTextCsv, onAddQrCodeCsv, dispatch)
+    useCellCanvasManager(canvas, instanceState, dispatchInstanceAction, canvasState)
+
+  const { importData } = useCsvImporter(
+    canvas,
+    onAddTextCsv,
+    onAddQrCodeCsv,
+    dispatchInstanceAction
+  )
 
   // Gestion du clic sur une cellule
   const handleCellClick = useCallback(
     (labelIndex, event) => {
-      if (labelIndex === state.selectedCell) return
+      if (labelIndex === instanceState.selectedCell) return
       saveChanges()
-      dispatch({
+      dispatchInstanceAction({
         type: 'SET_SELECTED_CELLS',
         payload:
           event.ctrlKey || event.metaKey
-            ? state.selectedCells.includes(labelIndex)
-              ? state.selectedCells.filter((index) => index !== labelIndex)
-              : [...state.selectedCells, labelIndex]
+            ? instanceState.selectedCells.includes(labelIndex)
+              ? instanceState.selectedCells.filter((index) => index !== labelIndex)
+              : [...instanceState.selectedCells, labelIndex]
             : [labelIndex]
       })
-      dispatch({ type: 'SET_SELECTED_CELL', payload: labelIndex })
+      dispatchInstanceAction({ type: 'SET_SELECTED_CELL', payload: labelIndex })
     },
-    [saveChanges, state.selectedCell, state.selectedCells]
+    [saveChanges, instanceState.selectedCell, instanceState.selectedCells]
   )
 
   useEffect(() => {
-    if (state.selectedCell !== null) loadCellDesign(state.selectedCell)
-  }, [state.selectedCell, loadCellDesign])
+    if (instanceState.selectedCell !== null) loadCellDesign(instanceState.selectedCell)
+  }, [instanceState.selectedCell, loadCellDesign])
 
   useEffect(() => {
-    dispatch({ type: 'SET_SELECTED_CELL', payload: 0 })
-    dispatch({ type: 'SET_SELECTED_CELLS', payload: [0] })
+    dispatchInstanceAction({ type: 'SET_SELECTED_CELL', payload: 0 })
+    dispatchInstanceAction({ type: 'SET_SELECTED_CELLS', payload: [0] })
   }, [])
 
   const value = {
-    ...state,
+    ...instanceState,
     handleCellClick,
     loadCellDesign,
     copyDesign,
@@ -54,8 +59,8 @@ const InstanceProvider = ({ children }) => {
     clearCellDesign,
     saveChanges,
     importData,
-    dispatch,
-    state
+    dispatchInstanceAction,
+    instanceState
   }
 
   return <InstanceContext.Provider value={value}>{children}</InstanceContext.Provider>

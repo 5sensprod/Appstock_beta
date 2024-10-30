@@ -6,7 +6,7 @@ import { useCanvas } from '../../../context/CanvasContext'
 
 export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
-  const { selectedColor, dispatch } = useCanvas()
+  const { selectedColor, dispatchCanvasAction } = useCanvas()
   const pickerRef = useRef(null)
 
   const toggleColorPicker = () => {
@@ -59,7 +59,9 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
           <ColorPicker
             color={selectedColor}
-            setSelectedColor={(color) => dispatch({ type: 'SET_COLOR', payload: color })}
+            setSelectedColor={(color) =>
+              dispatchCanvasAction({ type: 'SET_COLOR', payload: color })
+            }
           />
         </div>
       )}

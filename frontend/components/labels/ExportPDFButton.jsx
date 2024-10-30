@@ -7,18 +7,18 @@ import IconButton from '../ui/IconButton'
 
 const ExportPDFButton = () => {
   const { labelConfig } = useCanvas()
-  const { state, saveChanges, unsavedChanges } = useInstance()
+  const { instanceState, saveChanges, unsavedChanges } = useInstance()
 
   // Ajouter un état pour déclencher l'export PDF une fois la sauvegarde terminée
   const [shouldExport, setShouldExport] = useState(false)
 
-  // Utiliser useEffect pour surveiller les changements dans `state.objects` et déclencher l'export PDF
+  // Utiliser useEffect pour surveiller les changements dans `instanceState.objects` et déclencher l'export PDF
   useEffect(() => {
-    if (shouldExport && Object.keys(state.objects).length > 0) {
-      exportGridToPDF(labelConfig, state.objects)
+    if (shouldExport && Object.keys(instanceState.objects).length > 0) {
+      exportGridToPDF(labelConfig, instanceState.objects)
       setShouldExport(false)
     }
-  }, [state.objects, shouldExport, labelConfig])
+  }, [instanceState.objects, shouldExport, labelConfig])
 
   const handleExportPDF = async () => {
     if (unsavedChanges) {

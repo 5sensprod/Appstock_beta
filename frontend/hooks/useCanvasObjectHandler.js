@@ -1,6 +1,12 @@
 import { useEffect, useCallback } from 'react'
 
-const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedFont, dispatch) => {
+const useCanvasObjectHandler = (
+  canvas,
+  selectedObject,
+  selectedColor,
+  selectedFont,
+  dispatchCanvasAction
+) => {
   const updateCanvasObjects = useCallback(() => {
     const objectsData = canvas.getObjects().map((obj, index) => {
       if (obj.isQRCode) {
@@ -28,14 +34,14 @@ const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedF
         }
       }
     })
-    dispatch({ type: 'SET_OBJECTS', payload: objectsData })
-  }, [canvas, dispatch, selectedColor])
+    dispatchCanvasAction({ type: 'SET_OBJECTS', payload: objectsData })
+  }, [canvas, dispatchCanvasAction, selectedColor])
 
   // Mise à jour de l'objet sélectionné
   const updateSelectedObject = useCallback(() => {
     const activeObject = canvas.getActiveObject()
     if (activeObject) {
-      dispatch({
+      dispatchCanvasAction({
         type: 'UPDATE_SELECTED_OBJECT',
         payload: {
           object: activeObject,
@@ -45,9 +51,9 @@ const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedF
         }
       })
     } else {
-      dispatch({ type: 'SET_SELECTED_OBJECT', payload: null })
+      dispatchCanvasAction({ type: 'SET_SELECTED_OBJECT', payload: null })
     }
-  }, [canvas, dispatch])
+  }, [canvas, dispatchCanvasAction])
 
   const addCanvasListeners = useCallback(() => {
     if (!canvas) return
@@ -60,14 +66,14 @@ const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedF
       { event: 'selection:updated', handler: updateSelectedObject },
       {
         event: 'selection:cleared',
-        handler: () => dispatch({ type: 'SET_SELECTED_OBJECT', payload: null })
+        handler: () => dispatchCanvasAction({ type: 'SET_SELECTED_OBJECT', payload: null })
       }
     ]
 
     listeners.forEach(({ event, handler }) => canvas.on(event, handler))
 
     return () => listeners.forEach(({ event, handler }) => canvas.off(event, handler))
-  }, [canvas, updateCanvasObjects, updateSelectedObject, dispatch])
+  }, [canvas, updateCanvasObjects, updateSelectedObject, dispatchCanvasAction])
 
   useEffect(addCanvasListeners, [addCanvasListeners])
 
