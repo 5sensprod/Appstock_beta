@@ -24,6 +24,7 @@ export const instanceReducer = (state, action) => {
       return { ...state, objects: action.payload }
     case 'SAVE_CELL_DESIGN': {
       const { cellIndex, design } = action.payload
+      console.log('Instance SAVE_CELL_DESIGN déclenchée avec payload :', action.payload)
       return {
         ...state,
         objects: { ...state.objects, [cellIndex]: design }
