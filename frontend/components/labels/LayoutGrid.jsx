@@ -1,8 +1,12 @@
+// frontend/components/labels/LayoutGrid.jsx
 import React from 'react'
-import useCellSelection from '../../hooks/useCellSelection'
+import useGridGenerator from '../../hooks/cells/useGridGenerator'
+import { useCanvas } from '../../context/CanvasContext'
 
 const LayoutGrid = () => {
-  useCellSelection() // Gère la grille et la sélection des cellules
+  const { selectCell } = useCanvas()
+
+  useGridGenerator(selectCell)
 
   return (
     <div className="relative w-full border-2 border-gray-300 bg-light-background pb-[141.4%] shadow-xl dark:bg-dark-background">
