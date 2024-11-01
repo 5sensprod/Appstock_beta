@@ -27,7 +27,8 @@ const CanvasProvider = ({ children }) => {
     selectedFont,
     selectedObject,
     labelConfig,
-    selectedCellIndex
+    selectedCellIndex,
+    cellObjects
   } = canvasState
 
   // Initialisation et transformations du canevas
@@ -42,29 +43,35 @@ const CanvasProvider = ({ children }) => {
     (cellIndex) => {
       if (!canvas) return // Vérifie que le canevas est bien initialisé
 
-      // Sauvegarde des objets actuels dans la cellule actuelle
+      // Si la cellule sélectionnée est déjà active, ne fait rien
+      if (cellIndex === selectedCellIndex) {
+        console.log('La cellule sélectionnée est déjà active.')
+        return
+      }
+
+      // 1. Sauvegarde les objets actuels de la cellule dans `cellObjects` sans JSON
       const currentObjects = canvas.getObjects()
       dispatchCanvasAction({
         type: 'SET_CELL_OBJECTS',
-        payload: { cellIndex: selectedCellIndex, objects: currentObjects }
+        payload: { cellIndex: selectedCellIndex, objects: [...currentObjects] } // Sauvegarde directement les objets
       })
 
-      // Efface le canevas pour la nouvelle cellule
+      // 2. Efface le canvas pour préparer le chargement des objets de la nouvelle cellule
       canvas.clear()
 
-      // Réinitialise le fond blanc pour la cellule sélectionnée
+      // 3. Réinitialise le fond blanc pour la nouvelle cellule
       canvas.backgroundColor = 'white'
 
-      // Charge les objets pour la cellule nouvellement sélectionnée
+      // 4. Charge les objets pour la cellule nouvellement sélectionnée directement depuis `cellObjects`
       const cellObjects = canvasState.cellObjects[cellIndex] || []
       cellObjects.forEach((obj) => {
-        canvas.add(obj)
+        canvas.add(obj) // Ajoute chaque objet directement au canvas
       })
 
-      // Met à jour l'index de la cellule sélectionnée
+      // 5. Met à jour l'index de la cellule sélectionnée
       dispatchCanvasAction({ type: 'SELECT_CELL', payload: cellIndex })
 
-      // Rendu du canevas avec le fond et les objets mis à jour
+      // 6. Rendu du canevas avec les objets mis à jour
       canvas.renderAll()
     },
     [canvas, selectedCellIndex, canvasState.cellObjects, dispatchCanvasAction]
@@ -74,12 +81,12 @@ const CanvasProvider = ({ children }) => {
     console.log('CanvasProvider - Selected Cell Index:', selectedCellIndex)
   }, [selectedCellIndex])
 
-  useEffect(() => {
-    if (canvas && selectedCellIndex === null) {
-      // Ne s'exécute qu'au montage
-      selectCell(0)
-    }
-  }, [canvas, selectCell, selectedCellIndex])
+  // useEffect(() => {
+  //   if (canvas && selectedCellIndex === null) {
+  //     // Ne s'exécute qu'au montage
+  //     selectCell(0)
+  //   }
+  // }, [canvas, selectCell, selectedCellIndex])
   // Gestion des objets sur le canevas
   useCanvasObjectHandler(canvas, selectedObject, selectedColor, selectedFont, dispatchCanvasAction)
   useObjectConstraints(canvas)
@@ -136,6 +143,7 @@ const CanvasProvider = ({ children }) => {
     isQRCodeSelected,
     dispatchCanvasAction,
     selectedCellIndex,
+    cellObjects,
     selectCell,
     canvasState
   }

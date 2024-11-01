@@ -43,6 +43,7 @@ export const canvasReducer = (state, action) => {
         objects: action.payload
       }
     case 'SET_CELL_OBJECTS':
+      console.log('cellObjects avant mise à jour:', state.cellObjects)
       return {
         ...state,
         cellObjects: {
