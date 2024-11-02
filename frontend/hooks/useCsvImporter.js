@@ -26,7 +26,8 @@ const useCsvImporter = (canvas, onAddTextCsv, onAddQrCodeCsv, dispatchInstanceAc
             if (Tarif) await onAddTextCsv(`${Tarif}€`)
             if (Gencode) await new Promise((resolve) => onAddQrCodeCsv(Gencode, resolve))
 
-            newObjects[cellIndex] = JSON.stringify(canvas.toJSON())
+            // Enregistrer l'objet JSON brut plutôt qu'une chaîne JSON
+            newObjects[cellIndex] = canvas.toJSON()
             importedCellIndices.push(cellIndex)
 
             canvas.clear()

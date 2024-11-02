@@ -1,9 +1,8 @@
-// frontend/hooks/cells/useGridGenerator.js
 import { useCallback, useEffect } from 'react'
 import { useCanvas } from '../../context/CanvasContext'
 
 const useGridGenerator = (selectCell) => {
-  const { labelConfig, selectedCellIndex } = useCanvas()
+  const { labelConfig, selectedCellIndex, cellObjects } = useCanvas() // Ajout de cellObjects
 
   const generateGrid = useCallback(() => {
     const { labelWidth, labelHeight, offsetTop, offsetLeft, spacingVertical, spacingHorizontal } =
@@ -31,10 +30,14 @@ const useGridGenerator = (selectCell) => {
           const labelIndex = row * labelsPerRow + col
           const label = document.createElement('div')
 
+          // Applique le style bleu clair si la cellule contient des objets
+          const hasContent = cellObjects[labelIndex] && cellObjects[labelIndex].length > 0
           label.className = `absolute border ${
             labelIndex === selectedCellIndex
               ? 'border-blue-500 bg-blue-100'
-              : 'border-gray-300 bg-gray-100'
+              : hasContent
+                ? 'border-gray-300 bg-blue-50' // Fond bleu clair pour les cellules avec contenu
+                : 'border-gray-300 bg-gray-100'
           } cursor-pointer`
 
           label.style.width = `${(labelWidth / pageWidth) * 100}%`
@@ -48,7 +51,7 @@ const useGridGenerator = (selectCell) => {
         }
       }
     }
-  }, [labelConfig, selectedCellIndex, selectCell])
+  }, [labelConfig, selectedCellIndex, cellObjects, selectCell])
 
   useEffect(() => {
     generateGrid()

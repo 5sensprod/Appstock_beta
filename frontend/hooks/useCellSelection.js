@@ -41,7 +41,7 @@ const useCellSelection = () => {
               parseInt(primaryCell) === labelIndex ||
               instanceState.linkedCells[primaryCell].includes(labelIndex)
           )
-          console.log('Label Index:', labelIndex, 'Is Linked:', isLinkedCell)
+          // console.log('Label Index:', labelIndex, 'Is Linked:', isLinkedCell)
 
           label.className = `absolute border ${
             selectedCells.includes(labelIndex) && isLinkedCell

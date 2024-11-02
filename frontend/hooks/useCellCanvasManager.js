@@ -74,6 +74,9 @@ const useCellCanvasManager = (canvas, instanceState, dispatchInstanceAction) => 
     })
 
     dispatchInstanceAction({ type: 'SET_OBJECTS', payload: updatedObjects })
+
+    // Réinitialiser `unsavedChanges` à `false` après sauvegarde
+    dispatchInstanceAction({ type: 'RESET_UNSAVED_CHANGES' })
   }, [
     canvas,
     instanceState.selectedCells,

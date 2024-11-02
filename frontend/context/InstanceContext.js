@@ -52,6 +52,7 @@ const InstanceProvider = ({ children }) => {
 
   const value = {
     ...instanceState,
+    unsavedChanges: instanceState.unsavedChanges,
     handleCellClick,
     loadCellDesign,
     copyDesign,
