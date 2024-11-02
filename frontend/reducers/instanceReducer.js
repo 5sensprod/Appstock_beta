@@ -60,16 +60,18 @@ export const instanceReducer = (state, action) => {
       const { primaryCell, design } = action.payload
       const updatedObjects = { ...state.objects }
 
-      if (state.linkedCells[primaryCell]) {
-        state.linkedCells[primaryCell].forEach((cellIndex) => {
-          updatedObjects[cellIndex] = design
+      // Récupérer la liste des cellules liées
+      const linkedCells = state.linkedCells[primaryCell]
+
+      if (linkedCells) {
+        linkedCells.forEach((cellIndex) => {
+          updatedObjects[cellIndex] = design // Appliquer le même design à chaque cellule liée
         })
       }
 
       return {
         ...state,
-        objects: updatedObjects,
-        unsavedChanges: true
+        objects: updatedObjects
       }
     }
 

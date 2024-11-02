@@ -6,7 +6,14 @@ const useCellCanvasManager = (canvas, instanceState, dispatchInstanceAction) => 
       if (!canvas) return
       canvas.clear()
       canvas.backgroundColor = 'white'
-      const design = instanceState.objects[cellIndex]
+
+      // Récupère le design de la cellule principale si la cellule est liée
+      const primaryCell =
+        Object.keys(instanceState.linkedCells).find((primary) =>
+          instanceState.linkedCells[primary].includes(cellIndex)
+        ) || cellIndex
+
+      const design = instanceState.objects[primaryCell]
 
       if (design) {
         canvas.loadFromJSON(design, () => {
@@ -35,12 +42,13 @@ const useCellCanvasManager = (canvas, instanceState, dispatchInstanceAction) => 
         canvas.requestRenderAll()
       }
     },
-    [canvas, instanceState.objects]
+    [canvas, instanceState.objects, instanceState.linkedCells]
   )
 
   const saveChanges = useCallback(() => {
     if (!canvas) return
 
+    // Traiter les objets QR Code dans le canevas
     canvas.getObjects().forEach((obj) => {
       if (obj.isQRCode) {
         obj.toObject = (function (toObject) {
@@ -65,17 +73,17 @@ const useCellCanvasManager = (canvas, instanceState, dispatchInstanceAction) => 
         delete updatedObjects[cellIndex]
       }
 
-      if (instanceState.linkedCells[cellIndex]) {
-        dispatchInstanceAction({
-          type: 'UPDATE_LINKED_CELLS',
-          payload: { primaryCell: cellIndex, design: currentDesign }
+      // Vérifie si cette cellule est liée à d'autres et propage le design
+      const linkedCells = instanceState.linkedCells[cellIndex]
+      if (linkedCells) {
+        linkedCells.forEach((linkedCellIndex) => {
+          updatedObjects[linkedCellIndex] = currentDesign // Applique le design à chaque cellule liée
         })
       }
     })
 
+    // Met à jour l'état global des objets et réinitialise `unsavedChanges`
     dispatchInstanceAction({ type: 'SET_OBJECTS', payload: updatedObjects })
-
-    // Réinitialiser `unsavedChanges` à `false` après sauvegarde
     dispatchInstanceAction({ type: 'RESET_UNSAVED_CHANGES' })
   }, [
     canvas,
