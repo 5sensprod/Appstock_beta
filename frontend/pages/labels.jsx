@@ -1,3 +1,5 @@
+// frontend/pages/labels.jsx
+
 import React, { useState } from 'react'
 import FabricDesigner from '../components/labels/FabricDesigner'
 import ConfigForm from '../components/labels/ConfigForm'
@@ -7,6 +9,9 @@ import { CanvasProvider } from '../context/CanvasContext'
 import { InstanceProvider } from '../context/InstanceContext'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import CellContainer from '../components/labels/CellContainer'
+import ImportMenu from '../components/labels/menus/ImportMenu'
+import { CellManagerProvider } from '../context/CellManagerContext' // Importez le contexte
 
 const Labels = () => {
   const [isRightPanelVisible, setIsRightPanelVisible] = useState(true)
@@ -18,53 +23,59 @@ const Labels = () => {
   return (
     <CanvasProvider>
       <InstanceProvider>
-        <div className="mx-auto flex flex-col rounded-lg bg-light-background p-6 shadow-lg dark:bg-dark-background lg:flex-row">
-          {/* Left Panel */}
-          <div
-            className={`border-r border-gray-300 p-6 transition-all duration-300 ${
-              isRightPanelVisible ? 'lg:w-3/5' : 'lg:w-full'
-            }`}
-          >
-            <h2 className="mb-4 text-xl font-semibold">Aperçu de l'Étiquette</h2>
-            <FabricDesigner />
-          </div>
+        <CellManagerProvider>
+          {' '}
+          {/* Envelopper avec CellManagerProvider */}
+          <div className="mx-auto flex flex-col rounded-lg bg-light-background p-6 shadow-lg dark:bg-dark-background lg:flex-row">
+            {/* Left Panel */}
+            <div
+              className={`border-r border-gray-300 p-6 transition-all duration-300 ${
+                isRightPanelVisible ? 'lg:w-3/5' : 'lg:w-full'
+              }`}
+            >
+              <h2 className="mb-4 text-xl font-semibold">Aperçu de l'Étiquette</h2>
+              <FabricDesigner />
+              <ImportMenu /> {/* Ajouté ImportMenu ici */}
+            </div>
 
-          {/* Chevron for toggling Right Panel */}
-          <div className="flex items-center justify-center">
-            <button onClick={toggleRightPanel} className="mx-2">
-              <FontAwesomeIcon
-                icon={isRightPanelVisible ? faChevronRight : faChevronLeft}
-                size="lg"
-                className="transition-colors duration-300 hover:text-blue-500"
-              />
-            </button>
-          </div>
+            {/* Chevron for toggling Right Panel */}
+            <div className="flex items-center justify-center">
+              <button onClick={toggleRightPanel} className="mx-2">
+                <FontAwesomeIcon
+                  icon={isRightPanelVisible ? faChevronRight : faChevronLeft}
+                  size="lg"
+                  className="transition-colors duration-300 hover:text-blue-500"
+                />
+              </button>
+            </div>
 
-          {/* Right Panel */}
-          <div
-            className={`transition-all duration-300 ${
-              isRightPanelVisible ? 'p-6 lg:w-2/5' : 'w-0 overflow-hidden p-0'
-            }`}
-          >
-            {isRightPanelVisible && (
-              <>
-                <div className="rounded-lg border border-gray-300 bg-light-background p-4 dark:bg-dark-background">
-                  <h2 className="mb-4 text-xl font-semibold">Configuration</h2>
-                  <ConfigForm />
-                </div>
-
-                {/* Section Disposition sur A4 */}
-                <div className="mt-6 rounded-lg border border-gray-300 bg-light-background p-4 dark:bg-dark-background">
-                  <div className="flex items-center justify-between">
-                    <h2 className="mb-4 text-xl font-semibold">Disposition sur A4</h2>
-                    <ExportPDFButton />
+            {/* Right Panel */}
+            <div
+              className={`transition-all duration-300 ${
+                isRightPanelVisible ? 'p-6 lg:w-2/5' : 'w-0 overflow-hidden p-0'
+              }`}
+            >
+              {isRightPanelVisible && (
+                <>
+                  <div className="rounded-lg border border-gray-300 bg-light-background p-4 dark:bg-dark-background">
+                    <h2 className="mb-4 text-xl font-semibold">Configuration</h2>
+                    <ConfigForm />
                   </div>
-                  <LayoutGrid />
-                </div>
-              </>
-            )}
+
+                  {/* Section Disposition sur A4 */}
+                  <div className="mt-6 rounded-lg border border-gray-300 bg-light-background p-4 dark:bg-dark-background">
+                    <div className="flex items-center justify-between">
+                      <h2 className="mb-4 text-xl font-semibold">Disposition sur A4</h2>
+                      <ExportPDFButton />
+                    </div>
+                    <CellContainer /> {/* CellContainer s'affiche ici */}
+                    <LayoutGrid />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        </CellManagerProvider>
       </InstanceProvider>
     </CanvasProvider>
   )

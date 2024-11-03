@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import { useInstance } from '../../../context/InstanceContext'
 import IconButton from '../../ui/IconButton'
 import { faFileCsv } from '@fortawesome/free-solid-svg-icons'
+import { useCellManagerContext } from '../../../context/CellManagerContext' // Utiliser le contexte
 
 const ImportMenu = () => {
-  const { importData } = useInstance()
+  const { importData } = useCellManagerContext() // Utiliser le contexte partagé
   const [file, setFile] = useState(null)
 
   const handleFileUpload = (event) => {
