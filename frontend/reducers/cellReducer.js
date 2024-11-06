@@ -27,56 +27,63 @@ export const initialState = {
 }
 
 export const cellReducer = (state, action) => {
-  switch (action.type) {
+  const { type, payload } = action
+
+  switch (type) {
     case 'IMPORT_DATA':
-      return { ...state, cells: action.payload }
+      return { ...state, cells: payload }
 
     case 'UPDATE_CELL':
       return {
         ...state,
         cells: state.cells.map((cell, index) =>
-          index === action.payload.index ? { ...cell, ...action.payload.data } : cell
+          index === payload.index ? { ...cell, ...payload.data } : cell
         )
       }
 
     case 'UPDATE_STYLE':
-      return { ...state, style: { ...state.style, ...action.payload } }
+      return { ...state, style: { ...state.style, ...payload } }
 
-    case 'UPDATE_GLOBAL_STYLE': // Action pour mettre à jour les styles globaux
-      return {
-        ...state,
-        globalStyle: { ...state.globalStyle, ...action.payload }
-      }
+    case 'UPDATE_GLOBAL_STYLE':
+      return { ...state, globalStyle: { ...state.globalStyle, ...payload } }
 
-    // Dans cellReducer.js
     case 'UPDATE_OBJECT_PROPERTIES':
-      const { objectType, ...properties } = action.payload
-      return {
-        ...state,
-        objectProperties: {
-          ...state.objectProperties,
-          [objectType]: {
-            ...state.objectProperties[objectType],
-            ...properties
-          }
-        }
-      }
+      return updateObjectProperties(state, payload)
+
     case 'SYNC_OBJECT_PROPERTIES':
-      return {
-        ...state,
-        objectProperties: action.payload
-      }
+      return { ...state, objectProperties: payload }
 
     case 'UPDATE_OBJECT_COLOR':
       return {
         ...state,
-        objectColors: {
-          ...state.objectColors,
-          [action.payload.objectType]: action.payload.color
-        }
+        objectColors: { ...state.objectColors, [payload.objectType]: payload.color }
+      }
+    case 'APPLY_GLOBAL_PROPERTIES':
+      return {
+        ...state,
+        objectProperties: applyGlobalPropertiesToAll(state.objectProperties, payload)
       }
 
     default:
       return state
+  }
+}
+
+// Fonction auxiliaire pour appliquer les propriétés globales à chaque type d'objet
+function applyGlobalPropertiesToAll(objectProperties, globalProperties) {
+  return Object.keys(objectProperties).reduce((newProperties, objectType) => {
+    newProperties[objectType] = { ...objectProperties[objectType], ...globalProperties }
+    return newProperties
+  }, {})
+}
+
+// Helper function to update object properties
+function updateObjectProperties(state, { objectType, ...properties }) {
+  return {
+    ...state,
+    objectProperties: {
+      ...state.objectProperties,
+      [objectType]: { ...state.objectProperties[objectType], ...properties }
+    }
   }
 }

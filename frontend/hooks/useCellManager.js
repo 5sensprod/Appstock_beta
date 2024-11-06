@@ -1,6 +1,7 @@
+// hooks/useCellManager.js
+
 import { useReducer, useCallback } from 'react'
 import { cellReducer, initialState } from '../reducers/cellReducer'
-import * as fabric from 'fabric'
 
 const useCellManager = () => {
   const [state, dispatch] = useReducer(cellReducer, initialState)
@@ -27,96 +28,13 @@ const useCellManager = () => {
     dispatch({ type: 'UPDATE_OBJECT_COLOR', payload: { objectType, color } })
   }
 
-  const renderCell = useCallback(
-    (data, canvasRef, setTempProperties) => {
-      if (!canvasRef) return
-
-      if (canvasRef._fabricCanvas) {
-        canvasRef._fabricCanvas.dispose()
-      }
-
-      const canvas = new fabric.Canvas(canvasRef)
-      canvasRef._fabricCanvas = canvas
-      canvas.setDimensions({ width: 180, height: 100 })
-
-      const createTextObject = (text, objectType) => {
-        const objProperties = state.objectProperties[objectType]
-
-        const obj = new fabric.IText(text, {
-          left: objProperties.left,
-          top: objProperties.top,
-          scaleX: objProperties.scaleX,
-          scaleY: objProperties.scaleY,
-          angle: objProperties.angle,
-          fontSize: parseInt(state.style.fontSize),
-          fill: state.objectColors[objectType]
-        })
-
-        // Mise à jour de l'état local pendant l'interaction
-        obj.on('moving', () => {
-          setTempProperties({
-            left: obj.left,
-            top: obj.top,
-            scaleX: obj.scaleX,
-            scaleY: obj.scaleY,
-            angle: obj.angle
-          })
-        })
-
-        obj.on('scaling', () => {
-          setTempProperties({
-            left: obj.left,
-            top: obj.top,
-            scaleX: obj.scaleX,
-            scaleY: obj.scaleY,
-            angle: obj.angle
-          })
-        })
-
-        obj.on('rotating', () => {
-          setTempProperties({
-            left: obj.left,
-            top: obj.top,
-            scaleX: obj.scaleX,
-            scaleY: obj.scaleY,
-            angle: obj.angle
-          })
-        })
-
-        // Synchronisation des propriétés finales avec l'état global
-        obj.on('modified', () => {
-          dispatch({
-            type: 'UPDATE_OBJECT_PROPERTIES',
-            payload: {
-              objectType,
-              left: obj.left,
-              top: obj.top,
-              scaleX: obj.scaleX,
-              scaleY: obj.scaleY,
-              angle: obj.angle
-            }
-          })
-        })
-
-        return obj
-      }
-
-      const nameText = createTextObject(data.name, 'name')
-      const priceText = createTextObject(`${data.price}€`, 'price')
-      const gencodeText = createTextObject(data.gencode, 'gencode')
-
-      canvas.add(nameText, priceText, gencodeText)
-      canvas.renderAll()
-    },
-    [state.objectProperties, state.style.fontSize, state.objectColors]
-  )
-
+  // *** Ajout de 'dispatch' ici ***
   return {
     state,
+    dispatch,
     importData,
     updateStyle,
-    updateObjectColor,
-    renderCell
+    updateObjectColor
   }
 }
 

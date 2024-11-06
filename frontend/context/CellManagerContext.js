@@ -1,4 +1,4 @@
-// frontend/context/CellManagerContext.js
+// context/CellManagerContext.js
 
 import React, { createContext, useContext } from 'react'
 import useCellManager from '../hooks/useCellManager'
