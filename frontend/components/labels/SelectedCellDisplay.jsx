@@ -1,26 +1,22 @@
-import React, { useRef, useEffect, useState } from 'react'
+// SelectedCellDisplay.jsx
+
+import React, { useEffect, useState } from 'react'
 import { useCellManagerContext } from '../../context/CellManagerContext'
+import { useCanvas } from '../../context/CanvasContext'
 import * as fabric from 'fabric'
 
 const SelectedCellDisplay = () => {
-  const canvasRef = useRef(null)
+  const { canvas } = useCanvas() // Utilise le canvas partagé depuis CanvasContext
   const { state, dispatch } = useCellManagerContext()
   const { selectedCellIndex, cells, objectProperties, style, objectColors } = state
   const selectedCell = cells[selectedCellIndex]
   const [, setTempProperties] = useState({})
 
   useEffect(() => {
-    if (!canvasRef.current || !selectedCell) return
+    if (!canvas || !selectedCell) return
 
-    let canvas = canvasRef.current._fabricCanvas
-
-    if (!canvas) {
-      canvas = new fabric.Canvas(canvasRef.current)
-      canvasRef.current._fabricCanvas = canvas
-      canvas.setDimensions({ width: 180, height: 100 })
-    } else {
-      canvas.clear()
-    }
+    // Efface le canvas avant d'ajouter les objets
+    canvas.clear()
 
     const createTextObject = (text, objectType) => {
       const objProperties = objectProperties[objectType]
@@ -84,27 +80,18 @@ const SelectedCellDisplay = () => {
       canvas.add(obj)
     }
 
+    // Ajouter les éléments de texte basés sur les données de la cellule sélectionnée
     createTextObject(selectedCell.name, 'name')
     createTextObject(`${selectedCell.price}€`, 'price')
+
+    // Ajouter gencode avec des positions distinctes
     createTextObject(selectedCell.gencode, 'gencode')
 
+    // Rendre le canvas après avoir ajouté tous les objets
     canvas.renderAll()
-  }, [selectedCell, objectProperties, style.fontSize, objectColors, dispatch])
+  }, [selectedCell, objectProperties, style.fontSize, objectColors, dispatch, canvas])
 
-  useEffect(() => {
-    const canvasElement = canvasRef.current
-    return () => {
-      if (canvasElement && canvasElement._fabricCanvas) {
-        canvasElement._fabricCanvas.dispose()
-      }
-    }
-  }, [])
-
-  return (
-    <div className="selected-cell-display rounded border border-gray-300 p-4 shadow-md">
-      <canvas ref={canvasRef} width={180} height={100} />
-    </div>
-  )
+  return null // Pas besoin de retourner un canvas, car le canvas est centralisé dans CanvasControl
 }
 
 export default React.memo(SelectedCellDisplay)

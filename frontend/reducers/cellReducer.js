@@ -10,7 +10,7 @@ export const initialState = {
   objectProperties: {
     name: { left: 10, top: 10, scaleX: 1, scaleY: 1, angle: 0 },
     price: { left: 10, top: 40, scaleX: 1, scaleY: 1, angle: 0 },
-    gencode: { left: 10, top: 70, scaleX: 1, scaleY: 1, angle: 0 }
+    gencode: { left: 10, top: 50, scaleX: 1, scaleY: 1, angle: 0 }
   },
   objectColors: {
     name: '#000000',
