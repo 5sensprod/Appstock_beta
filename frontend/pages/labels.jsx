@@ -9,9 +9,8 @@ import { CanvasProvider } from '../context/CanvasContext'
 import { InstanceProvider } from '../context/InstanceContext'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
-import CellContainer from '../components/labels/CellContainer'
-import ImportMenu from '../components/labels/menus/ImportMenu'
 import { CellManagerProvider } from '../context/CellManagerContext' // Import du contexte
+import LabelDisplay from '../components/labels/LabelDisplay' // Import du composant SelectedCellCanvas
 
 const Labels = () => {
   const [isRightPanelVisible, setIsRightPanelVisible] = useState(true)
@@ -36,8 +35,12 @@ const Labels = () => {
               <h2 className="mb-4 text-xl font-semibold">Aperçu de l'Étiquette</h2>
               <FabricDesigner /> {/* Conserver le composant existant */}
               {/* Ajouter le canevas de la cellule sélectionnée ici */}
-              <div className="mt-4 border border-black p-2"></div>
-              <ImportMenu /> {/* Composant existant */}
+              <div className="mt-4 border border-black p-2">
+                {' '}
+                {/* Encadré d'un trait noir */}
+                <LabelDisplay />
+              </div>
+              {/* <ImportMenu />  */}
             </div>
 
             {/* Bouton pour afficher/cacher le panneau droit */}
@@ -70,7 +73,7 @@ const Labels = () => {
                       <h2 className="mb-4 text-xl font-semibold">Disposition sur A4</h2>
                       <ExportPDFButton /> {/* Composant existant */}
                     </div>
-                    <CellContainer /> {/* Composant existant */}
+                    {/* <CellContainer />  */}
                     <LayoutGrid /> {/* Composant existant */}
                   </div>
                 </>

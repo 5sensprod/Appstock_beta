@@ -20,6 +20,10 @@ const useCellManager = () => {
     reader.readAsText(file)
   }, [])
 
+  const selectCell = useCallback((index) => {
+    dispatch({ type: 'SELECT_CELL', payload: index })
+  }, [])
+
   const updateStyle = (property, value) => {
     dispatch({ type: 'UPDATE_STYLE', payload: { [property]: value } })
   }
@@ -34,6 +38,7 @@ const useCellManager = () => {
     dispatch,
     importData,
     updateStyle,
+    selectCell,
     updateObjectColor
   }
 }
