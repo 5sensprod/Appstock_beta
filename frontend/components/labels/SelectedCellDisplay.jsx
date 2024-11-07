@@ -6,7 +6,7 @@ import { useCanvas } from '../../context/CanvasContext'
 import * as fabric from 'fabric'
 
 const SelectedCellDisplay = () => {
-  const { canvas } = useCanvas() // Utilise le canvas partagé depuis CanvasContext
+  const { canvas, labelConfig } = useCanvas() // Récupère labelConfig
   const { state, dispatch } = useCellManagerContext()
   const { selectedCellIndex, cells, objectProperties, style, objectColors } = state
   const selectedCell = cells[selectedCellIndex]
@@ -17,6 +17,9 @@ const SelectedCellDisplay = () => {
 
     // Efface le canvas avant d'ajouter les objets
     canvas.clear()
+
+    // Appliquer la couleur de fond depuis labelConfig
+    canvas.backgroundColor = labelConfig.backgroundColor || 'white'
 
     const createTextObject = (text, objectType) => {
       const objProperties = objectProperties[objectType]
@@ -83,13 +86,11 @@ const SelectedCellDisplay = () => {
     // Ajouter les éléments de texte basés sur les données de la cellule sélectionnée
     createTextObject(selectedCell.name, 'name')
     createTextObject(`${selectedCell.price}€`, 'price')
-
-    // Ajouter gencode avec des positions distinctes
     createTextObject(selectedCell.gencode, 'gencode')
 
-    // Rendre le canvas après avoir ajouté tous les objets
+    // Rendre le canvas après avoir ajouté tous les objets et appliqué la couleur de fond
     canvas.renderAll()
-  }, [selectedCell, objectProperties, style.fontSize, objectColors, dispatch, canvas])
+  }, [selectedCell, objectProperties, style.fontSize, objectColors, dispatch, canvas, labelConfig])
 
   return null // Pas besoin de retourner un canvas, car le canvas est centralisé dans CanvasControl
 }
