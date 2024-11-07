@@ -1,4 +1,4 @@
-// cellReducer.js
+// reducers/cellReducer.js
 
 export const initialState = {
   cells: [],
@@ -23,7 +23,8 @@ export const initialState = {
     scaleX: 1,
     scaleY: 1,
     angle: 0
-  }
+  },
+  selectedCellIndex: 0 // Ajout de l'index de la cellule sélectionnée
 }
 
 export const cellReducer = (state, action) => {
@@ -58,11 +59,15 @@ export const cellReducer = (state, action) => {
         ...state,
         objectColors: { ...state.objectColors, [payload.objectType]: payload.color }
       }
+
     case 'APPLY_GLOBAL_PROPERTIES':
       return {
         ...state,
         objectProperties: applyGlobalPropertiesToAll(state.objectProperties, payload)
       }
+
+    case 'SELECT_CELL':
+      return { ...state, selectedCellIndex: payload } // Ajout du cas SELECT_CELL
 
     default:
       return state
@@ -77,7 +82,7 @@ function applyGlobalPropertiesToAll(objectProperties, globalProperties) {
   }, {})
 }
 
-// Helper function to update object properties
+// Fonction pour mettre à jour les propriétés d'un objet spécifique
 function updateObjectProperties(state, { objectType, ...properties }) {
   return {
     ...state,

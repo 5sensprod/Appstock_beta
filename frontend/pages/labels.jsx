@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import CellContainer from '../components/labels/CellContainer'
 import ImportMenu from '../components/labels/menus/ImportMenu'
-import { CellManagerProvider } from '../context/CellManagerContext' // Importez le contexte
+import { CellManagerProvider } from '../context/CellManagerContext' // Import du contexte
 
 const Labels = () => {
   const [isRightPanelVisible, setIsRightPanelVisible] = useState(true)
@@ -22,23 +22,25 @@ const Labels = () => {
 
   return (
     <CanvasProvider>
-      <InstanceProvider>
-        <CellManagerProvider>
-          {' '}
-          {/* Envelopper avec CellManagerProvider */}
+      <CellManagerProvider>
+        {' '}
+        {/* Envelopper avec CellManagerProvider */}
+        <InstanceProvider>
           <div className="mx-auto flex flex-col rounded-lg bg-light-background p-6 shadow-lg dark:bg-dark-background lg:flex-row">
-            {/* Left Panel */}
+            {/* Panneau de gauche */}
             <div
               className={`border-r border-gray-300 p-6 transition-all duration-300 ${
                 isRightPanelVisible ? 'lg:w-3/5' : 'lg:w-full'
               }`}
             >
               <h2 className="mb-4 text-xl font-semibold">Aperçu de l'Étiquette</h2>
-              <FabricDesigner />
-              <ImportMenu /> {/* Ajouté ImportMenu ici */}
+              <FabricDesigner /> {/* Conserver le composant existant */}
+              {/* Ajouter le canevas de la cellule sélectionnée ici */}
+              <div className="mt-4 border border-black p-2"></div>
+              <ImportMenu /> {/* Composant existant */}
             </div>
 
-            {/* Chevron for toggling Right Panel */}
+            {/* Bouton pour afficher/cacher le panneau droit */}
             <div className="flex items-center justify-center">
               <button onClick={toggleRightPanel} className="mx-2">
                 <FontAwesomeIcon
@@ -49,7 +51,7 @@ const Labels = () => {
               </button>
             </div>
 
-            {/* Right Panel */}
+            {/* Panneau de droite */}
             <div
               className={`transition-all duration-300 ${
                 isRightPanelVisible ? 'p-6 lg:w-2/5' : 'w-0 overflow-hidden p-0'
@@ -59,24 +61,24 @@ const Labels = () => {
                 <>
                   <div className="rounded-lg border border-gray-300 bg-light-background p-4 dark:bg-dark-background">
                     <h2 className="mb-4 text-xl font-semibold">Configuration</h2>
-                    <ConfigForm />
+                    <ConfigForm /> {/* Composant existant */}
                   </div>
 
                   {/* Section Disposition sur A4 */}
                   <div className="mt-6 rounded-lg border border-gray-300 bg-light-background p-4 dark:bg-dark-background">
                     <div className="flex items-center justify-between">
                       <h2 className="mb-4 text-xl font-semibold">Disposition sur A4</h2>
-                      <ExportPDFButton />
+                      <ExportPDFButton /> {/* Composant existant */}
                     </div>
-                    <CellContainer /> {/* CellContainer s'affiche ici */}
-                    <LayoutGrid />
+                    <CellContainer /> {/* Composant existant */}
+                    <LayoutGrid /> {/* Composant existant */}
                   </div>
                 </>
               )}
             </div>
           </div>
-        </CellManagerProvider>
-      </InstanceProvider>
+        </InstanceProvider>
+      </CellManagerProvider>
     </CanvasProvider>
   )
 }
