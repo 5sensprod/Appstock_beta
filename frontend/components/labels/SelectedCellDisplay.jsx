@@ -14,26 +14,42 @@ const SelectedCellDisplay = () => {
   useEffect(() => {
     if (!canvas || !selectedCell) return
 
-    // Efface le canvas avant d'ajouter les objets
-    canvas.clear()
+    // Récupérer ou créer les objets pour chaque type (name, price, gencode)
+    const updateOrCreateObject = (text, objectType) => {
+      // Cherche l'objet correspondant dans le canvas en utilisant une propriété personnalisée
+      let obj = canvas.getObjects().find((o) => o._objectType === objectType)
 
-    // Appliquer la couleur de fond depuis labelConfig
-    canvas.backgroundColor = labelConfig.backgroundColor || 'white'
+      if (!obj) {
+        // Si l'objet n'existe pas, créez-le
+        obj = new fabric.IText(text, {
+          left: objectProperties[objectType].left,
+          top: objectProperties[objectType].top,
+          scaleX: objectProperties[objectType].scaleX,
+          scaleY: objectProperties[objectType].scaleY,
+          angle: objectProperties[objectType].angle,
+          fontSize: parseInt(style.fontSize),
+          fill: objectColors[objectType]
+        })
 
-    const createTextObject = (text, objectType) => {
-      const objProperties = objectProperties[objectType]
+        // Ajout d'une propriété personnalisée pour identifier l'objet
+        obj._objectType = objectType
 
-      const obj = new fabric.IText(text, {
-        left: objProperties.left,
-        top: objProperties.top,
-        scaleX: objProperties.scaleX,
-        scaleY: objProperties.scaleY,
-        angle: objProperties.angle,
-        fontSize: parseInt(style.fontSize),
-        fill: objectColors[objectType]
-      })
+        // Ajouter le nouvel objet au canvas
+        canvas.add(obj)
+      } else {
+        // Si l'objet existe déjà, mettez à jour ses propriétés
+        obj.set({
+          text: text,
+          left: objectProperties[objectType].left,
+          top: objectProperties[objectType].top,
+          scaleX: objectProperties[objectType].scaleX,
+          scaleY: objectProperties[objectType].scaleY,
+          angle: objectProperties[objectType].angle,
+          fontSize: parseInt(style.fontSize),
+          fill: objectColors[objectType]
+        })
+      }
 
-      // Synchroniser les modifications de design avec le contexte
       obj.on('modified', () => {
         dispatch({
           type: 'UPDATE_OBJECT_PROPERTIES',
@@ -47,16 +63,14 @@ const SelectedCellDisplay = () => {
           }
         })
       })
-
-      canvas.add(obj)
     }
 
-    // Ajouter les éléments de texte basés sur les données de la cellule sélectionnée
-    createTextObject(selectedCell.name, 'name')
-    createTextObject(`${selectedCell.price}€`, 'price')
-    createTextObject(selectedCell.gencode, 'gencode')
+    // Applique les changements pour chaque type d'objet
+    updateOrCreateObject(selectedCell.name, 'name')
+    updateOrCreateObject(`${selectedCell.price}€`, 'price')
+    updateOrCreateObject(selectedCell.gencode, 'gencode')
 
-    // Rendre le canvas après avoir ajouté tous les objets et appliqué la couleur de fond
+    // Render le canvas
     canvas.renderAll()
   }, [selectedCell, objectProperties, style.fontSize, objectColors, dispatch, canvas, labelConfig])
 
