@@ -1,8 +1,10 @@
+// frontend/components/labels/LayoutGrid.jsx
+
 import React from 'react'
-import useCellSelection from '../../hooks/useCellSelection'
+import useCellGrid from '../../hooks/useCellGrid'
 
 const LayoutGrid = () => {
-  useCellSelection() // Gère la grille et la sélection des cellules
+  useCellGrid() // Utiliser le nouveau hook pour gérer la grille des cellules
 
   return (
     <div className="relative w-full border-2 border-gray-300 bg-light-background pb-[141.4%] shadow-xl dark:bg-dark-background">

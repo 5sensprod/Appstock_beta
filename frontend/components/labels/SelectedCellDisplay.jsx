@@ -1,26 +1,29 @@
-// SelectedCellDisplay.jsx
-
 import React, { useEffect } from 'react'
 import { useCellManagerContext } from '../../context/CellManagerContext'
 import { useCanvas } from '../../context/CanvasContext'
+import useAddQrCodeCsv from '../../hooks/useAddQrCodeCsv' // Importer le hook
 import * as fabric from 'fabric'
 
 const SelectedCellDisplay = () => {
-  const { canvas, labelConfig } = useCanvas() // Récupère labelConfig
+  const { canvas, labelConfig } = useCanvas()
   const { state, dispatch } = useCellManagerContext()
   const { selectedCellIndex, cells, objectProperties, style, objectColors } = state
   const selectedCell = cells[selectedCellIndex]
+  const addQrCode = useAddQrCodeCsv() // Utilisation du hook
 
   useEffect(() => {
     if (!canvas || !selectedCell) return
 
-    // Récupérer ou créer les objets pour chaque type (name, price, gencode)
-    const updateOrCreateObject = (text, objectType) => {
-      // Cherche l'objet correspondant dans le canvas en utilisant une propriété personnalisée
+    // Efface le canvas avant d'ajouter les objets
+    canvas.clear()
+
+    // Appliquer la couleur de fond depuis labelConfig
+    canvas.backgroundColor = labelConfig.backgroundColor || 'white'
+
+    const updateOrCreateTextObject = (text, objectType) => {
       let obj = canvas.getObjects().find((o) => o._objectType === objectType)
 
       if (!obj) {
-        // Si l'objet n'existe pas, créez-le
         obj = new fabric.IText(text, {
           left: objectProperties[objectType].left,
           top: objectProperties[objectType].top,
@@ -30,14 +33,9 @@ const SelectedCellDisplay = () => {
           fontSize: parseInt(style.fontSize),
           fill: objectColors[objectType]
         })
-
-        // Ajout d'une propriété personnalisée pour identifier l'objet
         obj._objectType = objectType
-
-        // Ajouter le nouvel objet au canvas
         canvas.add(obj)
       } else {
-        // Si l'objet existe déjà, mettez à jour ses propriétés
         obj.set({
           text: text,
           left: objectProperties[objectType].left,
@@ -66,15 +64,28 @@ const SelectedCellDisplay = () => {
     }
 
     // Applique les changements pour chaque type d'objet
-    updateOrCreateObject(selectedCell.name, 'name')
-    updateOrCreateObject(`${selectedCell.price}€`, 'price')
-    updateOrCreateObject(selectedCell.gencode, 'gencode')
+    updateOrCreateTextObject(selectedCell.name, 'name')
+    updateOrCreateTextObject(`${selectedCell.price}€`, 'price')
+
+    // Ajouter le QR code pour 'gencode' avec le hook
+    addQrCode(selectedCell.gencode, () => {
+      console.log('QR Code ajouté avec succès')
+    })
 
     // Render le canvas
     canvas.renderAll()
-  }, [selectedCell, objectProperties, style.fontSize, objectColors, dispatch, canvas, labelConfig])
+  }, [
+    selectedCell,
+    objectProperties,
+    style.fontSize,
+    objectColors,
+    dispatch,
+    canvas,
+    labelConfig,
+    addQrCode
+  ])
 
-  return null // Pas besoin de retourner un canvas, car le canvas est centralisé dans CanvasControl
+  return null
 }
 
 export default React.memo(SelectedCellDisplay)
