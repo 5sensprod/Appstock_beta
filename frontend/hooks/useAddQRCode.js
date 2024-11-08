@@ -39,7 +39,7 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
             const canvasHeight = mmToPx(labelConfig.labelHeight)
             const scaleFactor = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight)
 
-            const fabricImg = new fabric.Image(imgElement, {
+            const fabricImg = new fabric.FabricImage(imgElement, {
               scaleX: scaleFactor,
               scaleY: scaleFactor
             })
@@ -138,7 +138,7 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
             const canvasHeight = mmToPx(labelConfig.labelHeight)
             const scaleFactor = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight)
 
-            const fabricImg = new fabric.Image(imgElement, {
+            const fabricImg = new fabric.FabricImage(imgElement, {
               scaleX: scaleFactor,
               scaleY: scaleFactor
             })
