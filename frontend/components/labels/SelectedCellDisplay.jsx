@@ -1,6 +1,6 @@
 // SelectedCellDisplay.jsx
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useCellManagerContext } from '../../context/CellManagerContext'
 import { useCanvas } from '../../context/CanvasContext'
 import * as fabric from 'fabric'
@@ -10,7 +10,6 @@ const SelectedCellDisplay = () => {
   const { state, dispatch } = useCellManagerContext()
   const { selectedCellIndex, cells, objectProperties, style, objectColors } = state
   const selectedCell = cells[selectedCellIndex]
-  const [, setTempProperties] = useState({})
 
   useEffect(() => {
     if (!canvas || !selectedCell) return
@@ -32,37 +31,6 @@ const SelectedCellDisplay = () => {
         angle: objProperties.angle,
         fontSize: parseInt(style.fontSize),
         fill: objectColors[objectType]
-      })
-
-      // Mise à jour des propriétés en temps réel pendant les interactions
-      obj.on('moving', () => {
-        setTempProperties({
-          left: obj.left,
-          top: obj.top,
-          scaleX: obj.scaleX,
-          scaleY: obj.scaleY,
-          angle: obj.angle
-        })
-      })
-
-      obj.on('scaling', () => {
-        setTempProperties({
-          left: obj.left,
-          top: obj.top,
-          scaleX: obj.scaleX,
-          scaleY: obj.scaleY,
-          angle: obj.angle
-        })
-      })
-
-      obj.on('rotating', () => {
-        setTempProperties({
-          left: obj.left,
-          top: obj.top,
-          scaleX: obj.scaleX,
-          scaleY: obj.scaleY,
-          angle: obj.angle
-        })
       })
 
       // Synchroniser les modifications de design avec le contexte
