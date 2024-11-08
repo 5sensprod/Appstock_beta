@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useCellManagerContext } from '../../context/CellManagerContext'
 import { useCanvas } from '../../context/CanvasContext'
-import useAddQrCodeCsv from '../../hooks/useAddQrCodeCsv' // Importer le hook
+import useAddQrCodeCsv from '../../hooks/useAddQrCodeCsv'
 import * as fabric from 'fabric'
 
 const SelectedCellDisplay = () => {
@@ -9,16 +9,15 @@ const SelectedCellDisplay = () => {
   const { state, dispatch } = useCellManagerContext()
   const { selectedCellIndex, cells, objectProperties, style, objectColors } = state
   const selectedCell = cells[selectedCellIndex]
-  const addQrCode = useAddQrCodeCsv() // Utilisation du hook
+  const addQrCode = useAddQrCodeCsv()
 
   useEffect(() => {
     if (!canvas || !selectedCell) return
 
-    // Efface le canvas avant d'ajouter les objets
-    canvas.clear()
-
-    // Appliquer la couleur de fond depuis labelConfig
-    canvas.backgroundColor = labelConfig.backgroundColor || 'white'
+    // Mettre à jour la couleur de fond si elle a changé
+    if (canvas.backgroundColor !== (labelConfig.backgroundColor || 'white')) {
+      canvas.setBackgroundColor(labelConfig.backgroundColor || 'white')
+    }
 
     const updateOrCreateTextObject = (text, objectType) => {
       let obj = canvas.getObjects().find((o) => o._objectType === objectType)
@@ -48,6 +47,7 @@ const SelectedCellDisplay = () => {
         })
       }
 
+      obj.off('modified') // Supprimer les anciens écouteurs pour éviter les doublons
       obj.on('modified', () => {
         dispatch({
           type: 'UPDATE_OBJECT_PROPERTIES',
@@ -63,16 +63,16 @@ const SelectedCellDisplay = () => {
       })
     }
 
-    // Applique les changements pour chaque type d'objet
+    // Mettre à jour ou créer les objets texte
     updateOrCreateTextObject(selectedCell.name, 'name')
     updateOrCreateTextObject(`${selectedCell.price}€`, 'price')
 
-    // Ajouter le QR code pour 'gencode' avec le hook
+    // Mettre à jour le QR code
     addQrCode(selectedCell.gencode, () => {
-      console.log('QR Code ajouté avec succès')
+      console.log('QR Code mis à jour avec succès')
     })
 
-    // Render le canvas
+    // Rendre le canvas
     canvas.renderAll()
   }, [
     selectedCell,

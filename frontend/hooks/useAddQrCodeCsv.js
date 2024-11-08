@@ -1,4 +1,5 @@
 // frontend/hooks/useAddQrCodeCsv.js
+
 import { useCallback } from 'react'
 import * as fabric from 'fabric'
 import QRCode from 'qrcode'
@@ -46,6 +47,7 @@ const useAddQrCodeCsv = () => {
             let fabricImg = canvas.getObjects().find((o) => o._objectType === 'gencode')
 
             if (!fabricImg) {
+              // Créer un nouvel objet image pour le QR code
               fabricImg = new fabric.Image(imgElement, {
                 scaleX: objectProperties.gencode.scaleX || scaleFactor,
                 scaleY: objectProperties.gencode.scaleY || scaleFactor,
@@ -56,6 +58,8 @@ const useAddQrCodeCsv = () => {
               fabricImg._objectType = 'gencode'
               canvas.add(fabricImg)
             } else {
+              // Mettre à jour l'élément de l'image existante avec le nouveau QR code
+              fabricImg.setElement(imgElement)
               fabricImg.set({
                 scaleX: objectProperties.gencode.scaleX || scaleFactor,
                 scaleY: objectProperties.gencode.scaleY || scaleFactor,
@@ -70,16 +74,7 @@ const useAddQrCodeCsv = () => {
               qrText: text
             })
 
-            fabricImg.toObject = (function (toObject) {
-              return function () {
-                return Object.assign(toObject.call(this), {
-                  isQRCode: true,
-                  qrText: text,
-                  _objectType: 'gencode'
-                })
-              }
-            })(fabricImg.toObject)
-
+            fabricImg.off('modified') // Supprimer les anciens écouteurs pour éviter les doublons
             fabricImg.on('modified', () => {
               dispatch({
                 type: 'UPDATE_OBJECT_PROPERTIES',
