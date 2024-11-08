@@ -5,7 +5,8 @@ export const initialState = {
   style: {
     backgroundColor: '#ffffff',
     textColor: '#000000',
-    fontSize: '14px'
+    fontSize: '14px',
+    fontFamily: 'Lato'
   },
   objectProperties: {
     name: { left: 10, top: 10, scaleX: 1, scaleY: 1, angle: 0 },

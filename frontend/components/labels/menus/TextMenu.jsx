@@ -1,12 +1,16 @@
+// components/labels/menus/TextMenu.jsx
+
 import React, { useState, useEffect, useRef } from 'react'
 import { faTextHeight, faPalette } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../../ui/IconButton'
 import ColorPicker from '../texttool/ColorPicker'
 import { useCanvas } from '../../../context/CanvasContext'
+import { useCellManagerContext } from '../../../context/CellManagerContext'
 
-export default function TextMenu({ onAddText }) {
+export default function TextMenu({ onAddText, objectType = 'name' }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
   const { selectedColor, selectedFont, dispatchCanvasAction } = useCanvas()
+  const { updateObjectColor } = useCellManagerContext()
 
   const pickerRef = useRef(null)
 
@@ -50,16 +54,20 @@ export default function TextMenu({ onAddText }) {
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
           <ColorPicker
             color={selectedColor}
-            setSelectedColor={(color) =>
+            setSelectedColor={(color) => {
               dispatchCanvasAction({ type: 'SET_COLOR', payload: color })
-            }
+              updateObjectColor(objectType, color)
+            }}
           />
         </div>
       )}
 
       <select
         value={selectedFont}
-        onChange={(e) => dispatchCanvasAction({ type: 'SET_FONT', payload: e.target.value })} // Utilisez dispatchCanvasAction directement
+        onChange={(e) => {
+          dispatchCanvasAction({ type: 'SET_FONT', payload: e.target.value })
+          // dispatch({ type: 'UPDATE_STYLE', payload: { fontFamily: e.target.value } })
+        }}
         className="rounded border bg-white p-2 shadow"
       >
         <option value="Lato">Lato</option>

@@ -1,3 +1,5 @@
+// components/labels/SelectedCellDisplay.jsx
+
 import React, { useEffect } from 'react'
 import { useCellManagerContext } from '../../context/CellManagerContext'
 import { useCanvas } from '../../context/CanvasContext'
@@ -20,34 +22,43 @@ const SelectedCellDisplay = () => {
     }
 
     const updateOrCreateTextObject = (text, objectType) => {
+      // Vérifier que objectProperties[objectType] existe
+      const objectProp = objectProperties[objectType]
+      if (!objectProp) {
+        console.error(`objectProperties pour ${objectType} est undefined`)
+        return
+      }
+
       let obj = canvas.getObjects().find((o) => o._objectType === objectType)
 
       if (!obj) {
-        obj = new fabric.IText(text, {
-          left: objectProperties[objectType].left,
-          top: objectProperties[objectType].top,
-          scaleX: objectProperties[objectType].scaleX,
-          scaleY: objectProperties[objectType].scaleY,
-          angle: objectProperties[objectType].angle,
-          fontSize: parseInt(style.fontSize),
-          fill: objectColors[objectType]
+        obj = new fabric.IText(text || '', {
+          left: objectProp.left || 0,
+          top: objectProp.top || 0,
+          scaleX: objectProp.scaleX || 1,
+          scaleY: objectProp.scaleY || 1,
+          angle: objectProp.angle || 0,
+          fontSize: parseInt(style.fontSize) || 14,
+          fill: objectColors[objectType] || '#000000',
+          fontFamily: style.fontFamily || 'Lato'
         })
         obj._objectType = objectType
         canvas.add(obj)
       } else {
         obj.set({
-          text: text,
-          left: objectProperties[objectType].left,
-          top: objectProperties[objectType].top,
-          scaleX: objectProperties[objectType].scaleX,
-          scaleY: objectProperties[objectType].scaleY,
-          angle: objectProperties[objectType].angle,
-          fontSize: parseInt(style.fontSize),
-          fill: objectColors[objectType]
+          text: text || '',
+          left: objectProp.left || obj.left,
+          top: objectProp.top || obj.top,
+          scaleX: objectProp.scaleX || obj.scaleX,
+          scaleY: objectProp.scaleY || obj.scaleY,
+          angle: objectProp.angle || obj.angle,
+          fontSize: parseInt(style.fontSize) || obj.fontSize,
+          fill: objectColors[objectType] || obj.fill,
+          fontFamily: style.fontFamily || obj.fontFamily
         })
       }
 
-      obj.off('modified') // Supprimer les anciens écouteurs pour éviter les doublons
+      obj.off('modified')
       obj.on('modified', () => {
         dispatch({
           type: 'UPDATE_OBJECT_PROPERTIES',
@@ -78,6 +89,7 @@ const SelectedCellDisplay = () => {
     selectedCell,
     objectProperties,
     style.fontSize,
+    style.fontFamily,
     objectColors,
     dispatch,
     canvas,

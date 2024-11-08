@@ -6,7 +6,7 @@ import useCellManager from '../hooks/useCellManager'
 const CellManagerContext = createContext()
 
 export const CellManagerProvider = ({ children }) => {
-  const cellManager = useCellManager() // Utiliser useCellManager ici pour un état partagé
+  const cellManager = useCellManager()
 
   return <CellManagerContext.Provider value={cellManager}>{children}</CellManagerContext.Provider>
 }
