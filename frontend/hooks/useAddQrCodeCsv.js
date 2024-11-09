@@ -48,7 +48,7 @@ const useAddQrCodeCsv = () => {
 
             if (!fabricImg) {
               // Créer un nouvel objet image pour le QR code
-              fabricImg = new fabric.Image(imgElement, {
+              fabricImg = new fabric.FabricImage(imgElement, {
                 scaleX: objectProperties.gencode.scaleX || scaleFactor,
                 scaleY: objectProperties.gencode.scaleY || scaleFactor,
                 left: objectProperties.gencode.left || 10,

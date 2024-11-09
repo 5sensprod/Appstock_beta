@@ -32,7 +32,7 @@ const SelectedCellDisplay = () => {
       let obj = canvas.getObjects().find((o) => o._objectType === objectType)
 
       if (!obj) {
-        obj = new fabric.IText(text || '', {
+        obj = new fabric.Textbox(text || '', {
           left: objectProp.left || 0,
           top: objectProp.top || 0,
           scaleX: objectProp.scaleX || 1,
