@@ -10,7 +10,7 @@ import { useCellManagerContext } from '../../../context/CellManagerContext'
 export default function TextMenu({ onAddText, objectType = 'name' }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
   const { selectedColor, selectedFont, dispatchCanvasAction } = useCanvas()
-  const { updateObjectColor } = useCellManagerContext()
+  const { updateObjectColor, dispatch } = useCellManagerContext()
 
   const pickerRef = useRef(null)
 
@@ -66,7 +66,7 @@ export default function TextMenu({ onAddText, objectType = 'name' }) {
         value={selectedFont}
         onChange={(e) => {
           dispatchCanvasAction({ type: 'SET_FONT', payload: e.target.value })
-          // dispatch({ type: 'UPDATE_STYLE', payload: { fontFamily: e.target.value } })
+          dispatch({ type: 'UPDATE_STYLE', payload: { fontFamily: e.target.value } })
         }}
         className="rounded border bg-white p-2 shadow"
       >
