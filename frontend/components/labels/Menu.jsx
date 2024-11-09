@@ -1,3 +1,5 @@
+// components/labels/Menu.jsx
+
 import React, { useState, useEffect } from 'react'
 import {
   faShapes,
@@ -16,7 +18,7 @@ import { useCanvas } from '../../context/CanvasContext'
 
 const Menu = () => {
   const [activeMenu, setActiveMenu] = useState(null)
-  const [selectedQrText, setSelectedQrText] = useState('') // État pour le texte QR code sélectionné
+  const [selectedQrText, setSelectedQrText] = useState('')
 
   // Largeurs fixes pour chaque sous-menu
   const shapeMenuWidth = 135
@@ -37,7 +39,7 @@ const Menu = () => {
   } = useCanvas()
 
   useEffect(() => {
-    const qrCodeSelected = isQRCodeSelected() // Appel de la fonction mémorisée
+    const qrCodeSelected = isQRCodeSelected()
 
     if (selectedObject?.type === 'circle' || selectedObject?.type === 'rect') {
       setActiveMenu('shapes')
@@ -46,7 +48,7 @@ const Menu = () => {
     } else if (selectedObject?.type === 'image') {
       if (qrCodeSelected) {
         setActiveMenu('qrcode')
-        setSelectedQrText(selectedObject.qrText || '') // Récupérer le texte associé au QR code
+        setSelectedQrText(selectedObject.qrText || '')
         console.log('Menu actif : qrcode', 'Texte QR sélectionné:', selectedObject.qrText)
       } else {
         setActiveMenu('images')
@@ -59,10 +61,10 @@ const Menu = () => {
   const toggleMenu = (menu) => {
     if (activeMenu === menu) {
       setActiveMenu(null)
-      setSelectedQrText('') // Réinitialiser le texte lorsque le menu se ferme
+      setSelectedQrText('')
     } else {
       if (menu === 'qrcode' && !isQRCodeSelected()) {
-        setSelectedQrText('') // Si vous ouvrez le menu QR pour un nouveau code, réinitialiser le texte
+        setSelectedQrText('')
       }
       setActiveMenu(menu)
     }
@@ -105,7 +107,7 @@ const Menu = () => {
         />
         {activeMenu === 'text' && (
           <div className="absolute left-full top-0 ml-2" style={{ width: `${textMenuWidth}px` }}>
-            <TextMenu onAddText={onAddText} />
+            <TextMenu onAddText={onAddText} selectedObject={selectedObject} />
           </div>
         )}
       </div>
@@ -154,7 +156,7 @@ const Menu = () => {
             <QrMenu
               onAddQrCode={onAddQrCode}
               selectedQrText={selectedQrText}
-              onUpdateQrCode={onUpdateQrCode} // Passer la fonction de mise à jour
+              onUpdateQrCode={onUpdateQrCode}
             />
           </div>
         )}
@@ -164,7 +166,7 @@ const Menu = () => {
       <div
         className="relative"
         style={{
-          marginLeft: activeMenu === 'qrcode' ? `${imageMenuWidth}px` : '0px',
+          marginLeft: activeMenu === 'qrcode' ? `${qrMenuWidth}px` : '0px',
           transition: 'margin-left 0.3s ease'
         }}
       >

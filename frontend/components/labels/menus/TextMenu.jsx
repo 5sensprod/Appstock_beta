@@ -5,12 +5,11 @@ import { faTextHeight, faPalette } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../../ui/IconButton'
 import ColorPicker from '../texttool/ColorPicker'
 import { useCanvas } from '../../../context/CanvasContext'
-import { useCellManagerContext } from '../../../context/CellManagerContext'
+import FontFaceObserver from 'fontfaceobserver'
 
-export default function TextMenu({ onAddText, objectType = 'name' }) {
+export default function TextMenu({ onAddText, selectedObject }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
   const { selectedColor, selectedFont, dispatchCanvasAction } = useCanvas()
-  const { updateObjectColor, dispatch } = useCellManagerContext()
 
   const pickerRef = useRef(null)
 
@@ -29,6 +28,38 @@ export default function TextMenu({ onAddText, objectType = 'name' }) {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
+
+  const isTextSelected =
+    selectedObject && (selectedObject.type === 'i-text' || selectedObject.type === 'textbox')
+
+  const currentColor = isTextSelected ? selectedObject.fill : selectedColor
+  const currentFont = isTextSelected ? selectedObject.fontFamily : selectedFont
+
+  const handleColorChange = (color) => {
+    if (isTextSelected) {
+      selectedObject.set({ fill: color })
+      selectedObject.canvas.renderAll()
+    } else {
+      dispatchCanvasAction({ type: 'SET_COLOR', payload: color })
+    }
+  }
+
+  const handleFontChange = (fontFamily) => {
+    if (isTextSelected) {
+      const fontObserver = new FontFaceObserver(fontFamily)
+      fontObserver
+        .load()
+        .then(() => {
+          selectedObject.set({ fontFamily })
+          selectedObject.canvas.renderAll()
+        })
+        .catch((e) => {
+          console.error(`Error loading font ${fontFamily}`, e)
+        })
+    } else {
+      dispatchCanvasAction({ type: 'SET_FONT', payload: fontFamily })
+    }
+  }
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
@@ -52,22 +83,13 @@ export default function TextMenu({ onAddText, objectType = 'name' }) {
 
       {isColorPickerOpen && (
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
-          <ColorPicker
-            color={selectedColor}
-            setSelectedColor={(color) => {
-              dispatchCanvasAction({ type: 'SET_COLOR', payload: color })
-              updateObjectColor(objectType, color)
-            }}
-          />
+          <ColorPicker color={currentColor} setSelectedColor={handleColorChange} />
         </div>
       )}
 
       <select
-        value={selectedFont}
-        onChange={(e) => {
-          dispatchCanvasAction({ type: 'SET_FONT', payload: e.target.value })
-          dispatch({ type: 'UPDATE_STYLE', payload: { fontFamily: e.target.value } })
-        }}
+        value={currentFont}
+        onChange={(e) => handleFontChange(e.target.value)}
         className="rounded border bg-white p-2 shadow"
       >
         <option value="Lato">Lato</option>

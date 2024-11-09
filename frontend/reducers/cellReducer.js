@@ -18,6 +18,10 @@ export const initialState = {
     price: '#000000',
     gencode: '#000000'
   },
+  objectFonts: {
+    name: 'Lato',
+    price: 'Lato'
+  },
   globalStyle: {
     left: 10,
     top: 10,
@@ -69,6 +73,15 @@ export const cellReducer = (state, action) => {
 
     case 'SELECT_CELL':
       return { ...state, selectedCellIndex: payload }
+
+    case 'UPDATE_OBJECT_FONT':
+      return {
+        ...state,
+        objectFonts: {
+          ...state.objectFonts,
+          [payload.objectType]: payload.fontFamily
+        }
+      }
 
     default:
       return state

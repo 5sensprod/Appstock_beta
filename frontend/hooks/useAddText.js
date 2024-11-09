@@ -42,26 +42,27 @@ const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
   }, [selectedColor, labelConfig, selectedFont, addObjectToCanvas, canvas, loadAndApplyFont])
 
   const onAddTextCsv = useCallback(
-    async (text = 'Votre texte ici') => {
-      const fontSize = labelConfig?.labelWidth / 5 || 16
-      await loadAndApplyFont(selectedFont)
+    async (text = 'Votre texte ici', fontFamily = 'Lato', fillColor = 'black', fontSize = 16) => {
+      await loadAndApplyFont(fontFamily)
 
       if (!canvas) {
         console.error('Canvas is not initialized.')
-        return
+        return null
       }
 
       const textBox = new fabric.Textbox(text, {
         fontSize,
-        fill: selectedColor || 'black',
+        fill: fillColor,
         textAlign: 'left',
-        fontFamily: selectedFont || 'Lato'
+        fontFamily
       })
 
       addObjectToCanvas(textBox)
       canvas.renderAll()
+
+      return textBox // Retourner le textBox créé
     },
-    [selectedColor, labelConfig, selectedFont, addObjectToCanvas, canvas, loadAndApplyFont]
+    [addObjectToCanvas, canvas, loadAndApplyFont]
   )
 
   return { onAddText, onAddTextCsv }
