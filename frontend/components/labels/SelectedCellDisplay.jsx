@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react'
 import { useCellManagerContext } from '../../context/CellManagerContext'
 import { useCanvas } from '../../context/CanvasContext'
-import useAddQrCodeCsv from '../../hooks/useAddQrCodeCsv'
+import useAddQrCodeCsv from '../../hooks/useAddObjetsCsv'
 import * as fabric from 'fabric'
 
 const SelectedCellDisplay = () => {
