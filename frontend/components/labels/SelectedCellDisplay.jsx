@@ -1,3 +1,5 @@
+// frontend/components/labels/SelectedCellDisplay.jsx
+
 import React, { useEffect, useMemo } from 'react'
 import { useCellManagerContext } from '../../context/CellManagerContext'
 import { useCanvas } from '../../context/CanvasContext'
@@ -17,17 +19,19 @@ const SelectedCellDisplay = () => {
   const selectedCellData = useMemo(() => cells[selectedCell] || {}, [cells, selectedCell])
 
   useEffect(() => {
-    // Vérification si canvas est bien initialisé
     if (!canvas || !labelConfig) {
       console.warn('Canvas ou labelConfig non encore prêt. Arrêt de SelectedCellDisplay.')
       return
     }
-    console.log('Canvas prêt dans SelectedCellDisplay:', canvas)
 
-    // Vérification du contenu de la cellule
+    // Assurer que le fond blanc est appliqué systématiquement
+    canvas.backgroundColor = labelConfig.backgroundColor || 'white'
+    canvas.renderAll()
+
     const hasContent = selectedCellData.name || selectedCellData.price || selectedCellData.gencode
     if (!hasContent) {
-      canvas.clear()
+      // Supprimer uniquement les objets sans retirer le fond
+      canvas.getObjects().forEach((obj) => canvas.remove(obj))
       canvas.renderAll()
       return
     }

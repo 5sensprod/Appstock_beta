@@ -13,14 +13,15 @@ export default function useInitializeCanvas(canvas, labelConfig, dispatchCanvasA
         preserveObjectStacking: true
       })
 
-      // Utiliser backgroundColor de labelConfig
+      // Configurer le fond par défaut, en s'assurant qu'il reste blanc
       fabricCanvas.backgroundColor = labelConfig.backgroundColor || 'white'
       fabricCanvas.renderAll()
       dispatchCanvasAction({ type: 'SET_CANVAS', payload: fabricCanvas })
     } else {
+      // Appliquer le fond blanc chaque fois que le canevas est redimensionné
       canvas.setWidth(mmToPx(labelConfig.labelWidth || 200))
       canvas.setHeight(mmToPx(labelConfig.labelHeight || 100))
-      canvas.backgroundColor = labelConfig.backgroundColor || 'white' // Applique la couleur de fond
+      canvas.backgroundColor = labelConfig.backgroundColor || 'white'
       canvas.renderAll()
     }
   }, [canvas, labelConfig, dispatchCanvasAction, canvasRef])
