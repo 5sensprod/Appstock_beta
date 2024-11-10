@@ -1,0 +1,93 @@
+// frontend/reducers/gridReducer.js
+
+export const initialGridState = {
+  cells: [
+    // Exemple de cellules indépendantes et liées
+    { id: 1, design: {}, linkedToCsv: false, dataIndex: null },
+    { id: 2, design: {}, linkedToCsv: true, dataIndex: 0 },
+    { id: 3, design: {}, linkedToCsv: true, dataIndex: 0 }
+  ],
+  linkedCells: {
+    // Cellules liées à la première ligne du CSV
+    0: [2, 3]
+  },
+  selectedCell: null
+}
+
+export const gridReducer = (state, action) => {
+  const { type, payload } = action
+
+  switch (type) {
+    case 'ADD_CELL':
+      console.log('Action ADD_CELL déclenchée avec payload :', payload)
+      return {
+        ...state,
+        cells: [...state.cells, payload]
+      }
+
+    case 'SELECT_CELL':
+      console.log('Action SELECT_CELL déclenchée pour la cellule ID :', payload)
+      return {
+        ...state,
+        selectedCell: payload // Met à jour la cellule sélectionnée
+      }
+
+    case 'LINK_CELLS_TO_CSV':
+      console.log('Action LINK_CELLS_TO_CSV déclenchée avec payload :', payload)
+      return {
+        ...state,
+        linkedCells: {
+          ...state.linkedCells,
+          [payload.dataIndex]: payload.cellIds
+        },
+        cells: state.cells.map((cell) =>
+          payload.cellIds.includes(cell.id)
+            ? { ...cell, linkedToCsv: true, dataIndex: payload.dataIndex }
+            : cell
+        )
+      }
+
+    case 'UPDATE_CELL_DESIGN':
+      console.log('Action UPDATE_CELL_DESIGN déclenchée avec payload :', payload)
+      return {
+        ...state,
+        cells: state.cells.map((cell) =>
+          cell.id === payload.cellId
+            ? { ...cell, design: { ...cell.design, ...payload.design } }
+            : cell
+        )
+      }
+
+    case 'TOGGLE_CELL_LINK':
+      console.log('Action TOGGLE_CELL_LINK déclenchée pour la cellule ID :', payload.cellId)
+      return {
+        ...state,
+        cells: state.cells.map((cell) =>
+          cell.id === payload.cellId
+            ? {
+                ...cell,
+                linkedToCsv: !cell.linkedToCsv,
+                dataIndex: cell.linkedToCsv ? null : payload.dataIndex
+              }
+            : cell
+        )
+      }
+
+    case 'SAVE_GRID_STATE':
+      console.log('Action SAVE_GRID_STATE déclenchée')
+      // Ici, nous pouvons ajouter la logique pour sauvegarder l'état de la grille
+      return state
+
+    case 'LOAD_GRID_STATE':
+      console.log('Action LOAD_GRID_STATE déclenchée avec payload :', payload)
+      // Charger un état sauvegardé
+      return {
+        ...state,
+        ...payload
+      }
+
+    default:
+      console.log('Action non reconnue :', type)
+      return state
+  }
+}
