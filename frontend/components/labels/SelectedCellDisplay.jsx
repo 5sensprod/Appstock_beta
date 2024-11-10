@@ -1,29 +1,39 @@
-// components/labels/SelectedCellDisplay.jsx
-
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { useCellManagerContext } from '../../context/CellManagerContext'
 import { useCanvas } from '../../context/CanvasContext'
 import useAddText from '../../hooks/useAddText'
 import useAddQrCodeCsv from '../../hooks/useAddObjetsCsv'
+import { useGrid } from '../../context/GridContext'
 
 const SelectedCellDisplay = () => {
   const { canvas, labelConfig } = useCanvas()
+  const { gridState } = useGrid()
+  const { selectedCell } = gridState
   const { state, dispatch } = useCellManagerContext()
-  const { selectedCellIndex, cells, objectProperties, objectColors, objectFonts, style } = state
-  const selectedCell = cells[selectedCellIndex]
+  const { cells, objectProperties, objectColors, objectFonts, style } = state
   const addQrCode = useAddQrCodeCsv()
-
   const { onAddTextCsv } = useAddText(canvas, labelConfig)
 
-  useEffect(() => {
-    if (!canvas || !selectedCell) return
+  const selectedCellData = useMemo(() => cells[selectedCell] || {}, [cells, selectedCell])
 
-    if (canvas.backgroundColor !== (labelConfig.backgroundColor || 'white')) {
-      canvas.setBackgroundColor(labelConfig.backgroundColor || 'white')
+  useEffect(() => {
+    // Vérification si canvas est bien initialisé
+    if (!canvas || !labelConfig) {
+      console.warn('Canvas ou labelConfig non encore prêt. Arrêt de SelectedCellDisplay.')
+      return
+    }
+    console.log('Canvas prêt dans SelectedCellDisplay:', canvas)
+
+    // Vérification du contenu de la cellule
+    const hasContent = selectedCellData.name || selectedCellData.price || selectedCellData.gencode
+    if (!hasContent) {
+      canvas.clear()
+      canvas.renderAll()
+      return
     }
 
     const addOrUpdateTextObject = async (text, objectType) => {
-      const objectProp = objectProperties[objectType]
+      const objectProp = objectProperties[objectType] || {}
       const fontFamily = objectFonts[objectType] || style.fontFamily || 'Lato'
       const fillColor = objectColors[objectType] || style.textColor || '#000000'
       const fontSize = parseInt(style.fontSize) || 14
@@ -57,23 +67,21 @@ const SelectedCellDisplay = () => {
           })
         }
       } else {
-        // Mettre à jour uniquement le texte pour préserver les modifications de police et de couleur
-        obj.set({
-          text: text || ''
-        })
+        obj.set({ text: text || '' })
       }
     }
 
-    addOrUpdateTextObject(selectedCell.name, 'name')
-    addOrUpdateTextObject(`${selectedCell.price}€`, 'price')
-
-    addQrCode(selectedCell.gencode, () => {
-      console.log('QR Code mis à jour avec succès')
-    })
+    if (selectedCellData.name) addOrUpdateTextObject(selectedCellData.name, 'name')
+    if (selectedCellData.price) addOrUpdateTextObject(`${selectedCellData.price}€`, 'price')
+    if (selectedCellData.gencode) {
+      addQrCode(selectedCellData.gencode, () => {
+        console.log('QR Code mis à jour avec succès')
+      })
+    }
 
     canvas.renderAll()
   }, [
-    selectedCell,
+    selectedCellData,
     objectProperties,
     objectFonts,
     objectColors,

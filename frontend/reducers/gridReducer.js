@@ -1,17 +1,9 @@
 // frontend/reducers/gridReducer.js
 
 export const initialGridState = {
-  cells: [
-    // Exemple de cellules indépendantes et liées
-    { id: 1, design: {}, linkedToCsv: false, dataIndex: null },
-    { id: 2, design: {}, linkedToCsv: true, dataIndex: 0 },
-    { id: 3, design: {}, linkedToCsv: true, dataIndex: 0 }
-  ],
-  linkedCells: {
-    // Cellules liées à la première ligne du CSV
-    0: [2, 3]
-  },
-  selectedCell: null
+  cells: [], // Vide pour permettre une génération dynamique des cellules
+  linkedCells: {}, // Vide pour permettre une liaison dynamique
+  selectedCell: 0
 }
 
 export const gridReducer = (state, action) => {
@@ -29,16 +21,16 @@ export const gridReducer = (state, action) => {
       console.log('Action SELECT_CELL déclenchée pour la cellule ID :', payload)
       return {
         ...state,
-        selectedCell: payload // Met à jour la cellule sélectionnée
+        selectedCell: payload
       }
 
     case 'LINK_CELLS_TO_CSV':
-      console.log('Action LINK_CELLS_TO_CSV déclenchée avec payload :', payload)
+      console.log('Action LINK_CELLS_TO_CSV déclenchée pour dataIndex :', payload.dataIndex)
       return {
         ...state,
         linkedCells: {
           ...state.linkedCells,
-          [payload.dataIndex]: payload.cellIds
+          [payload.dataIndex]: payload.cellIds // Associe les cellules à un dataIndex
         },
         cells: state.cells.map((cell) =>
           payload.cellIds.includes(cell.id)
@@ -53,6 +45,18 @@ export const gridReducer = (state, action) => {
         ...state,
         cells: state.cells.map((cell) =>
           cell.id === payload.cellId
+            ? { ...cell, design: { ...cell.design, ...payload.design } }
+            : cell
+        )
+      }
+
+    case 'UPDATE_LINKED_CELLS':
+      console.log('Action UPDATE_LINKED_CELLS pour dataIndex :', payload.dataIndex)
+      const linkedCellIds = state.linkedCells[payload.dataIndex] || []
+      return {
+        ...state,
+        cells: state.cells.map((cell) =>
+          linkedCellIds.includes(cell.id)
             ? { ...cell, design: { ...cell.design, ...payload.design } }
             : cell
         )
