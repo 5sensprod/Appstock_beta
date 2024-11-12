@@ -19,10 +19,20 @@ const useCellManager = () => {
           return { name, price, gencode }
         })
         dispatch({ type: 'IMPORT_DATA', payload: cells })
+        dispatchGridAction({
+          type: 'SYNC_CELLS_WITH_GRID',
+          payload: cells.map((cell, index) => ({
+            id: index,
+            ...cell,
+            linkedToCsv: true,
+            design: { backgroundColor: '#e6f7ff' } // Appliquer le bleu très clair aux cellules importées
+          }))
+        })
         cells.forEach((_, index) => {
+          console.log('Liaison des cellules à CSV pour dataIndex:', index)
           dispatchGridAction({
             type: 'LINK_CELLS_TO_CSV',
-            payload: { dataIndex: index, cellIds: [index] } // Ex: liaison d'une cellule par ligne
+            payload: { dataIndex: index, cellIds: [index] }
           })
         })
       }

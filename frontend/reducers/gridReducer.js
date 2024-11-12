@@ -30,13 +30,8 @@ export const gridReducer = (state, action) => {
         ...state,
         linkedCells: {
           ...state.linkedCells,
-          [payload.dataIndex]: payload.cellIds // Associe les cellules à un dataIndex
-        },
-        cells: state.cells.map((cell) =>
-          payload.cellIds.includes(cell.id)
-            ? { ...cell, linkedToCsv: true, dataIndex: payload.dataIndex }
-            : cell
-        )
+          [payload.dataIndex]: payload.cellIds
+        }
       }
 
     case 'UPDATE_CELL_DESIGN':
@@ -88,6 +83,12 @@ export const gridReducer = (state, action) => {
       return {
         ...state,
         ...payload
+      }
+    case 'SYNC_CELLS_WITH_GRID':
+      console.log('Synchronisation des cellules importées avec la grille.')
+      return {
+        ...state,
+        cells: payload // Met à jour `gridState` avec les cellules importées
       }
 
     default:

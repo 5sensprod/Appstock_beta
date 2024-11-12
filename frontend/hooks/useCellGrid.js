@@ -39,14 +39,17 @@ const useCellGrid = () => {
           // Définir la classe de style en fonction de l'état de la cellule
           let cellClass = 'absolute border cursor-pointer '
           if (cellIndex === selectedCell) {
-            cellClass += 'border-blue-500 bg-blue-200' // Cellule sélectionnée (bleu)
-          } else if (Object.keys(cell.design).length > 0) {
-            cellClass += 'border-gray-300 bg-blue-50' // Cellule avec design (bleu très clair)
+            cellClass += 'border-blue-500' // Cellule sélectionnée (bleu)
+            label.style.backgroundColor = '#cce5ff' // Bleu plus soutenu pour la sélection
+          } else if (cell.design && cell.design.backgroundColor) {
+            cellClass += 'border-gray-300' // Bordure grise
+            label.style.backgroundColor = cell.design.backgroundColor // Appliquer le bleu très clair pour cellules liées
           } else {
-            cellClass += 'border-gray-300 bg-gray-100' // Cellule vide (gris clair)
+            cellClass += 'border-gray-300'
+            label.style.backgroundColor = cell.linkedToCsv ? '#e6f7ff' : '#f7f7f7' // Gris clair pour les cellules vides
           }
           label.className = cellClass
-
+          console.log(`Cellule ID ${cellIndex} - Couleur de fond :`, label.style.backgroundColor)
           // Définir la taille et la position de chaque cellule dynamiquement
           label.style.width = `${(labelWidth / pageWidth) * 100}%`
           label.style.height = `${(labelHeight / pageHeight) * 100}%`
