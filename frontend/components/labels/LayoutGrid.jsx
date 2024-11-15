@@ -1,8 +1,8 @@
 import React from 'react'
-import useCellGrid from '../../hooks/useCellGrid'
+import useCellSelection from '../../hooks/useCellSelection'
 
 const LayoutGrid = () => {
-  useCellGrid() // Utiliser le hook pour générer et gérer la grille des cellules dynamiquement
+  useCellSelection() // Gère la grille et la sélection des cellules
 
   return (
     <div className="relative w-full border-2 border-gray-300 bg-light-background pb-[141.4%] shadow-xl dark:bg-dark-background">

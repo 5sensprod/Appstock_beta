@@ -1,15 +1,11 @@
-// components/labels/menus/QrMenu.jsx
-
 import React, { useState, useRef, useEffect } from 'react'
 import IconButton from '../../ui/IconButton'
 import ColorPicker from '../texttool/ColorPicker'
 import { faQrcode, faPalette, faSync } from '@fortawesome/free-solid-svg-icons'
 import { useCanvas } from '../../../context/CanvasContext'
-import { useCellManagerContext } from '../../../context/CellManagerContext' // Importation ajoutée
 
 export default function QrMenu({ onAddQrCode, onUpdateQrCode, selectedQrText }) {
   const { selectedColor, dispatchCanvasAction } = useCanvas()
-  const { updateObjectColor, state } = useCellManagerContext() // Utilisation de useCellManagerContext
   const [qrText, setQrText] = useState(selectedQrText || '')
   const [isModified, setIsModified] = useState(false)
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
@@ -32,7 +28,7 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode, selectedQrText }) 
 
   const handleUpdate = () => {
     if (isModified && qrText.trim()) {
-      onUpdateQrCode(qrText)
+      onUpdateQrCode(qrText, selectedColor)
       setIsModified(false)
     }
   }
@@ -44,9 +40,8 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode, selectedQrText }) 
 
   const handleColorChangeAndUpdate = (color) => {
     dispatchCanvasAction({ type: 'SET_COLOR', payload: color })
-    updateObjectColor('gencode', color) // Mise à jour de la couleur du QR code dans le contexte
     if (qrText.trim()) {
-      onUpdateQrCode(qrText)
+      onUpdateQrCode(qrText, color)
     }
   }
 
@@ -62,9 +57,6 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode, selectedQrText }) 
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
-
-  // Obtenir la couleur actuelle pour 'gencode' depuis le contexte ou utiliser selectedColor
-  const currentColor = state.objectColors['gencode'] || selectedColor || '#000000'
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
@@ -107,7 +99,7 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode, selectedQrText }) 
 
       {isColorPickerOpen && (
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
-          <ColorPicker color={currentColor} setSelectedColor={handleColorChangeAndUpdate} />
+          <ColorPicker color={selectedColor} setSelectedColor={handleColorChangeAndUpdate} />
         </div>
       )}
     </div>

@@ -1,32 +1,30 @@
+// frontend/components/labels/menus/ImportMenu.jsx
+
 import React, { useState } from 'react'
+import { useInstance } from '../../../context/InstanceContext'
 import IconButton from '../../ui/IconButton'
 import { faFileCsv } from '@fortawesome/free-solid-svg-icons'
-import { useCellManagerContext } from '../../../context/CellManagerContext'
 
 const ImportMenu = () => {
-  const { importData } = useCellManagerContext()
+  const { importData, saveChanges } = useInstance()
   const [file, setFile] = useState(null)
-  const [error, setError] = useState(null)
 
   const handleFileUpload = (event) => {
     const uploadedFile = event.target.files[0]
-    if (uploadedFile) {
-      setFile(uploadedFile)
-      setError(null) // Réinitialise l'erreur lors d'une nouvelle sélection de fichier
-    }
+    setFile(uploadedFile)
   }
 
   const handleProcessCSV = () => {
     if (!file) {
-      setError('Veuillez sélectionner un fichier.')
+      console.error('Aucun fichier sélectionné')
       return
     }
-    importData(file) // Appeler importData pour traiter le fichier CSV
-    setFile(null) // Réinitialiser le fichier après importation
+    saveChanges()
+    importData(file)
   }
 
   return (
-    <div className="relative flex w-auto flex-col space-y-2 rounded bg-white p-2 shadow-lg">
+    <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
       <input type="file" accept=".csv" onChange={handleFileUpload} className="mb-2" />
       <IconButton
         onClick={handleProcessCSV}
@@ -36,7 +34,6 @@ const ImportMenu = () => {
         size="w-9 h-12"
         iconSize="text-xl"
       />
-      {error && <p className="text-sm text-red-500">{error}</p>}
     </div>
   )
 }
