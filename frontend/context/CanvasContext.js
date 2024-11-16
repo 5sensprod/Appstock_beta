@@ -1,12 +1,9 @@
 import React, { createContext, useRef, useContext, useReducer } from 'react'
 import useCanvasObjectHandler from '../hooks/useCanvasObjectHandler'
-import useObjectConstraints from '../hooks/useObjectConstraints'
-import useCanvasTransform from '../hooks/useCanvasTransform'
-import { canvasReducer, initialCanvasState } from '../reducers/canvasReducer'
+import useCanvasTransformAndConstraints from '../hooks/useCanvasTransformAndConstraints'
 import useInitializeCanvas from '../hooks/useInitializeCanvas'
-import useCanvasObjectManagement from '../hooks/useCanvasObjectManagement'
-import useFontManagement from '../hooks/useFontManagement'
-import useCanvasObjectActions from '../hooks/useCanvasObjectActions' // Import du nouveau hook
+import useCanvasObjectActions from '../hooks/useCanvasObjectActions'
+import { canvasReducer, initialCanvasState } from '../reducers/canvasReducer'
 
 const CanvasContext = createContext()
 
@@ -23,22 +20,28 @@ const CanvasProvider = ({ children }) => {
   const { canvas, zoomLevel, selectedColor, selectedFont, selectedObject, labelConfig } =
     canvasState
 
-  // Initialisation et transformations du canevas
+  // Initialisation du canevas
   useInitializeCanvas(canvas, labelConfig, dispatchCanvasAction, canvasRef)
-  const { updateCanvasSize, handleZoomChange } = useCanvasTransform(
+
+  // Gestion des transformations et des contraintes
+  const { updateCanvasSize, handleZoomChange } = useCanvasTransformAndConstraints(
     canvas,
     labelConfig,
     dispatchCanvasAction
   )
 
   // Gestion des objets sur le canevas
-  useCanvasObjectHandler(canvas, selectedObject, selectedColor, selectedFont, dispatchCanvasAction)
-  useObjectConstraints(canvas)
+  const { isShapeSelected, isTextSelected, isImageSelected, isQRCodeSelected } =
+    useCanvasObjectHandler(
+      canvas,
+      selectedObject,
+      selectedColor,
+      selectedFont,
+      dispatchCanvasAction
+    )
 
-  // Utilisation de useCanvasObjectActions pour gérer l'ajout/suppression d'objets
+  // Actions pour les objets
   const {
-    // addObjectToCanvas,
-    onDeleteObject,
     onAddCircle,
     onAddRectangle,
     onAddText,
@@ -49,13 +52,7 @@ const CanvasProvider = ({ children }) => {
     onAddQrCodeCsv
   } = useCanvasObjectActions(canvas, labelConfig, selectedColor, selectedFont)
 
-  // Vérifications de type d'objet et gestion de la touche "Delete"
-  const { isShapeSelected, isTextSelected, isImageSelected, isQRCodeSelected } =
-    useCanvasObjectManagement(canvas, selectedObject, onDeleteObject)
-
-  // Gestion de la police de l'objet sélectionné
-  useFontManagement(canvas, selectedObject, selectedFont)
-
+  // Valeurs et actions exposées par le contexte
   const value = {
     canvasRef,
     canvas,
@@ -70,7 +67,7 @@ const CanvasProvider = ({ children }) => {
     setSelectedObject: (obj) => dispatchCanvasAction({ type: 'SET_SELECTED_OBJECT', payload: obj }),
     selectedFont,
     setSelectedFont: (font) => dispatchCanvasAction({ type: 'SET_FONT', payload: font }),
-    // Actions centralisées pour les objets
+    // Actions pour les objets
     onAddCircle,
     onAddRectangle,
     onAddText,
@@ -79,12 +76,12 @@ const CanvasProvider = ({ children }) => {
     onAddQrCode,
     onAddQrCodeCsv,
     onUpdateQrCode,
-    onDeleteObject,
-    // Vérifications de type d'objet
+    // Vérifications du type d'objet
     isShapeSelected,
     isTextSelected,
     isImageSelected,
     isQRCodeSelected,
+    // Dispatcher pour des actions personnalisées
     dispatchCanvasAction,
     canvasState
   }

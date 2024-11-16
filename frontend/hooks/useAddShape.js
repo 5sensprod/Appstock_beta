@@ -1,8 +1,16 @@
 import { useCallback } from 'react'
 import * as fabric from 'fabric'
+import useAddObjectToCanvas from './useAddObjectToCanvas'
 
-const useAddShape = (canvas, labelConfig, selectedColor, addObjectToCanvas) => {
+const useAddShape = (canvas, labelConfig, selectedColor) => {
+  const { centerObject } = useAddObjectToCanvas(labelConfig)
+
   const onAddCircle = useCallback(() => {
+    if (!canvas) {
+      console.error('Canvas is not initialized.')
+      return
+    }
+
     const minDimension = Math.min(labelConfig.labelWidth, labelConfig.labelHeight)
     const circleRadius = minDimension / 2.5
 
@@ -14,10 +22,18 @@ const useAddShape = (canvas, labelConfig, selectedColor, addObjectToCanvas) => {
       strokeUniform: true
     })
 
-    addObjectToCanvas(circle)
-  }, [selectedColor, labelConfig, addObjectToCanvas])
+    centerObject(circle) // Centrer le cercle
+    canvas.add(circle)
+    canvas.setActiveObject(circle)
+    canvas.renderAll()
+  }, [canvas, labelConfig, selectedColor, centerObject])
 
   const onAddRectangle = useCallback(() => {
+    if (!canvas) {
+      console.error('Canvas is not initialized.')
+      return
+    }
+
     const rectWidth = labelConfig.labelWidth / 1.1
     const rectHeight = labelConfig.labelHeight / 1.1
 
@@ -27,8 +43,11 @@ const useAddShape = (canvas, labelConfig, selectedColor, addObjectToCanvas) => {
       fill: selectedColor
     })
 
-    addObjectToCanvas(rectangle)
-  }, [selectedColor, labelConfig, addObjectToCanvas])
+    centerObject(rectangle) // Centrer le rectangle
+    canvas.add(rectangle)
+    canvas.setActiveObject(rectangle)
+    canvas.renderAll()
+  }, [canvas, labelConfig, selectedColor, centerObject])
 
   return { onAddCircle, onAddRectangle }
 }

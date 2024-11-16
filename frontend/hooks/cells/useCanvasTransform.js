@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { mmToPx } from '../utils/conversionUtils'
+import { mmToPx } from '../../utils/conversionUtils'
 
 const useCanvasTransform = (canvas, labelConfig, dispatchCanvasAction) => {
   const updateCanvasSize = useCallback(

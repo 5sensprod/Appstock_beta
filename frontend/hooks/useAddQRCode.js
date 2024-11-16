@@ -1,5 +1,3 @@
-// hooks/useAddQRCode.js
-
 import { useCallback } from 'react'
 import * as fabric from 'fabric'
 import QRCode from 'qrcode'
@@ -7,20 +5,18 @@ import { rgbToHex, mmToPx } from '../utils/conversionUtils'
 import useAddObjectToCanvas from './useAddObjectToCanvas'
 
 const useAddQRCode = (canvas, labelConfig, selectedColor) => {
-  const { addObjectToCanvas } = useAddObjectToCanvas(canvas, labelConfig)
+  const { centerObject } = useAddObjectToCanvas(labelConfig)
 
   const onAddQrCode = useCallback(
     (text) => {
       if (!canvas) return
 
-      const minDimension = Math.min(labelConfig.labelWidth, labelConfig.labelHeight)
-      const qrSize = minDimension / 2
       const validColor = rgbToHex(selectedColor || '#000000')
 
       QRCode.toDataURL(
         text,
         {
-          width: qrSize,
+          width: mmToPx(labelConfig.labelWidth / 2), // Utiliser la moitié de la largeur de l'étiquette
           margin: 2,
           color: { dark: validColor, light: '#ffffff' }
         },
@@ -34,16 +30,9 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
           imgElement.src = url
 
           imgElement.onload = () => {
-            const imgWidth = imgElement.naturalWidth
-            const imgHeight = imgElement.naturalHeight
-
-            const canvasWidth = mmToPx(labelConfig.labelWidth)
-            const canvasHeight = mmToPx(labelConfig.labelHeight)
-            const scaleFactor = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight)
-
-            const fabricImg = new fabric.FabricImage(imgElement, {
-              scaleX: scaleFactor,
-              scaleY: scaleFactor
+            const fabricImg = new fabric.Image(imgElement, {
+              width: mmToPx(labelConfig.labelWidth / 2),
+              height: mmToPx(labelConfig.labelWidth / 2)
             })
 
             fabricImg.set({
@@ -60,7 +49,10 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
               }
             })(fabricImg.toObject)
 
-            addObjectToCanvas(fabricImg)
+            centerObject(fabricImg) // Centrer le QR code
+            canvas.add(fabricImg)
+            canvas.setActiveObject(fabricImg)
+            canvas.renderAll()
           }
 
           imgElement.onerror = () => {
@@ -69,7 +61,7 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
         }
       )
     },
-    [selectedColor, labelConfig, addObjectToCanvas, canvas]
+    [selectedColor, labelConfig, centerObject, canvas]
   )
 
   const onUpdateQrCode = useCallback(
@@ -83,7 +75,7 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
         QRCode.toDataURL(
           newText,
           {
-            width: activeObject.width,
+            width: mmToPx(labelConfig.labelWidth / 2),
             margin: 2,
             color: { dark: validColor, light: '#ffffff' }
           },
@@ -109,23 +101,21 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
         )
       }
     },
-    [canvas, selectedColor]
+    [canvas, selectedColor, labelConfig]
   )
 
   const onAddQrCodeCsv = useCallback(
     (text, callback) => {
       if (!canvas) return
 
-      const minDimension = Math.min(labelConfig.labelWidth, labelConfig.labelHeight)
-      const qrSize = minDimension / 2
-      const validColor = rgbToHex(selectedColor)
+      const validColor = rgbToHex(selectedColor || '#000000')
 
       QRCode.toDataURL(
         text,
         {
-          width: qrSize,
+          width: mmToPx(labelConfig.labelWidth / 2), // Utiliser la moitié de la largeur de l'étiquette
           margin: 2,
-          color: { dark: validColor || '#000000', light: '#ffffff' }
+          color: { dark: validColor, light: '#ffffff' }
         },
         (err, url) => {
           if (err) {
@@ -137,16 +127,9 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
           imgElement.src = url
 
           imgElement.onload = () => {
-            const imgWidth = imgElement.naturalWidth
-            const imgHeight = imgElement.naturalHeight
-
-            const canvasWidth = mmToPx(labelConfig.labelWidth)
-            const canvasHeight = mmToPx(labelConfig.labelHeight)
-            const scaleFactor = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight)
-
-            const fabricImg = new fabric.FabricImage(imgElement, {
-              scaleX: scaleFactor,
-              scaleY: scaleFactor
+            const fabricImg = new fabric.Image(imgElement, {
+              width: mmToPx(labelConfig.labelWidth / 2),
+              height: mmToPx(labelConfig.labelWidth / 2)
             })
 
             fabricImg.set({
@@ -163,7 +146,10 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
               }
             })(fabricImg.toObject)
 
-            addObjectToCanvas(fabricImg)
+            centerObject(fabricImg) // Centrer le QR code
+            canvas.add(fabricImg)
+            canvas.setActiveObject(fabricImg)
+            canvas.renderAll()
 
             if (callback) callback()
           }
@@ -175,7 +161,7 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
         }
       )
     },
-    [selectedColor, labelConfig, addObjectToCanvas, canvas]
+    [selectedColor, labelConfig, centerObject, canvas]
   )
 
   return { onAddQrCode, onUpdateQrCode, onAddQrCodeCsv }

@@ -1,7 +1,7 @@
 // frontend/hooks/useFontManagement.js
 import { useEffect } from 'react'
 import FontFaceObserver from 'fontfaceobserver'
-import { loadedFonts } from '../utils/fontCache' // Import du cache
+import { loadedFonts } from '../../utils/fontCache' // Import du cache
 
 export default function useFontManagement(canvas, selectedObject, selectedFont) {
   useEffect(() => {

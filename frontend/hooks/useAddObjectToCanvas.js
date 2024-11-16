@@ -1,10 +1,10 @@
 import { useCallback } from 'react'
 import { mmToPx } from '../utils/conversionUtils'
 
-const useAddObjectToCanvas = (canvas, labelConfig) => {
-  const addObjectToCanvas = useCallback(
+const useAddObjectToCanvas = (labelConfig) => {
+  const centerObject = useCallback(
     (object) => {
-      if (!canvas) return
+      if (!labelConfig) return
 
       const centerX = mmToPx(labelConfig.labelWidth / 2)
       const centerY = mmToPx(labelConfig.labelHeight / 2)
@@ -14,23 +14,12 @@ const useAddObjectToCanvas = (canvas, labelConfig) => {
         top: centerY - object.getScaledHeight() / 2
       })
 
-      canvas.add(object)
-      canvas.setActiveObject(object)
-      canvas.renderAll()
+      return object
     },
-    [canvas, labelConfig]
+    [labelConfig]
   )
 
-  const onDeleteObject = useCallback(() => {
-    const activeObject = canvas.getActiveObject()
-    if (activeObject) {
-      canvas.remove(activeObject) // Supprimer l'objet actif du canevas
-      canvas.discardActiveObject() // Désélectionner l'objet
-      canvas.renderAll() // Re-rendu du canevas
-    }
-  }, [canvas])
-
-  return { addObjectToCanvas, onDeleteObject }
+  return { centerObject }
 }
 
 export default useAddObjectToCanvas

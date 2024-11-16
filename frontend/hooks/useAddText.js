@@ -4,7 +4,7 @@ import FontFaceObserver from 'fontfaceobserver'
 import useAddObjectToCanvas from './useAddObjectToCanvas'
 
 const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
-  const { addObjectToCanvas } = useAddObjectToCanvas(canvas, labelConfig)
+  const { centerObject } = useAddObjectToCanvas(labelConfig)
 
   const loadAndApplyFont = useCallback(async (fontFamily) => {
     if (!fontFamily) {
@@ -13,8 +13,7 @@ const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
     }
     const fontObserver = new FontFaceObserver(fontFamily)
     try {
-      // Increase timeout to 10 seconds (or as needed)
-      await fontObserver.load(null, 10000) // 10000ms = 10 seconds
+      await fontObserver.load(null, 10000) // 10 secondes timeout
       console.log(`Font ${fontFamily} loaded successfully`)
     } catch (error) {
       console.error(`Error loading font ${fontFamily}:`, error)
@@ -32,14 +31,16 @@ const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
 
     const textBox = new fabric.Textbox('Votre texte ici', {
       fontSize,
-      fill: selectedColor || 'black', // Fallback color
+      fill: selectedColor || 'black',
       textAlign: 'left',
-      fontFamily: selectedFont || 'Lato' // Fallback font
+      fontFamily: selectedFont || 'Lato'
     })
 
-    addObjectToCanvas(textBox)
+    centerObject(textBox) // Centrer l'objet
+    canvas.add(textBox)
+    canvas.setActiveObject(textBox)
     canvas.renderAll()
-  }, [selectedColor, labelConfig, selectedFont, addObjectToCanvas, canvas, loadAndApplyFont])
+  }, [canvas, labelConfig, selectedColor, selectedFont, loadAndApplyFont, centerObject])
 
   const onAddTextCsv = useCallback(
     async (text = 'Votre texte ici', fontFamily = 'Lato', fillColor = 'black', fontSize = 16) => {
@@ -57,12 +58,14 @@ const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
         fontFamily
       })
 
-      addObjectToCanvas(textBox)
+      centerObject(textBox) // Centrer l'objet
+      canvas.add(textBox)
+      canvas.setActiveObject(textBox)
       canvas.renderAll()
 
-      return textBox // Retourner le textBox créé
+      return textBox
     },
-    [addObjectToCanvas, canvas, loadAndApplyFont]
+    [canvas, loadAndApplyFont, centerObject]
   )
 
   return { onAddText, onAddTextCsv }

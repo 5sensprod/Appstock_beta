@@ -1,93 +1,125 @@
 import { useEffect, useCallback } from 'react'
 
-const useCanvasObjectHandler = (
-  canvas,
-  selectedObject,
-  selectedColor,
-  selectedFont,
-  dispatchCanvasAction
-) => {
-  const updateCanvasObjects = useCallback(() => {
-    const objectsData = canvas.getObjects().map((obj, index) => {
-      if (obj.isQRCode) {
-        // Gestion spécifique pour les QR codes
-        return {
-          id: obj.id || `temp-${index}`,
-          design: {
-            color: obj.fill || selectedColor // Couleur du QR code
-          },
-          data: {
-            qrText: obj.qrText // Texte associé au QR code
-          }
-        }
-      } else {
-        // Gestion des autres objets (texte, etc.)
-        return {
-          id: obj.id || `temp-${index}`,
-          design: {
-            fill: obj.fill,
-            fontFamily: obj.fontFamily
-          },
-          data: {
-            content: obj.type === 'i-text' || obj.type === 'textbox' ? obj.text : obj.data
-          }
-        }
-      }
-    })
-    dispatchCanvasAction({ type: 'SET_OBJECTS', payload: objectsData })
-  }, [canvas, dispatchCanvasAction, selectedColor])
-
-  // Mise à jour de l'objet sélectionné
-  const updateSelectedObject = useCallback(() => {
-    const activeObject = canvas.getActiveObject()
-    if (activeObject) {
-      dispatchCanvasAction({
-        type: 'UPDATE_SELECTED_OBJECT',
-        payload: {
-          object: activeObject,
-          color: activeObject.fill,
-          font: activeObject.fontFamily,
-          qrText: activeObject.isQRCode ? activeObject.qrText : undefined // QR code spécifique
-        }
-      })
-    } else {
-      dispatchCanvasAction({ type: 'SET_SELECTED_OBJECT', payload: null })
-    }
-  }, [canvas, dispatchCanvasAction])
-
-  const addCanvasListeners = useCallback(() => {
-    if (!canvas) return
-
-    const listeners = [
-      { event: 'object:modified', handler: updateCanvasObjects },
-      { event: 'object:added', handler: updateCanvasObjects },
-      { event: 'object:removed', handler: updateCanvasObjects },
-      { event: 'selection:created', handler: updateSelectedObject },
-      { event: 'selection:updated', handler: updateSelectedObject },
-      {
-        event: 'selection:cleared',
-        handler: () => dispatchCanvasAction({ type: 'SET_SELECTED_OBJECT', payload: null })
-      }
-    ]
-
-    listeners.forEach(({ event, handler }) => canvas.on(event, handler))
-
-    return () => listeners.forEach(({ event, handler }) => canvas.off(event, handler))
-  }, [canvas, updateCanvasObjects, updateSelectedObject, dispatchCanvasAction])
-
-  useEffect(addCanvasListeners, [addCanvasListeners])
+const useCanvasObjectHandler = (canvas, selectedObject, selectedColor, selectedFont, dispatch) => {
+  // Vérifie le type de l'objet sélectionné
+  const isShapeSelected = useCallback(
+    () => selectedObject?.type === 'circle' || selectedObject?.type === 'rect',
+    [selectedObject]
+  )
+  const isTextSelected = useCallback(
+    () => selectedObject?.type === 'i-text' || selectedObject?.type === 'textbox',
+    [selectedObject]
+  )
+  const isImageSelected = useCallback(() => selectedObject?.type === 'image', [selectedObject])
+  const isQRCodeSelected = useCallback(() => selectedObject?.isQRCode === true, [selectedObject])
 
   useEffect(() => {
+    if (!canvas) return
+
+    // Fonction pour mettre à jour l'objet sélectionné
+    const updateSelectedObject = () => {
+      const activeObject = canvas.getActiveObject()
+      dispatch({ type: 'SET_SELECTED_OBJECT', payload: activeObject })
+
+      // Met à jour la couleur et la police si disponibles
+      if (activeObject) {
+        if (activeObject.fill) {
+          dispatch({ type: 'SET_COLOR', payload: activeObject.fill })
+        }
+        if (activeObject.fontFamily) {
+          dispatch({ type: 'SET_FONT', payload: activeObject.fontFamily })
+        }
+      }
+    }
+
+    // Fonction pour synchroniser l'état des objets du canevas
+    const updateCanvasObjects = () => {
+      const objectsData = canvas.getObjects().map((obj) => obj.toObject())
+      dispatch({ type: 'SET_OBJECTS', payload: objectsData }) // Met à jour l'état global des objets
+    }
+
+    // Ajout des écouteurs d'événements
+    canvas.on('object:modified', updateCanvasObjects)
+    canvas.on('object:added', updateCanvasObjects)
+    canvas.on('object:removed', updateCanvasObjects)
+    canvas.on('selection:created', updateSelectedObject)
+    canvas.on('selection:updated', updateSelectedObject)
+    canvas.on('selection:cleared', () => {
+      dispatch({ type: 'SET_SELECTED_OBJECT', payload: null }) // Efface l'objet sélectionné
+    })
+
+    // Nettoyage des écouteurs d'événements lors du démontage
+    return () => {
+      canvas.off('object:modified', updateCanvasObjects)
+      canvas.off('object:added', updateCanvasObjects)
+      canvas.off('object:removed', updateCanvasObjects)
+      canvas.off('selection:created', updateSelectedObject)
+      canvas.off('selection:updated', updateSelectedObject)
+      canvas.off('selection:cleared')
+    }
+  }, [canvas, dispatch])
+
+  // Synchronisation de la couleur de l'objet sélectionné avec l'état global
+  useEffect(() => {
     if (selectedObject && 'set' in selectedObject) {
+      selectedObject.set('fill', selectedColor)
+      canvas.requestRenderAll()
+
+      // Met à jour les données des objets après modification
+      const objectsData = canvas.getObjects().map((obj) => obj.toObject())
+      dispatch({ type: 'SET_OBJECTS', payload: objectsData })
+    }
+  }, [selectedColor, selectedObject, canvas, dispatch])
+
+  // Synchronisation de la police de l'objet sélectionné avec l'état global
+  useEffect(() => {
+    if (
+      selectedObject &&
+      'set' in selectedObject &&
+      (selectedObject.type === 'i-text' || selectedObject.type === 'textbox')
+    ) {
       selectedObject.set({
-        fill: selectedColor,
         fontFamily: selectedFont,
         dirty: true
       })
+
       canvas.requestRenderAll()
-      updateCanvasObjects()
+
+      // Met à jour les données des objets après modification
+      const objectsData = canvas.getObjects().map((obj) => obj.toObject())
+      dispatch({ type: 'SET_OBJECTS', payload: objectsData })
     }
-  }, [selectedColor, selectedFont, selectedObject, canvas, updateCanvasObjects])
+  }, [selectedFont, selectedObject, canvas, dispatch])
+
+  // Gestion de la suppression via la touche "Delete"
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Delete') {
+        const activeObject = canvas.getActiveObject()
+        if (activeObject) {
+          canvas.remove(activeObject)
+          canvas.discardActiveObject()
+          canvas.renderAll()
+
+          // Met à jour les données des objets après suppression
+          const objectsData = canvas.getObjects().map((obj) => obj.toObject())
+          dispatch({ type: 'SET_OBJECTS', payload: objectsData })
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [canvas, dispatch])
+
+  return {
+    isShapeSelected,
+    isTextSelected,
+    isImageSelected,
+    isQRCodeSelected
+  }
 }
 
 export default useCanvasObjectHandler

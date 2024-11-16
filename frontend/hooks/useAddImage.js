@@ -4,7 +4,7 @@ import { mmToPx } from '../utils/conversionUtils'
 import useAddObjectToCanvas from './useAddObjectToCanvas'
 
 const useAddImage = (canvas, labelConfig) => {
-  const { addObjectToCanvas } = useAddObjectToCanvas(canvas, labelConfig) // Assurez-vous de bien extraire addObjectToCanvas
+  const { centerObject } = useAddObjectToCanvas(labelConfig) // Extraire uniquement la logique de centrage
 
   return useCallback(
     (file) => {
@@ -28,8 +28,10 @@ const useAddImage = (canvas, labelConfig) => {
             scaleY: scaleFactor
           })
 
-          // Utiliser addObjectToCanvas pour centrer et ajouter l'image au canevas
-          addObjectToCanvas(fabricImg)
+          centerObject(fabricImg) // Centrer l'image
+          canvas.add(fabricImg)
+          canvas.setActiveObject(fabricImg)
+          canvas.renderAll()
         }
 
         imgElement.onerror = () => {
@@ -39,7 +41,7 @@ const useAddImage = (canvas, labelConfig) => {
 
       reader.readAsDataURL(file)
     },
-    [canvas, labelConfig, addObjectToCanvas]
+    [canvas, labelConfig, centerObject]
   )
 }
 
