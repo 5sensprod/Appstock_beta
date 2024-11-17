@@ -1,12 +1,20 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 import { GridContext } from '../../context/GridContext'
 import CSVImporter from './CSVImporter' // Import du composant CSVImporter
 
 const GridConfigurator = () => {
   const { state, dispatch } = useContext(GridContext)
-  const { config } = state
+  const { config, selectedCellId, cellContents } = state
 
   const [errors, setErrors] = useState({})
+  const [content, setContent] = useState('')
+
+  // Charger le contenu de la cellule sélectionnée dans le formulaire
+  useEffect(() => {
+    if (selectedCellId) {
+      setContent(cellContents[selectedCellId] || '') // Récupérer le contenu existant ou vide
+    }
+  }, [selectedCellId, cellContents])
 
   const validateConfig = (key, value) => {
     const { pageWidth, pageHeight } = config
@@ -57,6 +65,19 @@ const GridConfigurator = () => {
     }
   }
 
+  const handleContentChange = (e) => {
+    setContent(e.target.value)
+  }
+
+  const saveContent = () => {
+    if (selectedCellId) {
+      dispatch({
+        type: 'UPDATE_CELL_CONTENT',
+        payload: { id: selectedCellId, content }
+      })
+    }
+  }
+
   const hasErrors = Object.keys(errors).length > 0
 
   return (
@@ -89,6 +110,22 @@ const GridConfigurator = () => {
       <div style={{ marginTop: '20px' }}>
         <CSVImporter />
       </div>
+
+      {/* Formulaire d'édition de contenu */}
+      {selectedCellId && (
+        <div style={{ marginTop: '20px' }}>
+          <h4>Modifier le contenu</h4>
+          <textarea
+            value={content}
+            onChange={handleContentChange}
+            rows="4"
+            style={{ width: '100%', resize: 'none' }}
+          />
+          <button onClick={saveContent} style={{ marginTop: '10px', padding: '5px 10px' }}>
+            Sauvegarder
+          </button>
+        </div>
+      )}
     </div>
   )
 }
