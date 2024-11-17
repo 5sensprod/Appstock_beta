@@ -1,92 +1,45 @@
-import React, { createContext, useRef, useContext, useReducer } from 'react'
-import useCanvasObjectHandler from '../hooks/useCanvasObjectHandler'
-import useCanvasTransformAndConstraints from '../hooks/useCanvasTransformAndConstraints'
-import useInitializeCanvas from '../hooks/useInitializeCanvas'
-import useCanvasObjectActions from '../hooks/useCanvasObjectActions'
-import { canvasReducer, initialCanvasState } from '../reducers/canvasReducer'
+import React, { createContext, useReducer } from 'react'
+import * as fabric from 'fabric'
 
-const CanvasContext = createContext()
+export const CanvasContext = createContext()
 
-const useCanvas = () => {
-  const context = useContext(CanvasContext)
-  if (!context) throw new Error('useCanvas must be used within a CanvasProvider')
-  return context
+const initialState = {
+  canvas: null, // Instance Fabric.js
+  objects: [] // Objets sauvegardés liés au canvas
 }
 
-const CanvasProvider = ({ children }) => {
-  const canvasRef = useRef(null)
-  const [canvasState, dispatchCanvasAction] = useReducer(canvasReducer, initialCanvasState)
+function canvasReducer(state, action) {
+  switch (action.type) {
+    case 'SET_CANVAS':
+      return {
+        ...state,
+        canvas: action.payload
+      }
 
-  const { canvas, zoomLevel, selectedColor, selectedFont, selectedObject, labelConfig } =
-    canvasState
+    case 'ADD_OBJECT': {
+      const { canvas } = state
+      if (canvas) {
+        const newObject = new fabric.IText(action.payload.props.text, action.payload.props)
+        canvas.add(newObject)
+        canvas.setActiveObject(newObject)
+        canvas.renderAll()
+      }
+      return state
+    }
 
-  // Initialisation du canevas
-  useInitializeCanvas(canvas, labelConfig, dispatchCanvasAction, canvasRef)
+    case 'UPDATE_OBJECTS':
+      return {
+        ...state,
+        objects: action.payload
+      }
 
-  // Gestion des transformations et des contraintes
-  const { updateCanvasSize, handleZoomChange } = useCanvasTransformAndConstraints(
-    canvas,
-    labelConfig,
-    dispatchCanvasAction
-  )
-
-  // Gestion des objets sur le canevas
-  const { isShapeSelected, isTextSelected, isImageSelected, isQRCodeSelected } =
-    useCanvasObjectHandler(
-      canvas,
-      selectedObject,
-      selectedColor,
-      selectedFont,
-      dispatchCanvasAction
-    )
-
-  // Actions pour les objets
-  const {
-    onAddCircle,
-    onAddRectangle,
-    onAddText,
-    onAddTextCsv,
-    onAddImage,
-    onAddQrCode,
-    onUpdateQrCode,
-    onAddQrCodeCsv
-  } = useCanvasObjectActions(canvas, labelConfig, selectedColor, selectedFont)
-
-  // Valeurs et actions exposées par le contexte
-  const value = {
-    canvasRef,
-    canvas,
-    zoomLevel,
-    updateCanvasSize,
-    handleZoomChange,
-    labelConfig,
-    setLabelConfig: (config) => dispatchCanvasAction({ type: 'SET_LABEL_CONFIG', payload: config }),
-    selectedColor,
-    setSelectedColor: (color) => dispatchCanvasAction({ type: 'SET_COLOR', payload: color }),
-    selectedObject,
-    setSelectedObject: (obj) => dispatchCanvasAction({ type: 'SET_SELECTED_OBJECT', payload: obj }),
-    selectedFont,
-    setSelectedFont: (font) => dispatchCanvasAction({ type: 'SET_FONT', payload: font }),
-    // Actions pour les objets
-    onAddCircle,
-    onAddRectangle,
-    onAddText,
-    onAddTextCsv,
-    onAddImage,
-    onAddQrCode,
-    onAddQrCodeCsv,
-    onUpdateQrCode,
-    // Vérifications du type d'objet
-    isShapeSelected,
-    isTextSelected,
-    isImageSelected,
-    isQRCodeSelected,
-    // Dispatcher pour des actions personnalisées
-    dispatchCanvasAction,
-    canvasState
+    default:
+      return state
   }
-
-  return <CanvasContext.Provider value={value}>{children}</CanvasContext.Provider>
 }
 
-export { CanvasContext, CanvasProvider, useCanvas }
+export const CanvasProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(canvasReducer, initialState)
+
+  return <CanvasContext.Provider value={{ state, dispatch }}>{children}</CanvasContext.Provider>
+}
