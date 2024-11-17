@@ -1,3 +1,5 @@
+// frontend/hooks/useCanvasTransformAndConstraints.js
+
 import { useCallback, useEffect } from 'react'
 import { mmToPx } from '../utils/conversionUtils'
 
@@ -61,10 +63,8 @@ const useCanvasTransformAndConstraints = (canvas, labelConfig, dispatchCanvasAct
   )
 
   // Restrictions sur les objets (mouvement/redimensionnement)
-  useEffect(() => {
-    if (!canvas) return
-
-    const restrictObjectMovement = (e) => {
+  const restrictObjectMovement = useCallback(
+    (e) => {
       const obj = e.target
       obj.setCoords()
 
@@ -83,7 +83,12 @@ const useCanvasTransformAndConstraints = (canvas, labelConfig, dispatchCanvasAct
         obj.top -= boundingRect.top + boundingRect.height - canvasHeight
 
       obj.setCoords()
-    }
+    },
+    [canvas]
+  )
+
+  useEffect(() => {
+    if (!canvas) return
 
     canvas.on('object:moving', restrictObjectMovement)
     canvas.on('object:scaling', restrictObjectMovement)
@@ -92,7 +97,7 @@ const useCanvasTransformAndConstraints = (canvas, labelConfig, dispatchCanvasAct
       canvas.off('object:moving', restrictObjectMovement)
       canvas.off('object:scaling', restrictObjectMovement)
     }
-  }, [canvas])
+  }, [canvas, restrictObjectMovement])
 
   return { updateCanvasSize, handleZoomChange }
 }
