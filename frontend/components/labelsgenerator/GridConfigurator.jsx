@@ -2,73 +2,53 @@ import React, { useContext, useState, useEffect } from 'react'
 import { GridContext } from '../../context/GridContext'
 import CSVImporter from './CSVImporter' // Import du composant CSVImporter
 
+const validateConfigValue = (key, value, config) => {
+  const { pageWidth, pageHeight } = config
+  if (value <= 0) return 'La valeur doit être supérieure à 0.'
+  if (
+    (key === 'offsetTop' && value >= pageHeight) ||
+    (key === 'offsetLeft' && value >= pageWidth)
+  ) {
+    return 'La valeur dépasse les dimensions de la page.'
+  }
+  return null
+}
+
 const GridConfigurator = () => {
   const { state, dispatch } = useContext(GridContext)
   const { config, selectedCellId, cellContents } = state
 
-  const [errors, setErrors] = useState({})
   const [content, setContent] = useState('')
+  const [errors, setErrors] = useState({})
 
-  // Charger le contenu de la cellule sélectionnée dans le formulaire
   useEffect(() => {
     if (selectedCellId) {
-      setContent(cellContents[selectedCellId] || '') // Récupérer le contenu existant ou vide
+      setContent(cellContents[selectedCellId] || '')
     }
   }, [selectedCellId, cellContents])
-
-  const validateConfig = (key, value) => {
-    const { pageWidth, pageHeight } = config
-    const newErrors = { ...errors }
-
-    switch (key) {
-      case 'cellWidth':
-      case 'cellHeight':
-        if (value <= 0) {
-          newErrors[key] = 'La taille doit être supérieure à 0 mm.'
-        } else {
-          delete newErrors[key]
-        }
-        break
-
-      case 'offsetTop':
-      case 'offsetLeft':
-        if (value < 0) {
-          newErrors[key] = 'L’offset ne peut pas être négatif.'
-        } else if (
-          (key === 'offsetTop' && value >= pageHeight) ||
-          (key === 'offsetLeft' && value >= pageWidth)
-        ) {
-          newErrors[key] = 'L’offset ne peut pas dépasser les dimensions de la page.'
-        } else {
-          delete newErrors[key]
-        }
-        break
-
-      default:
-        break
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
 
   const handleChange = (e) => {
     const { id, value } = e.target
     const numericValue = parseFloat(value)
 
-    if (validateConfig(id, numericValue)) {
-      dispatch({
-        type: 'UPDATE_CONFIG',
-        payload: { [id]: numericValue }
-      })
+    const error = validateConfigValue(id, numericValue, config)
+
+    // Mettre à jour uniquement les erreurs pour les champs invalides
+    setErrors((prevErrors) => {
+      const newErrors = { ...prevErrors }
+      if (error) {
+        newErrors[id] = error // Ajouter une erreur si elle existe
+      } else {
+        delete newErrors[id] // Supprimer l'erreur si corrigée
+      }
+      return newErrors
+    })
+
+    if (!error) {
+      dispatch({ type: 'UPDATE_CONFIG', payload: { [id]: numericValue } })
       dispatch({ type: 'GENERATE_GRID' })
     }
   }
-
-  const handleContentChange = (e) => {
-    setContent(e.target.value)
-  }
-
   const saveContent = () => {
     if (selectedCellId) {
       dispatch({
@@ -78,15 +58,11 @@ const GridConfigurator = () => {
     }
   }
 
-  const hasErrors = Object.keys(errors).length > 0
-
   return (
     <div>
       <h4>Configuration</h4>
-      {hasErrors && (
-        <p style={{ color: 'red', fontWeight: 'bold' }}>
-          Veuillez corriger les erreurs pour générer la grille correctement.
-        </p>
+      {Object.keys(errors).length > 0 && (
+        <p style={{ color: 'red', fontWeight: 'bold' }}>Veuillez corriger les erreurs.</p>
       )}
       <form style={{ display: 'grid', gap: '10px' }}>
         {Object.keys(config).map((key) => (
@@ -105,19 +81,13 @@ const GridConfigurator = () => {
           </div>
         ))}
       </form>
-
-      {/* Composant CSVImporter pour importer les données CSV */}
-      <div style={{ marginTop: '20px' }}>
-        <CSVImporter />
-      </div>
-
-      {/* Formulaire d'édition de contenu */}
+      <CSVImporter />
       {selectedCellId && (
         <div style={{ marginTop: '20px' }}>
           <h4>Modifier le contenu</h4>
           <textarea
             value={content}
-            onChange={handleContentChange}
+            onChange={(e) => setContent(e.target.value)}
             rows="4"
             style={{ width: '100%', resize: 'none' }}
           />

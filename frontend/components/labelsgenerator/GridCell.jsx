@@ -1,6 +1,6 @@
 import React from 'react'
 
-const GridCell = ({ id, col, row, width, height, left, top, isSelected, onClick, content }) => {
+const GridCell = ({ id, width, height, left, top, isSelected, onClick, content }) => {
   const styles = {
     position: 'absolute',
     width: `${width}%`,
