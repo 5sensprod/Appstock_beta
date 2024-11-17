@@ -85,13 +85,13 @@ export function gridReducer(state, action) {
         pageHeight
       } = state.config
 
-      // Calcul des dimensions de la grille indépendamment des offsets
-      const maxWidth = pageWidth - 2 * offsetLeft
-      const maxHeight = pageHeight - 2 * offsetTop
-
       // Calcul du nombre de colonnes et lignes possibles
-      const columns = Math.floor((maxWidth + spacingHorizontal) / (cellWidth + spacingHorizontal))
-      const rowsPerPage = Math.floor((maxHeight + spacingVertical) / (cellHeight + spacingVertical))
+      const columns = Math.floor(
+        (pageWidth - 2 * offsetLeft + spacingHorizontal) / (cellWidth + spacingHorizontal)
+      )
+      const rowsPerPage = Math.floor(
+        (pageHeight - 2 * offsetTop + spacingVertical) / (cellHeight + spacingVertical)
+      )
 
       const cellsPerPage = columns * rowsPerPage
 
@@ -102,21 +102,15 @@ export function gridReducer(state, action) {
           const row = Math.floor(i / columns)
           const col = i % columns
 
-          // Calcul des positions relatives à la zone de contenu
-          const contentLeft = col * (cellWidth + spacingHorizontal)
-          const contentTop = row * (cellHeight + spacingVertical)
-
           grid.push({
             id: `${pageIndex}-${row}-${col}`,
             pageIndex,
             row,
             col,
-            // Les dimensions des cellules restent constantes
             width: (cellWidth / pageWidth) * 100,
             height: (cellHeight / pageHeight) * 100,
-            // Les positions sont ajustées en fonction des offsets
-            left: ((offsetLeft + contentLeft) / pageWidth) * 100,
-            top: ((offsetTop + contentTop) / pageHeight) * 100
+            left: ((offsetLeft + col * (cellWidth + spacingHorizontal)) / pageWidth) * 100,
+            top: ((offsetTop + row * (cellHeight + spacingVertical)) / pageHeight) * 100
           })
         }
       }

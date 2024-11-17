@@ -6,7 +6,7 @@ const GridManager = () => {
   const { state, dispatch } = useContext(GridContext)
   const { grid, config, selectedCellId, cellContents, currentPage, totalPages } = state
 
-  const { pageWidth, pageHeight, offsetTop, offsetLeft } = config
+  const { pageWidth, pageHeight } = config
 
   // Filtrer les cellules pour la page courante
   const currentPageCells = grid.filter((cell) => cell.pageIndex === currentPage)
@@ -17,6 +17,7 @@ const GridManager = () => {
 
   return (
     <div>
+      {/* Navigation entre pages */}
       <div style={{ marginBottom: '10px', textAlign: 'center' }}>
         <button
           onClick={() => dispatch({ type: 'SET_PAGE', payload: { page: currentPage - 1 } })}
@@ -40,23 +41,24 @@ const GridManager = () => {
         </button>
       </div>
 
+      {/* Conteneur principal représentant la page */}
       <div
         style={{
           position: 'relative',
           width: '100%',
           height: '0',
-          paddingBottom: `${(pageHeight / pageWidth) * 100}%`,
+          paddingBottom: `${(pageHeight / pageWidth) * 100}%`, // Ratio A4
           background: '#fff',
-          border: '2px solid #000'
+          border: '2px solid #000', // Bordure autour de l'ensemble de la grille
+          boxSizing: 'border-box' // Assurez-vous que la bordure n'affecte pas les dimensions internes
         }}
       >
         <div
           style={{
             position: 'absolute',
-            top: `${(offsetTop / pageHeight) * 100}%`,
-            left: `${(offsetLeft / pageWidth) * 100}%`,
-            right: `${(offsetLeft / pageWidth) * 100}%`,
-            bottom: `${(offsetTop / pageHeight) * 100}%`
+            width: '100%',
+            height: '100%',
+            overflow: 'hidden' // Évitez que les cellules débordent
           }}
         >
           {currentPageCells.map((cell) => (
