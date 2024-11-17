@@ -1,98 +1,197 @@
-// frontend/reducers/gridReducer.js
-
 export const initialGridState = {
-  cells: [], // Vide pour permettre une génération dynamique des cellules
-  linkedCells: {}, // Vide pour permettre une liaison dynamique
-  selectedCell: 0
+  config: {
+    cellWidth: 48.5,
+    cellHeight: 25,
+    offsetTop: 22,
+    offsetLeft: 8,
+    spacingHorizontal: 0,
+    spacingVertical: 0,
+    pageWidth: 210, // A4 dimensions
+    pageHeight: 297
+  },
+  grid: [], // Grille vide générée dynamiquement
+  selectedCellId: null, // Aucun ID sélectionné au départ
+  cellContents: {}, // Contient les données dynamiques des cellules
+  currentPage: 0, // Page active
+  totalPages: 1 // Nombre total de pages
 }
 
-export const gridReducer = (state, action) => {
-  const { type, payload } = action
+export function gridReducer(state, action) {
+  switch (action.type) {
+    case 'UPDATE_CONFIG': {
+      const { pageWidth, pageHeight } = state.config
+      const updatedConfig = { ...state.config, ...action.payload }
 
-  switch (type) {
-    case 'ADD_CELL':
-      console.log('Action ADD_CELL déclenchée avec payload :', payload)
-      return {
-        ...state,
-        cells: [...state.cells, payload]
+      // Validation des offsets
+      if (updatedConfig.offsetTop >= pageHeight) {
+        updatedConfig.offsetTop = pageHeight - 1
+      }
+      if (updatedConfig.offsetLeft >= pageWidth) {
+        updatedConfig.offsetLeft = pageWidth - 1
+      }
+      // Validation des dimensions
+      if (updatedConfig.cellWidth <= 0) {
+        updatedConfig.cellWidth = 1
+      }
+      if (updatedConfig.cellHeight <= 0) {
+        updatedConfig.cellHeight = 1
       }
 
-    case 'SELECT_CELL':
-      console.log('Action SELECT_CELL déclenchée pour la cellule ID :', payload)
-      return {
-        ...state,
-        selectedCell: payload
-      }
+      // Calcul du nombre de cellules seulement si les dimensions changent
+      const dimensionsChanged =
+        action.payload.cellWidth !== undefined ||
+        action.payload.cellHeight !== undefined ||
+        action.payload.spacingHorizontal !== undefined ||
+        action.payload.spacingVertical !== undefined ||
+        action.payload.pageWidth !== undefined ||
+        action.payload.pageHeight !== undefined
 
-    case 'LINK_CELLS_TO_CSV':
-      console.log('Action LINK_CELLS_TO_CSV déclenchée pour dataIndex :', payload.dataIndex)
-      return {
-        ...state,
-        linkedCells: {
-          ...state.linkedCells,
-          [payload.dataIndex]: payload.cellIds
+      if (dimensionsChanged) {
+        // Calculer le nombre de cellules par page avec la nouvelle configuration
+        const availableWidth = pageWidth - 2 * updatedConfig.offsetLeft
+        const availableHeight = pageHeight - 2 * updatedConfig.offsetTop
+        const columns = Math.floor(
+          (availableWidth + updatedConfig.spacingHorizontal) /
+            (updatedConfig.cellWidth + updatedConfig.spacingHorizontal)
+        )
+        const rows = Math.floor(
+          (availableHeight + updatedConfig.spacingVertical) /
+            (updatedConfig.cellHeight + updatedConfig.spacingVertical)
+        )
+        const cellsPerPage = columns * rows
+
+        return {
+          ...state,
+          config: updatedConfig,
+          cellsPerPage
         }
       }
 
-    case 'UPDATE_CELL_DESIGN':
-      console.log('Action UPDATE_CELL_DESIGN déclenchée avec payload :', payload)
       return {
         ...state,
-        cells: state.cells.map((cell) =>
-          cell.id === payload.cellId
-            ? { ...cell, design: { ...cell.design, ...payload.design } }
-            : cell
+        config: updatedConfig
+      }
+    }
+
+    case 'GENERATE_GRID': {
+      const {
+        cellWidth,
+        cellHeight,
+        offsetTop,
+        offsetLeft,
+        spacingHorizontal,
+        spacingVertical,
+        pageWidth,
+        pageHeight
+      } = state.config
+
+      // Calcul des dimensions de la grille indépendamment des offsets
+      const maxWidth = pageWidth - 2 * offsetLeft
+      const maxHeight = pageHeight - 2 * offsetTop
+
+      // Calcul du nombre de colonnes et lignes possibles
+      const columns = Math.floor((maxWidth + spacingHorizontal) / (cellWidth + spacingHorizontal))
+      const rowsPerPage = Math.floor((maxHeight + spacingVertical) / (cellHeight + spacingVertical))
+
+      const cellsPerPage = columns * rowsPerPage
+
+      // Création de la grille
+      const grid = []
+      for (let pageIndex = 0; pageIndex < state.totalPages; pageIndex++) {
+        for (let i = 0; i < cellsPerPage; i++) {
+          const row = Math.floor(i / columns)
+          const col = i % columns
+
+          // Calcul des positions relatives à la zone de contenu
+          const contentLeft = col * (cellWidth + spacingHorizontal)
+          const contentTop = row * (cellHeight + spacingVertical)
+
+          grid.push({
+            id: `${pageIndex}-${row}-${col}`,
+            pageIndex,
+            row,
+            col,
+            // Les dimensions des cellules restent constantes
+            width: (cellWidth / pageWidth) * 100,
+            height: (cellHeight / pageHeight) * 100,
+            // Les positions sont ajustées en fonction des offsets
+            left: ((offsetLeft + contentLeft) / pageWidth) * 100,
+            top: ((offsetTop + contentTop) / pageHeight) * 100
+          })
+        }
+      }
+
+      return {
+        ...state,
+        grid,
+        cellsPerPage
+      }
+    }
+
+    case 'IMPORT_CSV': {
+      const rows = action.payload
+      const newCellContents = { ...state.cellContents }
+
+      // Calculer le nombre de pages nécessaires
+      const requiredPages = Math.ceil(rows.length / state.cellsPerPage)
+      const totalPages = Math.max(1, requiredPages)
+
+      // Générer la grille avec le nouveau nombre de pages
+      const updatedState = gridReducer({ ...state, totalPages }, { type: 'GENERATE_GRID' })
+
+      // Associer les données CSV aux cellules
+      rows.forEach((row, index) => {
+        const pageIndex = Math.floor(index / state.cellsPerPage)
+        const cellIndexInPage = index % state.cellsPerPage
+
+        // Utiliser les dimensions actuelles pour calculer la position
+        const columns = Math.floor(
+          (state.config.pageWidth - 2 * state.config.offsetLeft + state.config.spacingHorizontal) /
+            (state.config.cellWidth + state.config.spacingHorizontal)
         )
-      }
 
-    case 'UPDATE_LINKED_CELLS':
-      console.log('Action UPDATE_LINKED_CELLS pour dataIndex :', payload.dataIndex)
-      const linkedCellIds = state.linkedCells[payload.dataIndex] || []
+        const col = cellIndexInPage % columns
+        const rowInPage = Math.floor(cellIndexInPage / columns)
+
+        const cellId = `${pageIndex}-${rowInPage}-${col}`
+        const content = Object.entries(row)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join('\n')
+        newCellContents[cellId] = content
+      })
+
+      return {
+        ...updatedState,
+        cellContents: newCellContents,
+        totalPages
+      }
+    }
+
+    case 'SELECT_CELL':
       return {
         ...state,
-        cells: state.cells.map((cell) =>
-          linkedCellIds.includes(cell.id)
-            ? { ...cell, design: { ...cell.design, ...payload.design } }
-            : cell
-        )
+        selectedCellId: action.payload // Met à jour l'ID de la cellule sélectionnée
       }
-
-    case 'TOGGLE_CELL_LINK':
-      console.log('Action TOGGLE_CELL_LINK déclenchée pour la cellule ID :', payload.cellId)
+    case 'UPDATE_CELL_CONTENT': {
+      const { id, content } = action.payload
       return {
         ...state,
-        cells: state.cells.map((cell) =>
-          cell.id === payload.cellId
-            ? {
-                ...cell,
-                linkedToCsv: !cell.linkedToCsv,
-                dataIndex: cell.linkedToCsv ? null : payload.dataIndex
-              }
-            : cell
-        )
+        cellContents: {
+          ...state.cellContents,
+          [id]: content // Met à jour le contenu de la cellule spécifique
+        }
       }
+    }
 
-    case 'SAVE_GRID_STATE':
-      console.log('Action SAVE_GRID_STATE déclenchée')
-      // Ici, nous pouvons ajouter la logique pour sauvegarder l'état de la grille
-      return state
-
-    case 'LOAD_GRID_STATE':
-      console.log('Action LOAD_GRID_STATE déclenchée avec payload :', payload)
-      // Charger un état sauvegardé
+    case 'SET_PAGE': {
+      const { page } = action.payload
       return {
         ...state,
-        ...payload
+        currentPage: Math.min(Math.max(0, page), state.totalPages - 1)
       }
-    case 'SYNC_CELLS_WITH_GRID':
-      console.log('Synchronisation des cellules importées avec la grille.')
-      return {
-        ...state,
-        cells: payload // Met à jour `gridState` avec les cellules importées
-      }
+    }
 
     default:
-      console.log('Action non reconnue :', type)
       return state
   }
 }
