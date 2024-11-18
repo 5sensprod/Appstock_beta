@@ -96,6 +96,20 @@ const LabelsContent = () => {
             Vider
           </button>
         </div>
+        <div style={{ marginBottom: '20px' }}>
+          <button
+            onClick={() => dispatch({ type: 'UNDO' })}
+            disabled={state.undoStack.length === 0}
+          >
+            Annuler
+          </button>
+          <button
+            onClick={() => dispatch({ type: 'REDO' })}
+            disabled={state.redoStack.length === 0}
+          >
+            Refaire
+          </button>
+        </div>
 
         {selectedCellId && (
           <CellEditor

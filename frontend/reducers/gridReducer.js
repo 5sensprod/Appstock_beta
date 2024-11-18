@@ -25,66 +25,21 @@ export const initialGridState = {
   clipboard: null, // Contenu temporaire pour le copier-coller
   linkedGroups: [],
   currentPage: 0, // Page active
-  totalPages: 1 // Nombre total de pages
+  totalPages: 1,
+  undoStack: [], // Historique des états précédents
+  redoStack: [] // Historique des états annulés
+}
+
+function withUndoRedo(state, newState) {
+  return {
+    ...newState,
+    undoStack: [...state.undoStack, state], // Ajouter l'état actuel à undoStack
+    redoStack: [] // Réinitialiser redoStack après une nouvelle action
+  }
 }
 
 export function gridReducer(state, action) {
   switch (action.type) {
-    case 'UPDATE_CONFIG': {
-      const { pageWidth, pageHeight } = state.config
-      const updatedConfig = { ...state.config, ...action.payload }
-
-      // Validation des offsets
-      if (updatedConfig.offsetTop >= pageHeight) {
-        updatedConfig.offsetTop = pageHeight - 1
-      }
-      if (updatedConfig.offsetLeft >= pageWidth) {
-        updatedConfig.offsetLeft = pageWidth - 1
-      }
-      // Validation des dimensions
-      if (updatedConfig.cellWidth <= 0) {
-        updatedConfig.cellWidth = 1
-      }
-      if (updatedConfig.cellHeight <= 0) {
-        updatedConfig.cellHeight = 1
-      }
-
-      // Calcul du nombre de cellules seulement si les dimensions changent
-      const dimensionsChanged =
-        action.payload.cellWidth !== undefined ||
-        action.payload.cellHeight !== undefined ||
-        action.payload.spacingHorizontal !== undefined ||
-        action.payload.spacingVertical !== undefined ||
-        action.payload.pageWidth !== undefined ||
-        action.payload.pageHeight !== undefined
-
-      if (dimensionsChanged) {
-        // Calculer le nombre de cellules par page avec la nouvelle configuration
-        const availableWidth = pageWidth - 2 * updatedConfig.offsetLeft
-        const availableHeight = pageHeight - 2 * updatedConfig.offsetTop
-        const columns = Math.floor(
-          (availableWidth + updatedConfig.spacingHorizontal) /
-            (updatedConfig.cellWidth + updatedConfig.spacingHorizontal)
-        )
-        const rows = Math.floor(
-          (availableHeight + updatedConfig.spacingVertical) /
-            (updatedConfig.cellHeight + updatedConfig.spacingVertical)
-        )
-        const cellsPerPage = columns * rows
-
-        return {
-          ...state,
-          config: updatedConfig,
-          cellsPerPage
-        }
-      }
-
-      return {
-        ...state,
-        config: updatedConfig
-      }
-    }
-
     case 'GENERATE_GRID': {
       const {
         cellWidth,
@@ -144,17 +99,65 @@ export function gridReducer(state, action) {
       }
     }
 
+    case 'UPDATE_CONFIG': {
+      const { pageWidth, pageHeight } = state.config
+      const updatedConfig = { ...state.config, ...action.payload }
+
+      // Validation des offsets
+      if (updatedConfig.offsetTop >= pageHeight) {
+        updatedConfig.offsetTop = pageHeight - 1
+      }
+      if (updatedConfig.offsetLeft >= pageWidth) {
+        updatedConfig.offsetLeft = pageWidth - 1
+      }
+      // Validation des dimensions
+      if (updatedConfig.cellWidth <= 0) {
+        updatedConfig.cellWidth = 1
+      }
+      if (updatedConfig.cellHeight <= 0) {
+        updatedConfig.cellHeight = 1
+      }
+
+      // Calcul du nombre de cellules seulement si les dimensions changent
+      const dimensionsChanged =
+        action.payload.cellWidth !== undefined ||
+        action.payload.cellHeight !== undefined ||
+        action.payload.spacingHorizontal !== undefined ||
+        action.payload.spacingVertical !== undefined ||
+        action.payload.pageWidth !== undefined ||
+        action.payload.pageHeight !== undefined
+
+      if (dimensionsChanged) {
+        // Calculer le nombre de cellules par page avec la nouvelle configuration
+        const availableWidth = pageWidth - 2 * updatedConfig.offsetLeft
+        const availableHeight = pageHeight - 2 * updatedConfig.offsetTop
+        const columns = Math.floor(
+          (availableWidth + updatedConfig.spacingHorizontal) /
+            (updatedConfig.cellWidth + updatedConfig.spacingHorizontal)
+        )
+        const rows = Math.floor(
+          (availableHeight + updatedConfig.spacingVertical) /
+            (updatedConfig.cellHeight + updatedConfig.spacingVertical)
+        )
+        const cellsPerPage = columns * rows
+
+        return {
+          ...state,
+          config: updatedConfig,
+          cellsPerPage
+        }
+      }
+
+      return {
+        ...state,
+        config: updatedConfig
+      }
+    }
+
     case 'IMPORT_CSV': {
       const rows = action.payload
       const newCellContents = { ...state.cellContents }
-      const newLinkedGroup = [] // Nouveau groupe lié pour toutes les cellules importées
-
-      // Calculer le nombre de pages nécessaires
-      const requiredPages = Math.ceil(rows.length / state.cellsPerPage)
-      const totalPages = Math.max(1, requiredPages)
-
-      // Générer la grille avec le nouveau nombre de pages
-      const updatedState = gridReducer({ ...state, totalPages }, { type: 'GENERATE_GRID' })
+      const newLinkedGroup = [] // Nouveau groupe pour les cellules liées par le CSV
 
       // Associer les données CSV aux cellules
       rows.forEach((row, index) => {
@@ -172,13 +175,13 @@ export function gridReducer(state, action) {
 
         // Créer plusieurs objets IText pour chaque colonne de la ligne CSV
         const iTextObjects = Object.entries(row).map(([key, value], idx) => ({
-          id: `${key}-${idx}`,
+          id: `${key}-${idx}`, // Identifiant unique pour chaque objet IText
           type: 'IText',
-          text: value,
-          left: 10 + idx * 50,
-          top: 10,
-          fontSize: 14,
-          fill: '#333'
+          text: value, // Texte depuis le CSV
+          left: 10 + idx * 50, // Décalage horizontal
+          top: 10, // Décalage vertical
+          fontSize: 14, // Taille de police
+          fill: '#333' // Couleur par défaut
         }))
 
         // Ajouter le contenu dans cellContents
@@ -191,16 +194,20 @@ export function gridReducer(state, action) {
       // Marquer les cellules comme liées par le CSV
       const markedGrid = state.grid.map((cell) => ({
         ...cell,
-        linkedByCsv: newLinkedGroup.includes(cell.id) // Marque uniquement les cellules liées
+        linkedByCsv: newLinkedGroup.includes(cell.id) // Marquer uniquement les cellules liées
       }))
 
-      return {
-        ...updatedState,
+      // Construire le nouvel état
+      const newState = {
+        ...state,
         cellContents: newCellContents,
         grid: markedGrid, // Mettre à jour la grille avec les marquages
-        linkedGroups: [...state.linkedGroups, newLinkedGroup],
-        totalPages
+        linkedGroups: [...state.linkedGroups, newLinkedGroup], // Ajouter le groupe lié
+        totalPages: Math.max(1, Math.ceil(rows.length / state.cellsPerPage)) // Mettre à jour les pages
       }
+
+      // Gérer Undo/Redo
+      return withUndoRedo(state, newState)
     }
 
     case 'SELECT_FIRST_CELL': {
@@ -223,17 +230,17 @@ export function gridReducer(state, action) {
       const newCellContents = { ...state.cellContents }
 
       if (!content || (content.type === 'IText' && content.text.trim() === '')) {
-        // Supprime la cellule si le texte est vide
         delete newCellContents[id]
       } else {
-        // Met à jour avec l'objet Fabric.js
         newCellContents[id] = content
       }
 
-      return {
+      const newState = {
         ...state,
         cellContents: newCellContents
       }
+
+      return withUndoRedo(state, newState)
     }
 
     case 'SET_PAGE': {
@@ -310,37 +317,46 @@ export function gridReducer(state, action) {
       const { cellId } = action.payload // ID de la cellule où coller
       const clipboardContent = state.cellContents[state.clipboard.cellId]
 
-      // Copier le contenu s'il est valide
+      // Vérifier si le contenu du presse-papiers est valide
       if (!clipboardContent) return state
 
-      return {
-        ...state,
-        cellContents: {
-          ...state.cellContents,
-          [cellId]: Array.isArray(clipboardContent)
-            ? [...clipboardContent] // Cloner le tableau d'objets
-            : [clipboardContent] // Gérer le cas d'un objet ou d'une chaîne unique
-        }
+      // Créer une copie propre du contenu pour la cellule cible
+      const newCellContents = {
+        ...state.cellContents,
+        [cellId]: Array.isArray(clipboardContent)
+          ? clipboardContent.map((item) => ({ ...item })) // Cloner chaque objet du tableau
+          : [{ ...clipboardContent }] // Gérer le cas d'un objet ou d'une chaîne unique
       }
+
+      // Construire le nouvel état
+      const newState = {
+        ...state,
+        cellContents: newCellContents
+      }
+
+      // Gérer Undo/Redo
+      return withUndoRedo(state, newState)
     }
 
     case 'LINK_CELLS': {
       const { source, destination } = action.payload
       const existingGroupIndex = state.linkedGroups.findIndex((group) => group.includes(source))
 
+      let updatedGroups
       if (existingGroupIndex > -1) {
-        const updatedGroups = [...state.linkedGroups]
-        updatedGroups[existingGroupIndex] = [...updatedGroups[existingGroupIndex], destination]
-        return {
-          ...state,
-          linkedGroups: updatedGroups
-        }
+        const updatedGroup = [...state.linkedGroups[existingGroupIndex], destination]
+        updatedGroups = [...state.linkedGroups]
+        updatedGroups[existingGroupIndex] = updatedGroup
+      } else {
+        updatedGroups = [...state.linkedGroups, [source, destination]]
       }
 
-      return {
+      const newState = {
         ...state,
-        linkedGroups: [...state.linkedGroups, [source, destination]]
+        linkedGroups: updatedGroups
       }
+
+      return withUndoRedo(state, newState)
     }
 
     case 'UNLINK_CELL': {
@@ -350,8 +366,9 @@ export function gridReducer(state, action) {
       const groupIndex = state.linkedGroups.findIndex((group) => group.includes(cellId))
       if (groupIndex === -1) return state // Si la cellule n'est pas liée, ne rien faire
 
+      // Retirer la cellule du groupe lié
       const updatedGroups = [...state.linkedGroups]
-      const updatedGroup = updatedGroups[groupIndex].filter((id) => id !== cellId) // Retirer la cellule
+      const updatedGroup = updatedGroups[groupIndex].filter((id) => id !== cellId)
 
       if (updatedGroup.length > 1) {
         // Si le groupe contient encore plus d'une cellule, le conserver
@@ -361,18 +378,24 @@ export function gridReducer(state, action) {
         updatedGroups.splice(groupIndex, 1)
       }
 
-      // Supprimer le flag `linkedByCsv` si présent
+      // Mettre à jour le contenu de la cellule pour supprimer le flag `linkedByCsv`
       const newCellContents = { ...state.cellContents }
-      newCellContents[cellId] = newCellContents[cellId]?.map((item) => ({
-        ...item,
-        linkedByCsv: false // Réinitialiser ce flag
-      }))
+      if (newCellContents[cellId]) {
+        newCellContents[cellId] = newCellContents[cellId].map((item) => ({
+          ...item,
+          linkedByCsv: false // Réinitialiser ce flag
+        }))
+      }
 
-      return {
+      // Construire le nouvel état
+      const newState = {
         ...state,
         linkedGroups: updatedGroups,
         cellContents: newCellContents
       }
+
+      // Gérer Undo/Redo
+      return withUndoRedo(state, newState)
     }
 
     case 'RESET_CELL': {
@@ -391,10 +414,36 @@ export function gridReducer(state, action) {
         .map((group) => group.filter((id) => id !== cellId)) // Retirer la cellule de chaque groupe
         .filter((group) => group.length > 1) // Supprimer les groupes devenus vides ou uniques
 
-      return {
+      const newState = {
         ...state,
         cellContents: newCellContents,
         linkedGroups: updatedGroups
+      }
+
+      return withUndoRedo(state, newState)
+    }
+
+    case 'UNDO': {
+      if (state.undoStack.length === 0) return state // Rien à annuler
+      const previousState = state.undoStack[state.undoStack.length - 1]
+      const newUndoStack = state.undoStack.slice(0, -1)
+      const newRedoStack = [state, ...state.redoStack] // Ajouter l'état actuel à redoStack
+      return {
+        ...previousState,
+        undoStack: newUndoStack,
+        redoStack: newRedoStack
+      }
+    }
+
+    case 'REDO': {
+      if (state.redoStack.length === 0) return state // Rien à refaire
+      const nextState = state.redoStack[0]
+      const newRedoStack = state.redoStack.slice(1)
+      const newUndoStack = [...state.undoStack, state] // Ajouter l'état actuel à undoStack
+      return {
+        ...nextState,
+        undoStack: newUndoStack,
+        redoStack: newRedoStack
       }
     }
 
