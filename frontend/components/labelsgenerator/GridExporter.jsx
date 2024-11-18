@@ -12,7 +12,6 @@ const loadCanvasDesign = (cellIndex, cellContent, cellWidth, cellHeight, scaleFa
       height: mmToPx(cellHeight) * scaleFactor
     })
 
-    // Ajouter manuellement les objets dans le canevas si `loadFromJSON` n'est pas utilisé
     try {
       cellContent.forEach((objectData) => {
         const fabricObject = new fabric.IText(objectData.text, {
@@ -29,7 +28,7 @@ const loadCanvasDesign = (cellIndex, cellContent, cellWidth, cellHeight, scaleFa
       setTimeout(() => {
         const imgData = tempCanvas.toDataURL('image/png')
         resolve(imgData)
-      }, 300) // Donne le temps au canevas de se rendre correctement
+      }, 300)
     } catch (error) {
       reject(
         new Error(
@@ -85,25 +84,22 @@ export const exportGridToPDF = async (grid, cellContents, config) => {
 
   const tasks = [] // Liste des promesses pour les images générées
 
-  // Boucle sur chaque cellule dans la grille
   for (let row = 0; row < labelsPerColumn; row++) {
     for (let col = 0; col < labelsPerRow; col++) {
       const cellIndex = row * labelsPerRow + col
       const cell = grid[cellIndex]
       const cellContent = cell && cellContents[cell?.id]
 
-      if (cellContent) {
-        // Capturer les coordonnées actuelles
+      // Vérifier si la cellule est marquée comme initiale
+      const isInitialContent =
+        cellContent && cellContent.every((objectData) => objectData.isInitialContent)
+
+      if (cellContent && !isInitialContent) {
+        // Charger uniquement les cellules avec contenu réel
         const currentX = x
         const currentY = y
 
-        const loadTask = loadCanvasDesign(
-          cellIndex,
-          cellContent,
-          cellWidth,
-          cellHeight,
-          4 // Facteur d'échelle pour qualité élevée
-        )
+        const loadTask = loadCanvasDesign(cellIndex, cellContent, cellWidth, cellHeight, 4)
           .then((imgData) => {
             pdf.addImage(imgData, 'PNG', currentX, currentY, cellWidth, cellHeight)
           })
@@ -112,9 +108,6 @@ export const exportGridToPDF = async (grid, cellContents, config) => {
           })
 
         tasks.push(loadTask)
-      } else {
-        // Ajouter une bordure pour une cellule vide
-        pdf.rect(x, y, cellWidth, cellHeight, 'S') // 'S' pour stroke uniquement
       }
 
       // Avancer horizontalement
