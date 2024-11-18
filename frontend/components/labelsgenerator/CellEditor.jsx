@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import * as fabric from 'fabric'
 
-const CellEditor = ({ cellId, initialContent, cellWidth, cellHeight, onSave }) => {
+const CellEditor = ({ initialContent, cellWidth, cellHeight, onSave }) => {
   const canvasRef = useRef(null) // Utiliser une référence pour le canvas
   const textObjectRef = useRef(null) // Référence pour le IText
 
@@ -10,7 +10,7 @@ const CellEditor = ({ cellId, initialContent, cellWidth, cellHeight, onSave }) =
     const canvas = new fabric.Canvas(canvasRef.current, {
       width: cellWidth,
       height: cellHeight,
-      backgroundColor: '#f5f5f5' // Fond clair pour l'édition
+      backgroundColor: '#fff' // Fond clair pour l'édition
     })
 
     // Ajoute un objet IText avec le contenu initial
