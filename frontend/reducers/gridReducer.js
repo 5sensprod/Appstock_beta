@@ -162,7 +162,7 @@ export function gridReducer(state, action) {
 
         // Créer plusieurs objets IText pour chaque colonne de la ligne CSV
         const iTextObjects = Object.entries(row).map(([key, value], idx) => ({
-          id: `${key}-${idx}`, // Identifiant stable basé sur la clé du CSV et l'index
+          id: `${key}-${idx}`,
           type: 'IText',
           text: value,
           left: 10 + idx * 50,
@@ -178,10 +178,17 @@ export function gridReducer(state, action) {
         newLinkedGroup.push(cellId)
       })
 
+      // Marquer les cellules comme liées par le CSV
+      const markedGrid = state.grid.map((cell) => ({
+        ...cell,
+        linkedByCsv: newLinkedGroup.includes(cell.id) // Marque uniquement les cellules liées
+      }))
+
       return {
         ...updatedState,
         cellContents: newCellContents,
-        linkedGroups: [...state.linkedGroups, newLinkedGroup], // Ajouter le nouveau groupe lié
+        grid: markedGrid, // Mettre à jour la grille avec les marquages
+        linkedGroups: [...state.linkedGroups, newLinkedGroup],
         totalPages
       }
     }

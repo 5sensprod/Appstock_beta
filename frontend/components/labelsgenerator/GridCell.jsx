@@ -7,6 +7,7 @@ const GridCell = ({
   isSelected,
   isLinkedAndSelected,
   linkedGroup,
+  linkedByCsv,
   onClick,
   content
 }) => {
@@ -25,14 +26,18 @@ const GridCell = ({
         ? '2px solid #007bff' // Bordure bleue pour la cellule sélectionnée
         : '1px solid #ccc',
     backgroundColor: isLinkedAndSelected
-      ? 'rgba(255, 20, 147, 0.7)' // Rose foncé pour les cellules liées et sélectionnées
-      : isLinked
-        ? 'rgba(255, 182, 193, 0.5)' // Rose clair pour les cellules liées
-        : isSelected
-          ? 'rgba(0, 123, 255, 0.5)' // Bleu clair pour la cellule sélectionnée
-          : isEmpty
-            ? 'rgba(220, 220, 220, 0.5)' // Gris clair pour les cellules vides
-            : 'rgba(0, 123, 255, 0.2)', // Bleu léger pour les cellules avec contenu
+      ? linkedByCsv
+        ? 'rgba(255, 204, 0, 0.7)' // Jaune plus foncé pour les cellules CSV actives
+        : 'rgba(255, 20, 147, 0.7)' // Rose foncé pour les autres cellules liées actives
+      : linkedByCsv
+        ? 'rgba(255, 255, 0, 0.4)' // Jaune clair pour les cellules liées par CSV
+        : isLinked
+          ? 'rgba(255, 182, 193, 0.5)' // Rose clair pour les cellules liées
+          : isSelected
+            ? 'rgba(0, 123, 255, 0.5)' // Bleu clair pour la cellule sélectionnée
+            : isEmpty
+              ? 'rgba(220, 220, 220, 0.5)' // Gris clair pour les cellules vides
+              : 'rgba(0, 123, 255, 0.2)', // Bleu léger pour les cellules avec contenu
     cursor: 'pointer',
     display: 'flex',
     justifyContent: 'center',
