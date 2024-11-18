@@ -50,7 +50,7 @@ const GridManager = () => {
           paddingBottom: `${(pageHeight / pageWidth) * 100}%`, // Ratio A4
           background: '#fff',
           border: '2px solid #000', // Bordure autour de l'ensemble de la grille
-          boxSizing: 'border-box' // Assurez-vous que la bordure n'affecte pas les dimensions internes
+          boxSizing: 'border-box'
         }}
       >
         <div
@@ -67,7 +67,7 @@ const GridManager = () => {
               {...cell}
               isSelected={selectedCellId === cell.id}
               onClick={handleSelectCell}
-              content={cellContents[cell.id] || 'Vide'}
+              content={cellContents[cell.id] || ''}
             />
           ))}
         </div>
