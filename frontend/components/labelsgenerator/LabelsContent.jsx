@@ -41,6 +41,13 @@ const LabelsContent = () => {
     }
   }
 
+  // Vider une cellule
+  const handleReset = () => {
+    if (selectedCellId) {
+      dispatch({ type: 'RESET_CELL', payload: { cellId: selectedCellId } })
+    }
+  }
+
   return (
     <div
       style={{
@@ -76,6 +83,9 @@ const LabelsContent = () => {
             disabled={!selectedCellId || findLinkedGroup(selectedCellId).length <= 1}
           >
             Délier
+          </button>
+          <button onClick={handleReset} disabled={!selectedCellId}>
+            Vider
           </button>
         </div>
 

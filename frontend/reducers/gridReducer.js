@@ -357,6 +357,25 @@ export function gridReducer(state, action) {
       }
     }
 
+    case 'RESET_CELL': {
+      const { cellId } = action.payload
+
+      // Supprimer le contenu de la cellule (ramener au contenu initial)
+      const newCellContents = { ...state.cellContents }
+      newCellContents[cellId] = [...state.cellContents.default] // Remettre au contenu par défaut
+
+      // Retirer la cellule des groupes liés
+      const updatedGroups = state.linkedGroups
+        .map((group) => group.filter((id) => id !== cellId)) // Retirer la cellule de chaque groupe
+        .filter((group) => group.length > 1) // Supprimer les groupes devenus vides ou uniques
+
+      return {
+        ...state,
+        cellContents: newCellContents,
+        linkedGroups: updatedGroups
+      }
+    }
+
     default:
       return state
   }
