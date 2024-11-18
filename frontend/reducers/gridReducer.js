@@ -137,6 +137,7 @@ export function gridReducer(state, action) {
     case 'IMPORT_CSV': {
       const rows = action.payload
       const newCellContents = { ...state.cellContents }
+      const newLinkedGroup = [] // Nouveau groupe lié pour toutes les cellules importées
 
       // Calculer le nombre de pages nécessaires
       const requiredPages = Math.ceil(rows.length / state.cellsPerPage)
@@ -150,33 +151,37 @@ export function gridReducer(state, action) {
         const pageIndex = Math.floor(index / state.cellsPerPage)
         const cellIndexInPage = index % state.cellsPerPage
 
-        // Utiliser les dimensions actuelles pour calculer la position
+        // Calculer la position de la cellule dans la grille
         const columns = Math.floor(
           (state.config.pageWidth - 2 * state.config.offsetLeft + state.config.spacingHorizontal) /
             (state.config.cellWidth + state.config.spacingHorizontal)
         )
-
         const col = cellIndexInPage % columns
         const rowInPage = Math.floor(cellIndexInPage / columns)
-
         const cellId = `${pageIndex}-${rowInPage}-${col}`
 
         // Créer plusieurs objets IText pour chaque colonne de la ligne CSV
         const iTextObjects = Object.entries(row).map(([key, value], idx) => ({
+          id: `${key}-${idx}`, // Identifiant stable basé sur la clé du CSV et l'index
           type: 'IText',
-          text: value, // Utilise uniquement la valeur
-          left: 10 + idx * 50, // Décalage horizontal (ajusté pour espacer les objets)
-          top: 10, // Position verticale
-          fontSize: 14, // Style par défaut
-          fill: '#333' // Couleur par défaut
+          text: value,
+          left: 10 + idx * 50,
+          top: 10,
+          fontSize: 14,
+          fill: '#333'
         }))
 
+        // Ajouter le contenu dans cellContents
         newCellContents[cellId] = iTextObjects
+
+        // Ajouter la cellule au groupe lié
+        newLinkedGroup.push(cellId)
       })
 
       return {
         ...updatedState,
         cellContents: newCellContents,
+        linkedGroups: [...state.linkedGroups, newLinkedGroup], // Ajouter le nouveau groupe lié
         totalPages
       }
     }
@@ -269,11 +274,11 @@ export function gridReducer(state, action) {
 
       linkedGroup.forEach((cellId) => {
         if (updatedCellContents[cellId]) {
-          // Mettre à jour uniquement les propriétés de mise en page (left, top)
+          // Synchroniser chaque objet IText basé sur son identifiant unique (id)
           updatedCellContents[cellId] = updatedCellContents[cellId].map((item) => ({
             ...item,
-            left: layout[item.id]?.left ?? item.left, // Applique les nouvelles positions
-            top: layout[item.id]?.top ?? item.top // Applique les nouvelles positions
+            left: layout[item.id]?.left ?? item.left, // Synchronise la position `left`
+            top: layout[item.id]?.top ?? item.top // Synchronise la position `top`
           }))
         }
       })
