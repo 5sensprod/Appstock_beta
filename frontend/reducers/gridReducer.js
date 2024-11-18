@@ -97,7 +97,6 @@ export function gridReducer(state, action) {
         pageHeight
       } = state.config
 
-      // Calcul du nombre de colonnes et lignes possibles
       const columns = Math.floor(
         (pageWidth - 2 * offsetLeft + spacingHorizontal) / (cellWidth + spacingHorizontal)
       )
@@ -106,16 +105,19 @@ export function gridReducer(state, action) {
       )
 
       const cellsPerPage = columns * rowsPerPage
-
-      // Création de la grille
       const grid = []
+
+      // Initialiser un nouvel objet pour les contenus des cellules
+      const newCellContents = { ...state.cellContents }
+
       for (let pageIndex = 0; pageIndex < state.totalPages; pageIndex++) {
         for (let i = 0; i < cellsPerPage; i++) {
           const row = Math.floor(i / columns)
           const col = i % columns
+          const cellId = `${pageIndex}-${row}-${col}`
 
           grid.push({
-            id: `${pageIndex}-${row}-${col}`,
+            id: cellId,
             pageIndex,
             row,
             col,
@@ -124,12 +126,20 @@ export function gridReducer(state, action) {
             left: ((offsetLeft + col * (cellWidth + spacingHorizontal)) / pageWidth) * 100,
             top: ((offsetTop + row * (cellHeight + spacingVertical)) / pageHeight) * 100
           })
+
+          // Ajouter le contenu par défaut avec le drapeau isInitialContent
+          if (!newCellContents[cellId]) {
+            newCellContents[cellId] = [
+              ...state.cellContents.default.map((item) => ({ ...item, isInitialContent: true }))
+            ]
+          }
         }
       }
 
       return {
         ...state,
         grid,
+        cellContents: newCellContents,
         cellsPerPage
       }
     }
@@ -351,22 +361,32 @@ export function gridReducer(state, action) {
         updatedGroups.splice(groupIndex, 1)
       }
 
+      // Supprimer le flag `linkedByCsv` si présent
+      const newCellContents = { ...state.cellContents }
+      newCellContents[cellId] = newCellContents[cellId]?.map((item) => ({
+        ...item,
+        linkedByCsv: false // Réinitialiser ce flag
+      }))
+
       return {
         ...state,
-        linkedGroups: updatedGroups
+        linkedGroups: updatedGroups,
+        cellContents: newCellContents
       }
     }
 
     case 'RESET_CELL': {
       const { cellId } = action.payload
 
-      // Supprimer le contenu de la cellule (ramener au contenu initial avec le drapeau reset)
       const newCellContents = { ...state.cellContents }
       newCellContents[cellId] = [
-        ...state.cellContents.default.map((item) => ({ ...item, reset: true })) // Ajouter le drapeau reset
+        ...state.cellContents.default.map((item) => ({
+          ...item,
+          isInitialContent: true,
+          linkedByCsv: false // Supprimer le flag lié au CSV
+        }))
       ]
 
-      // Retirer la cellule des groupes liés
       const updatedGroups = state.linkedGroups
         .map((group) => group.filter((id) => id !== cellId)) // Retirer la cellule de chaque groupe
         .filter((group) => group.length > 1) // Supprimer les groupes devenus vides ou uniques

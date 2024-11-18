@@ -15,6 +15,12 @@ const LabelsContent = () => {
     ? cellContents[selectedCellId] || cellContents.default
     : cellContents.default
 
+  // Vérifier si une cellule contient son contenu initial
+  const isDefaultContent = (cellId) => {
+    const content = cellContents[cellId]
+    return content?.every((item) => item.isInitialContent) // Vérifie si tous les objets ont le flag
+  }
+
   // Copier une cellule avec sauvegarde automatique
   const handleCopy = () => {
     if (selectedCellId) {
@@ -34,13 +40,6 @@ const LabelsContent = () => {
     }
   }
 
-  // Délier une cellule
-  const handleUnlink = () => {
-    if (selectedCellId) {
-      dispatch({ type: 'UNLINK_CELL', payload: { cellId: selectedCellId } })
-    }
-  }
-
   // Vider une cellule
   const handleReset = () => {
     if (selectedCellId) {
@@ -48,6 +47,12 @@ const LabelsContent = () => {
     }
   }
 
+  // Délier une cellule
+  const handleUnlink = () => {
+    if (selectedCellId) {
+      dispatch({ type: 'UNLINK_CELL', payload: { cellId: selectedCellId } })
+    }
+  }
   return (
     <div
       style={{
@@ -84,7 +89,10 @@ const LabelsContent = () => {
           >
             Délier
           </button>
-          <button onClick={handleReset} disabled={!selectedCellId}>
+          <button
+            onClick={handleReset}
+            disabled={!selectedCellId || isDefaultContent(selectedCellId)} // Désactivé si contenu initial
+          >
             Vider
           </button>
         </div>
