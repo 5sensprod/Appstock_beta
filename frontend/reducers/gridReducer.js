@@ -180,11 +180,11 @@ export function gridReducer(state, action) {
       const { id, content } = action.payload
       const newCellContents = { ...state.cellContents }
 
-      if (!content || content.trim() === '') {
-        // Si le contenu est vide ou seulement des espaces, on supprime l'entrée
+      if (!content || (content.type === 'IText' && content.text.trim() === '')) {
+        // Supprime la cellule si le texte est vide
         delete newCellContents[id]
       } else {
-        // Sinon, on met à jour avec le nouveau contenu
+        // Met à jour avec l'objet Fabric.js
         newCellContents[id] = content
       }
 

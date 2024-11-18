@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react'
+import React, { useContext, useState } from 'react'
 import { GridContext } from '../../context/GridContext'
 import CSVImporter from './CSVImporter' // Import du composant CSVImporter
 
@@ -24,16 +24,8 @@ const validateConfigValue = (key, value, config) => {
 
 const GridConfigurator = () => {
   const { state, dispatch } = useContext(GridContext)
-  const { config, selectedCellId, cellContents } = state
-
-  const [content, setContent] = useState('')
+  const { config } = state
   const [errors, setErrors] = useState({})
-
-  useEffect(() => {
-    if (selectedCellId) {
-      setContent(cellContents[selectedCellId] || '')
-    }
-  }, [selectedCellId, cellContents])
 
   const handleChange = (e) => {
     const { id, value } = e.target
@@ -55,14 +47,6 @@ const GridConfigurator = () => {
     if (!error) {
       dispatch({ type: 'UPDATE_CONFIG', payload: { [id]: numericValue } })
       dispatch({ type: 'GENERATE_GRID' })
-    }
-  }
-  const saveContent = () => {
-    if (selectedCellId) {
-      dispatch({
-        type: 'UPDATE_CELL_CONTENT',
-        payload: { id: selectedCellId, content }
-      })
     }
   }
 
@@ -90,20 +74,6 @@ const GridConfigurator = () => {
         ))}
       </form>
       <CSVImporter />
-      {selectedCellId && (
-        <div style={{ marginTop: '20px' }}>
-          <h4>Modifier le contenu</h4>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows="4"
-            style={{ width: '100%', resize: 'none' }}
-          />
-          <button onClick={saveContent} style={{ marginTop: '10px', padding: '5px 10px' }}>
-            Sauvegarder
-          </button>
-        </div>
-      )}
     </div>
   )
 }
