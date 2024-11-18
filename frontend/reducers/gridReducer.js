@@ -12,6 +12,7 @@ export const initialGridState = {
   grid: [], // Grille vide générée dynamiquement
   selectedCellId: null, // Aucun ID sélectionné au départ
   cellContents: {}, // Contient les données dynamiques des cellules
+  clipboard: null, // Contenu temporaire pour le copier-coller
   currentPage: 0, // Page active
   totalPages: 1 // Nombre total de pages
 }
@@ -207,6 +208,44 @@ export function gridReducer(state, action) {
       return {
         ...state,
         currentPage: Math.min(Math.max(0, page), state.totalPages - 1)
+      }
+    }
+    case 'COPY_CELL': {
+      const { cellId } = action.payload
+      const copiedContent = state.cellContents[cellId]
+
+      if (!copiedContent) {
+        console.warn('No content to copy from the selected cell.')
+        return state
+      }
+
+      console.log('COPY_CELL - Clipboard content:', copiedContent)
+
+      return {
+        ...state,
+        clipboard: copiedContent // Stocke le contenu dans le clipboard
+      }
+    }
+
+    case 'PASTE_CELL': {
+      const { cellId } = action.payload
+      const pastedContent = state.clipboard
+
+      if (!pastedContent) {
+        console.error('Clipboard is empty; nothing to paste.')
+        return state
+      }
+
+      const updatedCellContents = {
+        ...state.cellContents,
+        [cellId]: pastedContent // Applique le contenu copié à la cellule sélectionnée
+      }
+
+      console.log('PASTE_CELL - Updated cellContents:', updatedCellContents)
+
+      return {
+        ...state,
+        cellContents: updatedCellContents
       }
     }
 

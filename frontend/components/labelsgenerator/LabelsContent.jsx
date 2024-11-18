@@ -42,6 +42,22 @@ const LabelsContent = () => {
         }}
       >
         <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Aperçu de l'Étiquette</h2>
+        {/* Boutons Copier/Coller */}
+        <div style={{ marginBottom: '20px' }}>
+          <button
+            onClick={() => dispatch({ type: 'COPY_CELL', payload: { cellId: selectedCellId } })}
+            disabled={!selectedCellId}
+          >
+            Copier
+          </button>
+          <button
+            onClick={() => dispatch({ type: 'PASTE_CELL', payload: { cellId: selectedCellId } })}
+            disabled={!selectedCellId || !state.clipboard}
+          >
+            Coller
+          </button>
+        </div>
+
         {selectedCellId && (
           <>
             <CellEditor
