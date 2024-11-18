@@ -178,12 +178,19 @@ export function gridReducer(state, action) {
       }
     case 'UPDATE_CELL_CONTENT': {
       const { id, content } = action.payload
+      const newCellContents = { ...state.cellContents }
+
+      if (!content || content.trim() === '') {
+        // Si le contenu est vide ou seulement des espaces, on supprime l'entrée
+        delete newCellContents[id]
+      } else {
+        // Sinon, on met à jour avec le nouveau contenu
+        newCellContents[id] = content
+      }
+
       return {
         ...state,
-        cellContents: {
-          ...state.cellContents,
-          [id]: content // Met à jour le contenu de la cellule spécifique
-        }
+        cellContents: newCellContents
       }
     }
 

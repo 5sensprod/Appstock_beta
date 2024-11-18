@@ -67,7 +67,7 @@ const GridManager = () => {
               {...cell}
               isSelected={selectedCellId === cell.id}
               onClick={handleSelectCell}
-              content={cellContents[cell.id] || ''}
+              content={cellContents[cell.id]} // Une cellule est vide si `cellContents[cell.id]` est undefined
             />
           ))}
         </div>
