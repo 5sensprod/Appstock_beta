@@ -15,26 +15,9 @@ const LabelsContent = () => {
     ? cellContents[selectedCellId] || cellContents.default
     : cellContents.default
 
-  // Sauvegarde d'une cellule
-  const handleSave = (content) => {
-    if (selectedCellId) {
-      dispatch({
-        type: 'UPDATE_CELL_CONTENT',
-        payload: { id: selectedCellId, content }
-      })
-    }
-  }
-
   // Copier une cellule avec sauvegarde automatique
   const handleCopy = () => {
     if (selectedCellId) {
-      // Sauvegarde automatique via UPDATE_CELL_CONTENT avant de copier
-      const contentToSave = cellContents[selectedCellId] || initialContent
-      dispatch({
-        type: 'UPDATE_CELL_CONTENT',
-        payload: { id: selectedCellId, content: contentToSave }
-      })
-
       // Action COPY_CELL pour mettre la cellule dans le presse-papiers
       dispatch({ type: 'COPY_CELL', payload: { cellId: selectedCellId } })
     }
@@ -88,10 +71,9 @@ const LabelsContent = () => {
             initialContent={initialContent}
             cellWidth={mmToPx(cellWidth)}
             cellHeight={mmToPx(cellHeight)}
-            onSave={handleSave}
             cellId={selectedCellId}
             linkedGroup={findLinkedGroup(selectedCellId)} // Utilisation de la méthode centralisée
-            dispatch={dispatch} // Transmettre le dispatch pour synchronisation
+            dispatch={dispatch} // Transmettre le dispatch pour synchronisation automatique
           />
         )}
       </div>

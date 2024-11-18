@@ -1,15 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import * as fabric from 'fabric'
 
-const CellEditor = ({
-  initialContent,
-  cellWidth,
-  cellHeight,
-  onSave,
-  cellId,
-  linkedGroup,
-  dispatch
-}) => {
+const CellEditor = ({ initialContent, cellWidth, cellHeight, cellId, linkedGroup, dispatch }) => {
   const canvasRef = useRef(null) // Référence pour le canvas
   const canvasInstance = useRef(null) // Instance Fabric.js
 
@@ -33,15 +25,25 @@ const CellEditor = ({
       canvas.add(iText)
     })
 
-    // Synchronisation des modifications
+    // Sauvegarde et synchronisation lors de la modification
     const handleObjectModified = () => {
       const updatedContent = canvas.getObjects('i-text').map((iText) => ({
         id: iText.id,
+        type: 'IText',
+        text: iText.text,
         left: iText.left,
-        top: iText.top
+        top: iText.top,
+        fontSize: iText.fontSize,
+        fill: iText.fill
       }))
 
-      // Synchroniser la mise en page avec les cellules liées
+      // Mise à jour de la cellule via UPDATE_CELL_CONTENT
+      dispatch({
+        type: 'UPDATE_CELL_CONTENT',
+        payload: { id: cellId, content: updatedContent }
+      })
+
+      // Synchroniser les cellules liées si applicable
       if (linkedGroup && linkedGroup.length > 1) {
         dispatch({
           type: 'SYNC_CELL_LAYOUT',
@@ -56,31 +58,13 @@ const CellEditor = ({
       }
     }
 
+    // Écoute les modifications d'objet
     canvas.on('object:modified', handleObjectModified)
 
     return () => {
       canvas.dispose() // Nettoyage lors du démontage
     }
   }, [initialContent, cellWidth, cellHeight, cellId, linkedGroup, dispatch])
-
-  const handleSave = () => {
-    const canvas = canvasInstance.current
-    if (!canvas) return
-
-    // Récupérer les objets IText mis à jour
-    const updatedContent = canvas.getObjects('i-text').map((iText) => ({
-      id: iText.id,
-      type: 'IText',
-      text: iText.text,
-      left: iText.left,
-      top: iText.top,
-      fontSize: iText.fontSize,
-      fill: iText.fill
-    }))
-
-    // Sauvegarder les modifications
-    onSave(updatedContent)
-  }
 
   return (
     <div style={{ marginTop: '20px' }}>
@@ -92,9 +76,6 @@ const CellEditor = ({
           margin: '0 auto'
         }}
       />
-      <button onClick={handleSave} style={{ marginTop: '10px', padding: '5px 10px' }}>
-        Sauvegarder
-      </button>
     </div>
   )
 }
