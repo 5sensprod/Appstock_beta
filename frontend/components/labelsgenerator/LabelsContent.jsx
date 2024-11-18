@@ -4,11 +4,17 @@ import GridConfigurator from './GridConfigurator'
 import GridManager from './GridManager'
 import CellEditor from './CellEditor'
 import { mmToPx } from '../../utils/conversionUtils'
+import { exportGridToPDF } from './GridExporter'
 
 const LabelsContent = () => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
   const { selectedCellId, cellContents, config } = state
   const { cellWidth, cellHeight } = config
+
+  const handleExportPDF = async () => {
+    const { grid, cellContents, config } = state
+    await exportGridToPDF(grid, cellContents, config)
+  }
 
   // Déterminer le contenu initial de la cellule
   const initialContent = selectedCellId
@@ -109,6 +115,9 @@ const LabelsContent = () => {
           >
             Refaire
           </button>
+          <div>
+            <button onClick={handleExportPDF}>Exporter en PDF</button>
+          </div>
         </div>
 
         {selectedCellId && (
