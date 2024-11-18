@@ -225,6 +225,7 @@ export function gridReducer(state, action) {
         ...state,
         selectedCellId: action.payload // Met à jour l'ID de la cellule sélectionnée
       }
+
     case 'UPDATE_CELL_CONTENT': {
       const { id, content } = action.payload
       const newCellContents = { ...state.cellContents }
