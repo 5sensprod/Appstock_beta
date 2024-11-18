@@ -360,9 +360,11 @@ export function gridReducer(state, action) {
     case 'RESET_CELL': {
       const { cellId } = action.payload
 
-      // Supprimer le contenu de la cellule (ramener au contenu initial)
+      // Supprimer le contenu de la cellule (ramener au contenu initial avec le drapeau reset)
       const newCellContents = { ...state.cellContents }
-      newCellContents[cellId] = [...state.cellContents.default] // Remettre au contenu par défaut
+      newCellContents[cellId] = [
+        ...state.cellContents.default.map((item) => ({ ...item, reset: true })) // Ajouter le drapeau reset
+      ]
 
       // Retirer la cellule des groupes liés
       const updatedGroups = state.linkedGroups

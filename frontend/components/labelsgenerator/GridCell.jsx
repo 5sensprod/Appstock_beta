@@ -11,7 +11,9 @@ const GridCell = ({
   onClick,
   content
 }) => {
-  const isEmpty = !content
+  // Vérifier si le contenu est marqué comme réinitialisé
+  const isReset = content?.some((item) => item.reset)
+  const isEmpty = !content || isReset // Considérer comme vide si réinitialisé
   const isLinked = linkedGroup.length > 0
 
   const styles = {
