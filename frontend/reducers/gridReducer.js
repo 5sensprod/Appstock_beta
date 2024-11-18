@@ -11,7 +11,17 @@ export const initialGridState = {
   },
   grid: [], // Grille vide générée dynamiquement
   selectedCellId: null, // Aucun ID sélectionné au départ
-  cellContents: {}, // Contient les données dynamiques des cellules
+  cellContents: {
+    default: [
+      {
+        text: 'Cliquez pour éditer',
+        left: 10,
+        top: 10,
+        fontSize: 14,
+        fill: '#333'
+      }
+    ] // Contenu par défaut pour toute cellule non définie
+  },
   clipboard: null, // Contenu temporaire pour le copier-coller
   currentPage: 0, // Page active
   totalPages: 1 // Nombre total de pages

@@ -1,52 +1,45 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useContext } from 'react'
 import * as fabric from 'fabric'
+import { GridContext } from '../../context/GridContext'
 
 const CellEditor = ({ initialContent, cellWidth, cellHeight, onSave }) => {
   const canvasRef = useRef(null) // Référence pour le canvas
-  const iTextRefs = useRef([]) // Références pour tous les objets IText
+  const canvasInstance = useRef(null) // Instance Fabric.js
+  const { state } = useContext(GridContext)
 
   useEffect(() => {
-    // Crée le canvas Fabric.js avec les dimensions de la cellule
     const canvas = new fabric.Canvas(canvasRef.current, {
       width: cellWidth,
       height: cellHeight,
-      backgroundColor: '#fff' // Fond blanc pour l'édition
+      backgroundColor: '#fff'
     })
+    canvasInstance.current = canvas
 
-    // Ajouter le contenu initial
-    if (Array.isArray(initialContent)) {
-      // Cas où initialContent est un tableau d'objets IText
-      initialContent.forEach((iTextData, idx) => {
-        const iText = new fabric.IText(iTextData.text, {
-          left: iTextData.left,
-          top: iTextData.top,
-          fontSize: iTextData.fontSize,
-          fill: iTextData.fill
-        })
-        canvas.add(iText)
-        iTextRefs.current[idx] = iText // Sauvegarder la référence
-      })
-    } else {
-      // Cas où initialContent est une chaîne ou vide
-      const iText = new fabric.IText(initialContent || 'Cliquez pour éditer', {
-        left: 10,
-        top: 10,
-        fontSize: 14,
-        fill: '#333'
+    // Utiliser initialContent ou le contenu par défaut du contexte
+    const contentToLoad = initialContent ?? state.cellContents.default
+
+    contentToLoad.forEach((iTextData) => {
+      const iText = new fabric.IText(iTextData.text, {
+        left: iTextData.left,
+        top: iTextData.top,
+        fontSize: iTextData.fontSize,
+        fill: iTextData.fill,
+        editable: true // Permettre l'édition
       })
       canvas.add(iText)
-      iTextRefs.current = [iText] // Sauvegarder la référence
-    }
+    })
 
-    // Nettoyage lors du démontage
     return () => {
-      canvas.dispose()
+      canvas.dispose() // Nettoyage lors du démontage
     }
-  }, [initialContent, cellWidth, cellHeight])
+  }, [initialContent, cellWidth, cellHeight, state.cellContents])
 
   const handleSave = () => {
-    // Récupérer les propriétés mises à jour de chaque IText
-    const updatedContent = iTextRefs.current.map((iText) => ({
+    const canvas = canvasInstance.current
+    if (!canvas) return
+
+    // Récupérer les objets IText mis à jour
+    const updatedContent = canvas.getObjects('i-text').map((iText) => ({
       type: 'IText',
       text: iText.text,
       left: iText.left,
@@ -54,8 +47,7 @@ const CellEditor = ({ initialContent, cellWidth, cellHeight, onSave }) => {
       fontSize: iText.fontSize,
       fill: iText.fill
     }))
-
-    onSave(updatedContent) // Sauvegarder le contenu mis à jour
+    onSave(updatedContent) // Sauvegarder les modifications
   }
 
   return (

@@ -42,7 +42,6 @@ const LabelsContent = () => {
         }}
       >
         <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Aperçu de l'Étiquette</h2>
-        {/* Boutons Copier/Coller */}
         <div style={{ marginBottom: '20px' }}>
           <button
             onClick={() => dispatch({ type: 'COPY_CELL', payload: { cellId: selectedCellId } })}
@@ -59,14 +58,12 @@ const LabelsContent = () => {
         </div>
 
         {selectedCellId && (
-          <>
-            <CellEditor
-              initialContent={cellContents[selectedCellId]} // Tableau d'objets IText
-              cellWidth={mmToPx(cellWidth)} // Conversion en pixels
-              cellHeight={mmToPx(cellHeight)} // Conversion en pixels
-              onSave={handleSave}
-            />
-          </>
+          <CellEditor
+            initialContent={cellContents[selectedCellId]} // Passer le contenu de la cellule sélectionnée
+            cellWidth={mmToPx(cellWidth)}
+            cellHeight={mmToPx(cellHeight)}
+            onSave={handleSave}
+          />
         )}
       </div>
 
@@ -80,12 +77,9 @@ const LabelsContent = () => {
           overflowY: 'auto'
         }}
       >
-        {/* Configuration */}
         <div style={{ flex: 1, marginBottom: '20px' }}>
           <GridConfigurator />
         </div>
-
-        {/* Grid */}
         <div style={{ flex: 2 }}>
           <GridManager />
         </div>
