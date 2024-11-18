@@ -23,6 +23,7 @@ export const initialGridState = {
     ] // Contenu par défaut pour toute cellule non définie
   },
   clipboard: null, // Contenu temporaire pour le copier-coller
+  linkedGroups: [],
   currentPage: 0, // Page active
   totalPages: 1 // Nombre total de pages
 }
@@ -222,40 +223,58 @@ export function gridReducer(state, action) {
     }
     case 'COPY_CELL': {
       const { cellId } = action.payload
-      const copiedContent = state.cellContents[cellId]
+      const existingGroupIndex = state.linkedGroups.findIndex((group) => group.includes(cellId))
 
-      if (!copiedContent) {
-        console.warn('No content to copy from the selected cell.')
-        return state
+      // Si la cellule copiée n'est pas encore dans un groupe lié
+      if (existingGroupIndex === -1) {
+        return {
+          ...state,
+          clipboard: { cellId },
+          linkedGroups: [...state.linkedGroups, [cellId]] // Ajoutez un nouveau groupe contenant uniquement la cellule copiée
+        }
       }
 
-      console.log('COPY_CELL - Clipboard content:', copiedContent)
-
+      // Sinon, ne modifiez pas les groupes existants
       return {
         ...state,
-        clipboard: copiedContent // Stocke le contenu dans le clipboard
+        clipboard: { cellId }
       }
     }
 
     case 'PASTE_CELL': {
-      const { cellId } = action.payload
-      const pastedContent = state.clipboard
+      const { cellId } = action.payload // ID de la cellule où coller
+      const clipboardContent = state.cellContents[state.clipboard.cellId]
 
-      if (!pastedContent) {
-        console.error('Clipboard is empty; nothing to paste.')
-        return state
-      }
-
-      const updatedCellContents = {
-        ...state.cellContents,
-        [cellId]: pastedContent // Applique le contenu copié à la cellule sélectionnée
-      }
-
-      console.log('PASTE_CELL - Updated cellContents:', updatedCellContents)
+      // Copier le contenu s'il est valide
+      if (!clipboardContent) return state
 
       return {
         ...state,
-        cellContents: updatedCellContents
+        cellContents: {
+          ...state.cellContents,
+          [cellId]: Array.isArray(clipboardContent)
+            ? [...clipboardContent] // Cloner le tableau d'objets
+            : [clipboardContent] // Gérer le cas d'un objet ou d'une chaîne unique
+        }
+      }
+    }
+
+    case 'LINK_CELLS': {
+      const { source, destination } = action.payload
+      const existingGroupIndex = state.linkedGroups.findIndex((group) => group.includes(source))
+
+      if (existingGroupIndex > -1) {
+        const updatedGroups = [...state.linkedGroups]
+        updatedGroups[existingGroupIndex] = [...updatedGroups[existingGroupIndex], destination]
+        return {
+          ...state,
+          linkedGroups: updatedGroups
+        }
+      }
+
+      return {
+        ...state,
+        linkedGroups: [...state.linkedGroups, [source, destination]]
       }
     }
 

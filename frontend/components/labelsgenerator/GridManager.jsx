@@ -4,12 +4,18 @@ import GridCell from './GridCell'
 
 const GridManager = () => {
   const { state, dispatch } = useContext(GridContext)
-  const { grid, config, selectedCellId, cellContents, currentPage, totalPages } = state
+  const { grid, config, selectedCellId, cellContents, currentPage, totalPages, linkedGroups } =
+    state
 
   const { pageWidth, pageHeight } = config
 
   // Filtrer les cellules pour la page courante
   const currentPageCells = grid.filter((cell) => cell.pageIndex === currentPage)
+
+  // Trouver le groupe auquel appartient une cellule
+  const findLinkedGroup = (cellId) => {
+    return linkedGroups.find((group) => group.includes(cellId)) || []
+  }
 
   const handleSelectCell = (id) => {
     dispatch({ type: 'SELECT_CELL', payload: id })
@@ -49,7 +55,7 @@ const GridManager = () => {
           height: '0',
           paddingBottom: `${(pageHeight / pageWidth) * 100}%`, // Ratio A4
           background: '#fff',
-          border: '2px solid #000', // Bordure autour de l'ensemble de la grille
+          border: '2px solid #000',
           boxSizing: 'border-box'
         }}
       >
@@ -58,18 +64,26 @@ const GridManager = () => {
             position: 'absolute',
             width: '100%',
             height: '100%',
-            overflow: 'hidden' // Évitez que les cellules débordent
+            overflow: 'hidden'
           }}
         >
-          {currentPageCells.map((cell) => (
-            <GridCell
-              key={cell.id}
-              {...cell}
-              isSelected={selectedCellId === cell.id}
-              onClick={handleSelectCell}
-              content={cellContents[cell.id]} // Une cellule est vide si `cellContents[cell.id]` est undefined
-            />
-          ))}
+          {currentPageCells.map((cell) => {
+            const linkedGroup = findLinkedGroup(cell.id)
+            const isLinkedAndSelected =
+              linkedGroup.includes(selectedCellId) && cell.id === selectedCellId
+
+            return (
+              <GridCell
+                key={cell.id}
+                {...cell}
+                isSelected={selectedCellId === cell.id}
+                isLinkedAndSelected={isLinkedAndSelected}
+                linkedGroup={linkedGroup}
+                onClick={handleSelectCell}
+                content={cellContents[cell.id]}
+              />
+            )
+          })}
         </div>
       </div>
     </div>

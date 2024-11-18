@@ -7,14 +7,33 @@ import { mmToPx } from '../../utils/conversionUtils'
 
 const LabelsContent = () => {
   const { state, dispatch } = useContext(GridContext)
-  const { selectedCellId, cellContents, config } = state
+  const { selectedCellId, clipboard, linkedCells, cellContents, config } = state
   const { cellWidth, cellHeight } = config
 
+  // Mise à jour du contenu de la cellule
   const handleSave = (content) => {
     if (selectedCellId) {
       dispatch({
         type: 'UPDATE_CELL_CONTENT',
         payload: { id: selectedCellId, content }
+      })
+    }
+  }
+
+  // Copier une cellule
+  const handleCopy = () => {
+    if (selectedCellId) {
+      dispatch({ type: 'COPY_CELL', payload: { cellId: selectedCellId } })
+    }
+  }
+
+  // Coller une cellule et lier les cellules source/destination
+  const handlePaste = () => {
+    if (selectedCellId && clipboard) {
+      dispatch({ type: 'PASTE_CELL', payload: { cellId: selectedCellId } })
+      dispatch({
+        type: 'LINK_CELLS',
+        payload: { source: clipboard.cellId, destination: selectedCellId }
       })
     }
   }
@@ -43,23 +62,17 @@ const LabelsContent = () => {
       >
         <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Aperçu de l'Étiquette</h2>
         <div style={{ marginBottom: '20px' }}>
-          <button
-            onClick={() => dispatch({ type: 'COPY_CELL', payload: { cellId: selectedCellId } })}
-            disabled={!selectedCellId}
-          >
+          <button onClick={handleCopy} disabled={!selectedCellId}>
             Copier
           </button>
-          <button
-            onClick={() => dispatch({ type: 'PASTE_CELL', payload: { cellId: selectedCellId } })}
-            disabled={!selectedCellId || !state.clipboard}
-          >
+          <button onClick={handlePaste} disabled={!selectedCellId || !clipboard}>
             Coller
           </button>
         </div>
 
         {selectedCellId && (
           <CellEditor
-            initialContent={cellContents[selectedCellId]} // Passer le contenu de la cellule sélectionnée
+            initialContent={cellContents[selectedCellId]}
             cellWidth={mmToPx(cellWidth)}
             cellHeight={mmToPx(cellHeight)}
             onSave={handleSave}
@@ -81,7 +94,7 @@ const LabelsContent = () => {
           <GridConfigurator />
         </div>
         <div style={{ flex: 2 }}>
-          <GridManager />
+          <GridManager linkedCells={linkedCells} />
         </div>
       </div>
     </div>
