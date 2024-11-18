@@ -25,9 +25,17 @@ const LabelsContent = () => {
     }
   }
 
-  // Copier une cellule
+  // Copier une cellule avec sauvegarde automatique
   const handleCopy = () => {
     if (selectedCellId) {
+      // Sauvegarde automatique via UPDATE_CELL_CONTENT avant de copier
+      const contentToSave = cellContents[selectedCellId] || initialContent
+      dispatch({
+        type: 'UPDATE_CELL_CONTENT',
+        payload: { id: selectedCellId, content: contentToSave }
+      })
+
+      // Action COPY_CELL pour mettre la cellule dans le presse-papiers
       dispatch({ type: 'COPY_CELL', payload: { cellId: selectedCellId } })
     }
   }

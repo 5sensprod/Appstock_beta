@@ -224,37 +224,39 @@ export function gridReducer(state, action) {
     case 'COPY_CELL': {
       const { cellId } = action.payload
 
-      // Récupérer le contenu de la cellule à sauvegarder
-      const cellContent = state.cellContents[cellId]
+      // Récupérer le contenu actuel de la cellule à sauvegarder ou utiliser le contenu par défaut
+      const cellContent = state.cellContents[cellId] || state.cellContents.default
 
-      // Si la cellule n'existe pas encore, ne rien faire
+      // Si aucun contenu n'est disponible (ni dans la cellule ni par défaut), ne rien faire
       if (!cellContent) return state
 
       // Sauvegarde automatique avant de copier
       const updatedCellContents = {
         ...state.cellContents,
-        [cellId]: [...cellContent] // Assurez-vous que le contenu est bien cloné
+        [cellId]: [...cellContent] // Cloner le contenu pour éviter les mutations
       }
 
+      // Vérifier si la cellule appartient déjà à un groupe lié
       const existingGroupIndex = state.linkedGroups.findIndex((group) => group.includes(cellId))
 
-      // Si la cellule copiée n'est pas encore dans un groupe lié
       if (existingGroupIndex === -1) {
+        // Si la cellule copiée n'est pas encore dans un groupe lié, créer un nouveau groupe
         return {
           ...state,
-          clipboard: { cellId },
-          cellContents: updatedCellContents, // Mise à jour de l'état après sauvegarde
-          linkedGroups: [...state.linkedGroups, [cellId]] // Ajout d'un nouveau groupe
+          clipboard: { cellId }, // Ajouter la cellule au presse-papiers
+          cellContents: updatedCellContents, // Mettre à jour les contenus après sauvegarde
+          linkedGroups: [...state.linkedGroups, [cellId]] // Ajouter un nouveau groupe lié
         }
       }
 
-      // Sinon, ne modifiez pas les groupes existants
+      // Si la cellule appartient déjà à un groupe lié
       return {
         ...state,
-        clipboard: { cellId },
-        cellContents: updatedCellContents // Mise à jour de l'état après sauvegarde
+        clipboard: { cellId }, // Ajouter la cellule au presse-papiers
+        cellContents: updatedCellContents // Mettre à jour les contenus après sauvegarde
       }
     }
+
     case 'SYNC_CELL_LAYOUT': {
       const { sourceId, layout } = action.payload
 
