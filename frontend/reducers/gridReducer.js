@@ -148,10 +148,22 @@ export function gridReducer(state, action) {
         const rowInPage = Math.floor(cellIndexInPage / columns)
 
         const cellId = `${pageIndex}-${rowInPage}-${col}`
-        const content = Object.entries(row)
+
+        // Convertir chaque ligne CSV en un objet IText
+        const text = Object.entries(row)
           .map(([key, value]) => `${key}: ${value}`)
           .join('\n')
-        newCellContents[cellId] = content
+
+        const iTextObject = {
+          type: 'IText',
+          text, // Le texte à afficher
+          left: 0, // Par défaut (modifiable dans CellEditor)
+          top: 0, // Par défaut
+          fontSize: 14, // Style par défaut
+          fill: '#333' // Couleur par défaut
+        }
+
+        newCellContents[cellId] = iTextObject
       })
 
       return {
