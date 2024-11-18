@@ -34,6 +34,13 @@ const LabelsContent = () => {
     }
   }
 
+  // Délier une cellule
+  const handleUnlink = () => {
+    if (selectedCellId) {
+      dispatch({ type: 'UNLINK_CELL', payload: { cellId: selectedCellId } })
+    }
+  }
+
   return (
     <div
       style={{
@@ -63,6 +70,12 @@ const LabelsContent = () => {
           </button>
           <button onClick={handlePaste} disabled={!selectedCellId || !state.clipboard}>
             Coller
+          </button>
+          <button
+            onClick={handleUnlink}
+            disabled={!selectedCellId || findLinkedGroup(selectedCellId).length <= 1}
+          >
+            Délier
           </button>
         </div>
 

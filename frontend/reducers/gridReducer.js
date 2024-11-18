@@ -333,6 +333,30 @@ export function gridReducer(state, action) {
       }
     }
 
+    case 'UNLINK_CELL': {
+      const { cellId } = action.payload
+
+      // Trouver le groupe auquel appartient la cellule
+      const groupIndex = state.linkedGroups.findIndex((group) => group.includes(cellId))
+      if (groupIndex === -1) return state // Si la cellule n'est pas liée, ne rien faire
+
+      const updatedGroups = [...state.linkedGroups]
+      const updatedGroup = updatedGroups[groupIndex].filter((id) => id !== cellId) // Retirer la cellule
+
+      if (updatedGroup.length > 1) {
+        // Si le groupe contient encore plus d'une cellule, le conserver
+        updatedGroups[groupIndex] = updatedGroup
+      } else {
+        // Sinon, supprimer complètement le groupe
+        updatedGroups.splice(groupIndex, 1)
+      }
+
+      return {
+        ...state,
+        linkedGroups: updatedGroups
+      }
+    }
+
     default:
       return state
   }
