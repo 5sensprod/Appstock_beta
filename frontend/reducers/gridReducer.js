@@ -149,21 +149,17 @@ export function gridReducer(state, action) {
 
         const cellId = `${pageIndex}-${rowInPage}-${col}`
 
-        // Convertir chaque ligne CSV en un objet IText
-        const text = Object.entries(row)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join('\n')
-
-        const iTextObject = {
+        // Créer plusieurs objets IText pour chaque colonne de la ligne CSV
+        const iTextObjects = Object.entries(row).map(([key, value], idx) => ({
           type: 'IText',
-          text, // Le texte à afficher
-          left: 0, // Par défaut (modifiable dans CellEditor)
-          top: 0, // Par défaut
+          text: value, // Utilise uniquement la valeur
+          left: 10 + idx * 50, // Décalage horizontal (ajusté pour espacer les objets)
+          top: 10, // Position verticale
           fontSize: 14, // Style par défaut
           fill: '#333' // Couleur par défaut
-        }
+        }))
 
-        newCellContents[cellId] = iTextObject
+        newCellContents[cellId] = iTextObjects
       })
 
       return {

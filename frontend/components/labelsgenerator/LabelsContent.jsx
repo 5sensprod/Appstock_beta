@@ -43,13 +43,14 @@ const LabelsContent = () => {
       >
         <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Aperçu de l'Étiquette</h2>
         {selectedCellId && (
-          <CellEditor
-            cellId={selectedCellId}
-            initialContent={cellContents[selectedCellId]?.text || ''}
-            cellWidth={mmToPx(cellWidth)} // Conversion en pixels
-            cellHeight={mmToPx(cellHeight)} // Conversion en pixels
-            onSave={handleSave}
-          />
+          <>
+            <CellEditor
+              initialContent={cellContents[selectedCellId]} // Tableau d'objets IText
+              cellWidth={mmToPx(cellWidth)} // Conversion en pixels
+              cellHeight={mmToPx(cellHeight)} // Conversion en pixels
+              onSave={handleSave}
+            />
+          </>
         )}
       </div>
 
