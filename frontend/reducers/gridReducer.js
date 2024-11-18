@@ -161,6 +161,16 @@ export function gridReducer(state, action) {
       }
     }
 
+    case 'SELECT_FIRST_CELL': {
+      if (state.grid.length > 0) {
+        return {
+          ...state,
+          selectedCellId: state.grid[0].id // Sélectionne la première cellule par défaut
+        }
+      }
+      return state
+    }
+
     case 'SELECT_CELL':
       return {
         ...state,

@@ -4,13 +4,21 @@ import CSVImporter from './CSVImporter' // Import du composant CSVImporter
 
 const validateConfigValue = (key, value, config) => {
   const { pageWidth, pageHeight } = config
-  if (value <= 0) return 'La valeur doit être supérieure à 0.'
+
+  // Autoriser 0 pour certaines clés spécifiques
+  if (['offsetTop', 'offsetLeft', 'spacingHorizontal', 'spacingVertical'].includes(key)) {
+    if (value < 0) return 'La valeur doit être supérieure ou égale à 0.'
+  } else {
+    if (value <= 0) return 'La valeur doit être supérieure à 0.'
+  }
+
   if (
     (key === 'offsetTop' && value >= pageHeight) ||
     (key === 'offsetLeft' && value >= pageWidth)
   ) {
     return 'La valeur dépasse les dimensions de la page.'
   }
+
   return null
 }
 
