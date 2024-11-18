@@ -3,19 +3,13 @@ import { GridContext } from '../../context/GridContext'
 import GridCell from './GridCell'
 
 const GridManager = () => {
-  const { state, dispatch } = useContext(GridContext)
-  const { grid, config, selectedCellId, cellContents, currentPage, totalPages, linkedGroups } =
-    state
+  const { state, dispatch, findLinkedGroup } = useContext(GridContext)
+  const { grid, config, selectedCellId, cellContents, currentPage, totalPages } = state
 
   const { pageWidth, pageHeight } = config
 
   // Filtrer les cellules pour la page courante
   const currentPageCells = grid.filter((cell) => cell.pageIndex === currentPage)
-
-  // Trouver le groupe auquel appartient une cellule
-  const findLinkedGroup = (cellId) => {
-    return linkedGroups.find((group) => group.includes(cellId)) || []
-  }
 
   const handleSelectCell = (id) => {
     dispatch({ type: 'SELECT_CELL', payload: id })

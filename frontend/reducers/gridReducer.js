@@ -223,6 +223,19 @@ export function gridReducer(state, action) {
     }
     case 'COPY_CELL': {
       const { cellId } = action.payload
+
+      // Récupérer le contenu de la cellule à sauvegarder
+      const cellContent = state.cellContents[cellId]
+
+      // Si la cellule n'existe pas encore, ne rien faire
+      if (!cellContent) return state
+
+      // Sauvegarde automatique avant de copier
+      const updatedCellContents = {
+        ...state.cellContents,
+        [cellId]: [...cellContent] // Assurez-vous que le contenu est bien cloné
+      }
+
       const existingGroupIndex = state.linkedGroups.findIndex((group) => group.includes(cellId))
 
       // Si la cellule copiée n'est pas encore dans un groupe lié
@@ -230,14 +243,42 @@ export function gridReducer(state, action) {
         return {
           ...state,
           clipboard: { cellId },
-          linkedGroups: [...state.linkedGroups, [cellId]] // Ajoutez un nouveau groupe contenant uniquement la cellule copiée
+          cellContents: updatedCellContents, // Mise à jour de l'état après sauvegarde
+          linkedGroups: [...state.linkedGroups, [cellId]] // Ajout d'un nouveau groupe
         }
       }
 
       // Sinon, ne modifiez pas les groupes existants
       return {
         ...state,
-        clipboard: { cellId }
+        clipboard: { cellId },
+        cellContents: updatedCellContents // Mise à jour de l'état après sauvegarde
+      }
+    }
+    case 'SYNC_CELL_LAYOUT': {
+      const { sourceId, layout } = action.payload
+
+      // Trouver le groupe lié auquel appartient la cellule source
+      const linkedGroup = state.linkedGroups.find((group) => group.includes(sourceId))
+
+      if (!linkedGroup) return state // Si aucun groupe lié, ne rien faire
+
+      const updatedCellContents = { ...state.cellContents }
+
+      linkedGroup.forEach((cellId) => {
+        if (updatedCellContents[cellId]) {
+          // Mettre à jour uniquement les propriétés de mise en page (left, top)
+          updatedCellContents[cellId] = updatedCellContents[cellId].map((item) => ({
+            ...item,
+            left: layout[item.id]?.left ?? item.left, // Applique les nouvelles positions
+            top: layout[item.id]?.top ?? item.top // Applique les nouvelles positions
+          }))
+        }
+      })
+
+      return {
+        ...state,
+        cellContents: updatedCellContents
       }
     }
 

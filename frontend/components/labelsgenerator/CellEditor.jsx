@@ -1,11 +1,17 @@
-import React, { useEffect, useRef, useContext } from 'react'
+import React, { useEffect, useRef } from 'react'
 import * as fabric from 'fabric'
-import { GridContext } from '../../context/GridContext'
 
-const CellEditor = ({ initialContent, cellWidth, cellHeight, onSave }) => {
+const CellEditor = ({
+  initialContent,
+  cellWidth,
+  cellHeight,
+  onSave,
+  cellId,
+  linkedGroup,
+  dispatch
+}) => {
   const canvasRef = useRef(null) // Référence pour le canvas
   const canvasInstance = useRef(null) // Instance Fabric.js
-  const { state } = useContext(GridContext)
 
   useEffect(() => {
     const canvas = new fabric.Canvas(canvasRef.current, {
@@ -15,24 +21,47 @@ const CellEditor = ({ initialContent, cellWidth, cellHeight, onSave }) => {
     })
     canvasInstance.current = canvas
 
-    // Utiliser initialContent ou le contenu par défaut du contexte
-    const contentToLoad = initialContent ?? state.cellContents.default
+    // Charger le contenu initial
+    const contentToLoad = Array.isArray(initialContent) ? initialContent : []
 
     contentToLoad.forEach((iTextData) => {
+      const { type, ...rest } = iTextData // Exclure `type`
       const iText = new fabric.IText(iTextData.text, {
-        left: iTextData.left,
-        top: iTextData.top,
-        fontSize: iTextData.fontSize,
-        fill: iTextData.fill,
+        ...rest,
         editable: true // Permettre l'édition
       })
       canvas.add(iText)
     })
 
+    // Synchronisation des modifications
+    const handleObjectModified = () => {
+      const updatedContent = canvas.getObjects('i-text').map((iText) => ({
+        id: iText.id,
+        left: iText.left,
+        top: iText.top
+      }))
+
+      // Synchroniser la mise en page avec les cellules liées
+      if (linkedGroup && linkedGroup.length > 1) {
+        dispatch({
+          type: 'SYNC_CELL_LAYOUT',
+          payload: {
+            sourceId: cellId,
+            layout: updatedContent.reduce((acc, item) => {
+              acc[item.id] = { left: item.left, top: item.top }
+              return acc
+            }, {})
+          }
+        })
+      }
+    }
+
+    canvas.on('object:modified', handleObjectModified)
+
     return () => {
       canvas.dispose() // Nettoyage lors du démontage
     }
-  }, [initialContent, cellWidth, cellHeight, state.cellContents])
+  }, [initialContent, cellWidth, cellHeight, cellId, linkedGroup, dispatch])
 
   const handleSave = () => {
     const canvas = canvasInstance.current
@@ -40,6 +69,7 @@ const CellEditor = ({ initialContent, cellWidth, cellHeight, onSave }) => {
 
     // Récupérer les objets IText mis à jour
     const updatedContent = canvas.getObjects('i-text').map((iText) => ({
+      id: iText.id,
       type: 'IText',
       text: iText.text,
       left: iText.left,
@@ -47,7 +77,9 @@ const CellEditor = ({ initialContent, cellWidth, cellHeight, onSave }) => {
       fontSize: iText.fontSize,
       fill: iText.fill
     }))
-    onSave(updatedContent) // Sauvegarder les modifications
+
+    // Sauvegarder les modifications
+    onSave(updatedContent)
   }
 
   return (

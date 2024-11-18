@@ -12,5 +12,14 @@ export const GridProvider = ({ children }) => {
     dispatch({ type: 'SELECT_FIRST_CELL' })
   }, [])
 
-  return <GridContext.Provider value={{ state, dispatch }}>{children}</GridContext.Provider>
+  // Trouver le groupe lié d'une cellule
+  const findLinkedGroup = (cellId) => {
+    return state.linkedGroups.find((group) => group.includes(cellId)) || []
+  }
+
+  return (
+    <GridContext.Provider value={{ state, dispatch, findLinkedGroup }}>
+      {children}
+    </GridContext.Provider>
+  )
 }

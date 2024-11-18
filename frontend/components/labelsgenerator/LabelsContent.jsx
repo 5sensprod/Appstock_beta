@@ -6,11 +6,16 @@ import CellEditor from './CellEditor'
 import { mmToPx } from '../../utils/conversionUtils'
 
 const LabelsContent = () => {
-  const { state, dispatch } = useContext(GridContext)
-  const { selectedCellId, clipboard, linkedCells, cellContents, config } = state
+  const { state, dispatch, findLinkedGroup } = useContext(GridContext)
+  const { selectedCellId, cellContents, config } = state
   const { cellWidth, cellHeight } = config
 
-  // Mise à jour du contenu de la cellule
+  // Déterminer le contenu initial de la cellule
+  const initialContent = selectedCellId
+    ? cellContents[selectedCellId] || cellContents.default
+    : cellContents.default
+
+  // Sauvegarde d'une cellule
   const handleSave = (content) => {
     if (selectedCellId) {
       dispatch({
@@ -29,11 +34,11 @@ const LabelsContent = () => {
 
   // Coller une cellule et lier les cellules source/destination
   const handlePaste = () => {
-    if (selectedCellId && clipboard) {
+    if (selectedCellId && state.clipboard) {
       dispatch({ type: 'PASTE_CELL', payload: { cellId: selectedCellId } })
       dispatch({
         type: 'LINK_CELLS',
-        payload: { source: clipboard.cellId, destination: selectedCellId }
+        payload: { source: state.clipboard.cellId, destination: selectedCellId }
       })
     }
   }
@@ -65,17 +70,20 @@ const LabelsContent = () => {
           <button onClick={handleCopy} disabled={!selectedCellId}>
             Copier
           </button>
-          <button onClick={handlePaste} disabled={!selectedCellId || !clipboard}>
+          <button onClick={handlePaste} disabled={!selectedCellId || !state.clipboard}>
             Coller
           </button>
         </div>
 
         {selectedCellId && (
           <CellEditor
-            initialContent={cellContents[selectedCellId]}
+            initialContent={initialContent}
             cellWidth={mmToPx(cellWidth)}
             cellHeight={mmToPx(cellHeight)}
             onSave={handleSave}
+            cellId={selectedCellId}
+            linkedGroup={findLinkedGroup(selectedCellId)} // Utilisation de la méthode centralisée
+            dispatch={dispatch} // Transmettre le dispatch pour synchronisation
           />
         )}
       </div>
@@ -94,7 +102,7 @@ const LabelsContent = () => {
           <GridConfigurator />
         </div>
         <div style={{ flex: 2 }}>
-          <GridManager linkedCells={linkedCells} />
+          <GridManager />
         </div>
       </div>
     </div>
