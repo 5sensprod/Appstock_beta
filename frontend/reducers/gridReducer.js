@@ -120,17 +120,6 @@ export function gridReducer(state, action) {
       // Initialiser un nouvel objet pour les contenus des cellules
       const newCellContents = { ...state.cellContents }
 
-      // Fallback pour `cellContents.default`
-      const defaultContent = state.cellContents?.default || [
-        {
-          text: 'Cliquez pour éditer',
-          left: 10,
-          top: 10,
-          fontSize: 14,
-          fill: '#333'
-        }
-      ]
-
       for (let pageIndex = 0; pageIndex < state.totalPages; pageIndex++) {
         for (let i = 0; i < cellsPerPage; i++) {
           const row = Math.floor(i / columns)
@@ -147,11 +136,6 @@ export function gridReducer(state, action) {
             left: ((offsetLeft + col * (cellWidth + spacingHorizontal)) / pageWidth) * 100,
             top: ((offsetTop + row * (cellHeight + spacingVertical)) / pageHeight) * 100
           })
-
-          // Ajouter le contenu par défaut avec le drapeau isInitialContent
-          newCellContents[cellId] = state.cellContents[cellId] || [
-            ...defaultContent.map((item) => ({ ...item, isInitialContent: true }))
-          ]
         }
       }
 

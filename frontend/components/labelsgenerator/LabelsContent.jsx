@@ -16,11 +16,6 @@ const LabelsContent = () => {
     await exportGridToPDF(grid, cellContents, config)
   }
 
-  // Déterminer le contenu initial de la cellule
-  const initialContent = selectedCellId
-    ? cellContents[selectedCellId] || cellContents.default
-    : cellContents.default
-
   // Vérifier si une cellule contient son contenu initial
   const isDefaultContent = (cellId) => {
     const content = cellContents[cellId]
@@ -122,7 +117,11 @@ const LabelsContent = () => {
 
         {selectedCellId && (
           <CellEditor
-            initialContent={selectedCellId ? cellContents[selectedCellId] || [] : []} // Tableau vide si aucun contenu
+            initialContent={
+              selectedCellId
+                ? cellContents[selectedCellId] || cellContents.default
+                : cellContents.default
+            }
             cellWidth={mmToPx(cellWidth)}
             cellHeight={mmToPx(cellHeight)}
             cellId={selectedCellId}
