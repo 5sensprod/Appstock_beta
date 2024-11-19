@@ -40,65 +40,6 @@ function withUndoRedo(state, newState) {
 
 export function gridReducer(state, action) {
   switch (action.type) {
-    case 'GENERATE_GRID': {
-      const {
-        cellWidth,
-        cellHeight,
-        offsetTop,
-        offsetLeft,
-        spacingHorizontal,
-        spacingVertical,
-        pageWidth,
-        pageHeight
-      } = state.config
-
-      const columns = Math.floor(
-        (pageWidth - 2 * offsetLeft + spacingHorizontal) / (cellWidth + spacingHorizontal)
-      )
-      const rowsPerPage = Math.floor(
-        (pageHeight - 2 * offsetTop + spacingVertical) / (cellHeight + spacingVertical)
-      )
-
-      const cellsPerPage = columns * rowsPerPage
-      const grid = []
-
-      // Initialiser un nouvel objet pour les contenus des cellules
-      const newCellContents = { ...state.cellContents }
-
-      for (let pageIndex = 0; pageIndex < state.totalPages; pageIndex++) {
-        for (let i = 0; i < cellsPerPage; i++) {
-          const row = Math.floor(i / columns)
-          const col = i % columns
-          const cellId = `${pageIndex}-${row}-${col}`
-
-          grid.push({
-            id: cellId,
-            pageIndex,
-            row,
-            col,
-            width: (cellWidth / pageWidth) * 100,
-            height: (cellHeight / pageHeight) * 100,
-            left: ((offsetLeft + col * (cellWidth + spacingHorizontal)) / pageWidth) * 100,
-            top: ((offsetTop + row * (cellHeight + spacingVertical)) / pageHeight) * 100
-          })
-
-          // Ajouter le contenu par défaut avec le drapeau isInitialContent
-          if (!newCellContents[cellId]) {
-            newCellContents[cellId] = [
-              ...state.cellContents.default.map((item) => ({ ...item, isInitialContent: true }))
-            ]
-          }
-        }
-      }
-
-      return {
-        ...state,
-        grid,
-        cellContents: newCellContents,
-        cellsPerPage
-      }
-    }
-
     case 'UPDATE_CONFIG': {
       const { pageWidth, pageHeight } = state.config
       const updatedConfig = { ...state.config, ...action.payload }
@@ -154,15 +95,91 @@ export function gridReducer(state, action) {
       }
     }
 
+    case 'GENERATE_GRID': {
+      const {
+        cellWidth,
+        cellHeight,
+        offsetTop,
+        offsetLeft,
+        spacingHorizontal,
+        spacingVertical,
+        pageWidth,
+        pageHeight
+      } = state.config
+
+      const columns = Math.floor(
+        (pageWidth - 2 * offsetLeft + spacingHorizontal) / (cellWidth + spacingHorizontal)
+      )
+      const rowsPerPage = Math.floor(
+        (pageHeight - 2 * offsetTop + spacingVertical) / (cellHeight + spacingVertical)
+      )
+
+      const cellsPerPage = columns * rowsPerPage
+      const grid = []
+
+      // Initialiser un nouvel objet pour les contenus des cellules
+      const newCellContents = { ...state.cellContents }
+
+      // Fallback pour `cellContents.default`
+      const defaultContent = state.cellContents?.default || [
+        {
+          text: 'Cliquez pour éditer',
+          left: 10,
+          top: 10,
+          fontSize: 14,
+          fill: '#333'
+        }
+      ]
+
+      for (let pageIndex = 0; pageIndex < state.totalPages; pageIndex++) {
+        for (let i = 0; i < cellsPerPage; i++) {
+          const row = Math.floor(i / columns)
+          const col = i % columns
+          const cellId = `${pageIndex}-${row}-${col}`
+
+          grid.push({
+            id: cellId,
+            pageIndex,
+            row,
+            col,
+            width: (cellWidth / pageWidth) * 100,
+            height: (cellHeight / pageHeight) * 100,
+            left: ((offsetLeft + col * (cellWidth + spacingHorizontal)) / pageWidth) * 100,
+            top: ((offsetTop + row * (cellHeight + spacingVertical)) / pageHeight) * 100
+          })
+
+          // Ajouter le contenu par défaut avec le drapeau isInitialContent
+          newCellContents[cellId] = state.cellContents[cellId] || [
+            ...defaultContent.map((item) => ({ ...item, isInitialContent: true }))
+          ]
+        }
+      }
+
+      return {
+        ...state,
+        grid,
+        cellContents: newCellContents,
+        cellsPerPage
+      }
+    }
+
     case 'IMPORT_CSV': {
       const rows = action.payload
       const newCellContents = { ...state.cellContents }
+
       const newLinkedGroup = [] // Nouveau groupe pour les cellules liées par le CSV
+
+      // Calculer le nombre de pages nécessaires
+      const requiredPages = Math.ceil(rows.length / state.cellsPerPage)
+      const totalPages = Math.max(1, requiredPages)
+
+      // Mettre à jour totalPages et générer une nouvelle grille
+      const updatedState = gridReducer({ ...state, totalPages }, { type: 'GENERATE_GRID' })
 
       // Associer les données CSV aux cellules
       rows.forEach((row, index) => {
-        const pageIndex = Math.floor(index / state.cellsPerPage)
-        const cellIndexInPage = index % state.cellsPerPage
+        const pageIndex = Math.floor(index / updatedState.cellsPerPage)
+        const cellIndexInPage = index % updatedState.cellsPerPage
 
         // Calculer la position de la cellule dans la grille
         const columns = Math.floor(
@@ -191,23 +208,23 @@ export function gridReducer(state, action) {
         newLinkedGroup.push(cellId)
       })
 
-      // Marquer les cellules comme liées par le CSV
-      const markedGrid = state.grid.map((cell) => ({
-        ...cell,
-        linkedByCsv: newLinkedGroup.includes(cell.id) // Marquer uniquement les cellules liées
-      }))
+      // Nettoyer les cellules inutilisées
+      const cleanedCellContents = Object.keys(newCellContents)
+        .filter((key) => updatedState.grid.some((cell) => cell.id === key))
+        .reduce((acc, key) => {
+          acc[key] = newCellContents[key]
+          return acc
+        }, {})
 
       // Construire le nouvel état
       const newState = {
-        ...state,
-        cellContents: newCellContents,
-        grid: markedGrid, // Mettre à jour la grille avec les marquages
-        linkedGroups: [...state.linkedGroups, newLinkedGroup], // Ajouter le groupe lié
-        totalPages: Math.max(1, Math.ceil(rows.length / state.cellsPerPage)) // Mettre à jour les pages
+        ...updatedState,
+        cellContents: cleanedCellContents,
+        linkedGroups: [...state.linkedGroups, newLinkedGroup] // Ajouter le groupe lié
       }
 
-      // Gérer Undo/Redo
-      return withUndoRedo(state, newState)
+      // Générer à nouveau la grille pour garantir la synchronisation
+      return gridReducer(newState, { type: 'GENERATE_GRID' })
     }
 
     case 'SELECT_FIRST_CELL': {
