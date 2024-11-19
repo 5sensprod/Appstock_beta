@@ -16,43 +16,61 @@ const loadCanvasDesign = (cellIndex, cellContent, cellWidth, cellHeight, scaleFa
       cellContent.forEach((objectData) => {
         let fabricObject
 
-        switch (objectData.type) {
+        // Exclure les propriétés interdites comme "type"
+        const { type, ...objectProps } = objectData
+
+        switch (type) {
           case 'IText':
-            fabricObject = new fabric.IText(objectData.text || '', {
-              left: objectData.left * scaleFactor,
-              top: objectData.top * scaleFactor,
-              fontSize: objectData.fontSize * scaleFactor,
-              fill: objectData.fill || '#000'
+            fabricObject = new fabric.IText(objectProps.text || '', {
+              ...objectProps,
+              left: objectProps.left * scaleFactor,
+              top: objectProps.top * scaleFactor,
+              fontSize: (objectProps.fontSize || 12) * scaleFactor
             })
             break
-          case 'rect':
+          case 'Rect':
             fabricObject = new fabric.Rect({
-              left: objectData.left * scaleFactor,
-              top: objectData.top * scaleFactor,
-              fill: objectData.fill || '#000',
-              width: objectData.width * scaleFactor,
-              height: objectData.height * scaleFactor
+              ...objectProps,
+              left: objectProps.left * scaleFactor,
+              top: objectProps.top * scaleFactor,
+              width: (objectProps.width || 50) * scaleFactor,
+              height: (objectProps.height || 50) * scaleFactor
             })
             break
-          case 'circle':
+          case 'Circle':
             fabricObject = new fabric.Circle({
-              left: objectData.left * scaleFactor,
-              top: objectData.top * scaleFactor,
-              fill: objectData.fill || '#000',
-              radius: objectData.radius * scaleFactor
+              ...objectProps,
+              left: (objectProps.left + (objectProps.radius || 25)) * scaleFactor, // Ajuster pour centrer
+              top: (objectProps.top + (objectProps.radius || 25)) * scaleFactor, // Ajuster pour centrer
+              radius: (objectProps.radius || 25) * scaleFactor,
+              originX: 'center', // Définit l'origine au centre horizontal
+              originY: 'center' // Définit l'origine au centre vertical
             })
             break
-          case 'triangle':
+
+          case 'Triangle':
             fabricObject = new fabric.Triangle({
-              left: objectData.left * scaleFactor,
-              top: objectData.top * scaleFactor,
-              fill: objectData.fill || '#000',
-              width: objectData.width * scaleFactor,
-              height: objectData.height * scaleFactor
+              ...objectProps,
+              left: objectProps.left * scaleFactor,
+              top: objectProps.top * scaleFactor,
+              width: (objectProps.width || 50) * scaleFactor,
+              height: (objectProps.height || 50) * scaleFactor
             })
             break
+          case 'Image':
+            fabric.Image.fromURL(objectProps.src, (img) => {
+              img.set({
+                ...objectProps,
+                left: objectProps.left * scaleFactor,
+                top: objectProps.top * scaleFactor,
+                scaleX: (objectProps.scaleX || 1) * scaleFactor,
+                scaleY: (objectProps.scaleY || 1) * scaleFactor
+              })
+              tempCanvas.add(img)
+            })
+            return // Ne pas ajouter deux fois pour les images
           default:
-            console.warn(`Type d'objet inconnu lors du chargement : ${objectData.type}`)
+            console.warn(`Type d'objet inconnu lors du chargement : ${type}`)
             return // Ignore les objets inconnus
         }
 

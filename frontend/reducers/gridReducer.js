@@ -214,32 +214,46 @@ export function gridReducer(state, action) {
       const { id, content } = action.payload
       const newCellContents = { ...state.cellContents }
 
-      // Si la cellule existe, conserver ses anciens flags
+      // Récupérer le contenu existant de la cellule
       const existingContent = state.cellContents[id] || []
 
-      // Préserver les flags, notamment `linkedByCsv`, et garantir que `type` est défini
+      // Traiter et mettre à jour chaque objet du contenu
       const updatedContent = content.map((item) => {
         const existingItem = existingContent.find((oldItem) => oldItem.id === item.id)
         return {
           ...item,
-          type: item.type || existingItem?.type || 'IText', // Définit le type par défaut
+          type: item.type || existingItem?.type || 'IText',
+          left: item.left, // Aucune conversion ici
+          top: item.top,
+          radius: item.radius, // Conserver le rayon
+          originX: item.originX || 'center', // Enregistrer l'origine
+          originY: item.originY || 'center', // Enregistrer l'origine
           linkedByCsv: existingItem?.linkedByCsv || false
         }
       })
 
-      // Validation pour les objets non textuels
+      // Détecter si un objet est vide selon son type
       const isObjectEmpty = (obj) => {
-        if (obj.type === 'IText') return !obj.text?.trim()
-        return false // Les autres types d'objets ne sont jamais "vides"
+        switch (obj.type) {
+          case 'IText':
+            return !obj.text?.trim() // Vide si le texte est null ou vide
+          case 'Rect':
+          case 'Circle':
+          case 'Image':
+            return false // Les autres types ne sont jamais considérés vides
+          default:
+            return false // Tout autre type inconnu n'est pas vide par défaut
+        }
       }
 
-      // Si le nouveau contenu est vide, supprimez la cellule
+      // Si le contenu est vide, supprimer la cellule
       if (!content || (content.length === 0 && updatedContent.every(isObjectEmpty))) {
         delete newCellContents[id]
       } else {
         newCellContents[id] = updatedContent
       }
 
+      // Générer un nouvel état
       const newState = {
         ...state,
         cellContents: newCellContents
