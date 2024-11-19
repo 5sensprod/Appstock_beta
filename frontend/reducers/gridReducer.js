@@ -167,21 +167,17 @@ export function gridReducer(state, action) {
       const rows = action.payload
       const newCellContents = { ...state.cellContents }
 
-      const newLinkedGroup = [] // Nouveau groupe pour les cellules liées par le CSV
+      const newLinkedGroup = []
 
-      // Calculer le nombre de pages nécessaires
       const requiredPages = Math.ceil(rows.length / state.cellsPerPage)
-      const totalPages = Math.max(1, requiredPages)
+      const totalPages = Math.max(state.totalPages, requiredPages)
 
-      // Mettre à jour totalPages et générer une nouvelle grille
       const updatedState = gridReducer({ ...state, totalPages }, { type: 'GENERATE_GRID' })
 
-      // Associer les données CSV aux cellules
       rows.forEach((row, index) => {
         const pageIndex = Math.floor(index / updatedState.cellsPerPage)
         const cellIndexInPage = index % updatedState.cellsPerPage
 
-        // Calculer la position de la cellule dans la grille
         const columns = Math.floor(
           (state.config.pageWidth - 2 * state.config.offsetLeft + state.config.spacingHorizontal) /
             (state.config.cellWidth + state.config.spacingHorizontal)
@@ -190,25 +186,21 @@ export function gridReducer(state, action) {
         const rowInPage = Math.floor(cellIndexInPage / columns)
         const cellId = `${pageIndex}-${rowInPage}-${col}`
 
-        // Créer plusieurs objets IText pour chaque colonne de la ligne CSV
-        const iTextObjects = Object.entries(row).map(([key, value], idx) => ({
-          id: `${key}-${idx}`, // Identifiant unique pour chaque objet IText
+        const cellContent = Object.entries(row).map(([key, value], idx) => ({
+          id: `${key}-${idx}`,
           type: 'IText',
-          text: value, // Texte depuis le CSV
-          left: 10 + idx * 50, // Décalage horizontal
-          top: 10, // Décalage vertical
-          fontSize: 14, // Taille de police
-          fill: '#333' // Couleur par défaut
+          text: value,
+          left: 10 + idx * 50,
+          top: 10,
+          fontSize: 14,
+          fill: '#333',
+          linkedByCsv: true // Indicateur que cette cellule provient du CSV
         }))
 
-        // Ajouter le contenu dans cellContents
-        newCellContents[cellId] = iTextObjects
-
-        // Ajouter la cellule au groupe lié
+        newCellContents[cellId] = cellContent
         newLinkedGroup.push(cellId)
       })
 
-      // Nettoyer les cellules inutilisées
       const cleanedCellContents = Object.keys(newCellContents)
         .filter((key) => updatedState.grid.some((cell) => cell.id === key))
         .reduce((acc, key) => {
@@ -216,14 +208,15 @@ export function gridReducer(state, action) {
           return acc
         }, {})
 
-      // Construire le nouvel état
       const newState = {
         ...updatedState,
-        cellContents: cleanedCellContents,
-        linkedGroups: [...state.linkedGroups, newLinkedGroup] // Ajouter le groupe lié
+        cellContents: {
+          ...cleanedCellContents,
+          default: state.cellContents.default
+        },
+        linkedGroups: [...state.linkedGroups, newLinkedGroup]
       }
 
-      // Appliquer la gestion de redo/undo
       return withUndoRedo(state, newState)
     }
 
@@ -247,10 +240,23 @@ export function gridReducer(state, action) {
       const { id, content } = action.payload
       const newCellContents = { ...state.cellContents }
 
-      if (!content || (content.type === 'IText' && content.text.trim() === '')) {
+      // Si la cellule existe, conserver ses anciens flags
+      const existingContent = state.cellContents[id] || []
+
+      // Préserver les flags, notamment `linkedByCsv`
+      const updatedContent = content.map((item) => {
+        const existingItem = existingContent.find((oldItem) => oldItem.id === item.id)
+        return {
+          ...item,
+          linkedByCsv: existingItem?.linkedByCsv || false // Conserver le flag si présent
+        }
+      })
+
+      // Si le nouveau contenu est vide, supprimez la cellule
+      if (!content || (content.length === 0 && updatedContent.every((item) => !item.text.trim()))) {
         delete newCellContents[id]
       } else {
-        newCellContents[id] = content
+        newCellContents[id] = updatedContent
       }
 
       const newState = {
@@ -419,18 +425,28 @@ export function gridReducer(state, action) {
     case 'RESET_CELL': {
       const { cellId } = action.payload
 
+      const defaultContent = state.cellContents.default || [
+        {
+          text: 'Cliquez pour éditer',
+          left: 10,
+          top: 10,
+          fontSize: 14,
+          fill: '#333'
+        }
+      ]
+
       const newCellContents = { ...state.cellContents }
       newCellContents[cellId] = [
-        ...state.cellContents.default.map((item) => ({
+        ...defaultContent.map((item) => ({
           ...item,
           isInitialContent: true,
-          linkedByCsv: false // Supprimer le flag lié au CSV
+          linkedByCsv: false
         }))
       ]
 
       const updatedGroups = state.linkedGroups
-        .map((group) => group.filter((id) => id !== cellId)) // Retirer la cellule de chaque groupe
-        .filter((group) => group.length > 1) // Supprimer les groupes devenus vides ou uniques
+        .map((group) => group.filter((id) => id !== cellId))
+        .filter((group) => group.length > 1)
 
       const newState = {
         ...state,

@@ -73,7 +73,7 @@ const GridManager = () => {
                 isSelected={selectedCellId === cell.id}
                 isLinkedAndSelected={isLinkedAndSelected}
                 linkedGroup={linkedGroup}
-                linkedByCsv={cell.linkedByCsv || false} // Passe l'état lié par CSV
+                linkedByCsv={cellContents[cell.id]?.some((item) => item.linkedByCsv) || false}
                 onClick={handleSelectCell}
                 content={cellContents[cell.id]}
               />
