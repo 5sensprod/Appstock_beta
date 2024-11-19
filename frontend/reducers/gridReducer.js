@@ -223,8 +223,8 @@ export function gridReducer(state, action) {
         linkedGroups: [...state.linkedGroups, newLinkedGroup] // Ajouter le groupe lié
       }
 
-      // Générer à nouveau la grille pour garantir la synchronisation
-      return gridReducer(newState, { type: 'GENERATE_GRID' })
+      // Appliquer la gestion de redo/undo
+      return withUndoRedo(state, newState)
     }
 
     case 'SELECT_FIRST_CELL': {
