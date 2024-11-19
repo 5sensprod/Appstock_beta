@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf'
 import * as fabric from 'fabric'
-import { mmToPx } from '../../utils/conversionUtils' // Conversion mm -> pixels, réutilisable
+import { mmToPx } from '../../utils/conversionUtils'
 
 // Fonction pour charger le design dans un canvas temporaire
 const loadCanvasDesign = (cellIndex, cellContent, cellWidth, cellHeight, scaleFactor = 4) => {
@@ -79,48 +79,59 @@ export const exportGridToPDF = async (grid, cellContents, config) => {
     format: [config.pageWidth, config.pageHeight]
   })
 
-  let x = offsetLeft
-  let y = offsetTop
+  const totalPages = Math.max(...grid.map((cell) => cell.pageIndex)) + 1
 
-  const tasks = [] // Liste des promesses pour les images générées
+  for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+    const pageCells = grid.filter((cell) => cell.pageIndex === pageIndex)
 
-  for (let row = 0; row < labelsPerColumn; row++) {
-    for (let col = 0; col < labelsPerRow; col++) {
-      const cellIndex = row * labelsPerRow + col
-      const cell = grid[cellIndex]
-      const cellContent = cell && cellContents[cell?.id]
+    let x = offsetLeft
+    let y = offsetTop
 
-      // Vérifier si la cellule est marquée comme initiale
-      const isInitialContent =
-        cellContent && cellContent.every((objectData) => objectData.isInitialContent)
+    const tasks = [] // Liste des promesses pour les images générées
 
-      if (cellContent && !isInitialContent) {
-        // Charger uniquement les cellules avec contenu réel
-        const currentX = x
-        const currentY = y
+    for (let row = 0; row < labelsPerColumn; row++) {
+      for (let col = 0; col < labelsPerRow; col++) {
+        const cellIndex = row * labelsPerRow + col
+        const cell = pageCells[cellIndex]
+        const cellContent = cell && cellContents[cell?.id]
 
-        const loadTask = loadCanvasDesign(cellIndex, cellContent, cellWidth, cellHeight, 4)
-          .then((imgData) => {
-            pdf.addImage(imgData, 'PNG', currentX, currentY, cellWidth, cellHeight)
-          })
-          .catch((error) => {
-            console.error(`Erreur lors du rendu de la cellule ${cellIndex}:`, error)
-          })
+        // Vérifier si la cellule est marquée comme initiale
+        const isInitialContent =
+          cellContent && cellContent.every((objectData) => objectData.isInitialContent)
 
-        tasks.push(loadTask)
+        if (cellContent && !isInitialContent) {
+          // Charger uniquement les cellules avec contenu réel
+          const currentX = x
+          const currentY = y
+
+          const loadTask = loadCanvasDesign(cellIndex, cellContent, cellWidth, cellHeight, 4)
+            .then((imgData) => {
+              pdf.addImage(imgData, 'PNG', currentX, currentY, cellWidth, cellHeight)
+            })
+            .catch((error) => {
+              console.error(`Erreur lors du rendu de la cellule ${cellIndex}:`, error)
+            })
+
+          tasks.push(loadTask)
+        }
+
+        // Avancer horizontalement
+        x += cellWidth + spacingHorizontal
       }
 
-      // Avancer horizontalement
-      x += cellWidth + spacingHorizontal
+      // Retourner au début de la ligne et avancer verticalement
+      x = offsetLeft
+      y += cellHeight + spacingVertical
     }
 
-    // Retourner au début de la ligne et avancer verticalement
-    x = offsetLeft
-    y += cellHeight + spacingVertical
-  }
+    // Attendre que toutes les promesses soient résolues
+    await Promise.all(tasks)
 
-  // Attendre que toutes les promesses soient résolues
-  await Promise.all(tasks)
+    // Ajouter une nouvelle page si ce n'est pas la dernière
+    if (pageIndex < totalPages - 1) {
+      pdf.addPage()
+    }
+  }
 
   // Télécharger le fichier PDF généré
   pdf.save('grid_export.pdf')
