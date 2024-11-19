@@ -16,46 +16,87 @@ const CellEditor = ({ initialContent, cellWidth, cellHeight, cellId, linkedGroup
     // Charger le contenu initial
     const contentToLoad = Array.isArray(initialContent) ? initialContent : []
 
-    contentToLoad.forEach((objectData) => {
-      const { type, ...rest } = objectData // Exclure `type` pour éviter l'erreur
-      let fabricObject
-
-      switch (type) {
-        case 'Rect':
-          fabricObject = new fabric.Rect(rest)
-          break
-        case 'Circle':
-          fabricObject = new fabric.Circle(rest)
-          break
-        case 'Image':
-          fabric.Image.fromURL(rest.src, (img) => {
-            img.set(rest)
-            canvas.add(img)
-          })
-          return
-        default:
-          fabricObject = new fabric.IText(rest.text, rest) // Ne passez pas `type` ici
-      }
-
-      canvas.add(fabricObject)
+    contentToLoad.forEach((iTextData) => {
+      const { type, ...rest } = iTextData // Exclure `type`
+      const iText = new fabric.IText(iTextData.text, {
+        ...rest,
+        editable: true // Permettre l'édition
+      })
+      canvas.add(iText)
     })
 
     // Sauvegarde et synchronisation lors de la modification
-    const saveCanvasContent = () => {
-      const updatedContent = canvas.getObjects().map((obj) => {
-        const baseData = obj.toObject(['id', 'type'])
-        if (obj.type === 'Image') {
-          baseData.src = obj._element?.src || ''
-        }
-        return baseData
-      })
+    const handleObjectModified = () => {
+      const updatedContent = canvas.getObjects('i-text').map((iText) => ({
+        id: iText.id,
+        type: 'IText',
+        text: iText.text,
+        left: iText.left,
+        top: iText.top,
+        fontSize: iText.fontSize,
+        fill: iText.fill
+      }))
 
+      // Mise à jour de la cellule via UPDATE_CELL_CONTENT
       dispatch({
         type: 'UPDATE_CELL_CONTENT',
         payload: { id: cellId, content: updatedContent }
       })
 
       // Synchroniser les cellules liées si applicable
+      if (linkedGroup && linkedGroup.length > 1) {
+        dispatch({
+          type: 'SYNC_CELL_LAYOUT',
+          payload: {
+            sourceId: cellId,
+            layout: updatedContent.reduce((acc, item) => {
+              acc[item.id] = { left: item.left, top: item.top }
+              return acc
+            }, {})
+          }
+        })
+      }
+    }
+
+    // Écoute les modifications d'objet
+    canvas.on('object:modified', handleObjectModified)
+
+    return () => {
+      canvas.dispose() // Nettoyage lors du démontage
+    }
+  }, [initialContent, cellWidth, cellHeight, cellId, linkedGroup, dispatch])
+
+  const addNewIText = () => {
+    const canvas = canvasInstance.current
+    if (canvas) {
+      const iText = new fabric.IText('Nouveau texte', {
+        left: 10,
+        top: 10,
+        fontSize: 16,
+        fill: '#000',
+        editable: true,
+        id: Math.random().toString(36).substr(2, 9) // Génère un ID unique pour l'objet
+      })
+      canvas.add(iText)
+      canvas.setActiveObject(iText)
+
+      // Sauvegarde immédiate après ajout
+      const updatedContent = canvas.getObjects('i-text').map((obj) => ({
+        id: obj.id || Math.random().toString(36).substr(2, 9), // Générer un ID unique si nécessaire
+        type: 'IText',
+        text: obj.text,
+        left: obj.left,
+        top: obj.top,
+        fontSize: obj.fontSize,
+        fill: obj.fill
+      }))
+
+      dispatch({
+        type: 'UPDATE_CELL_CONTENT',
+        payload: { id: cellId, content: updatedContent }
+      })
+
+      // Synchroniser les autres cellules du groupe
       if (linkedGroup && linkedGroup.length > 1) {
         linkedGroup.forEach((linkedCellId) => {
           if (linkedCellId !== cellId) {
@@ -67,76 +108,25 @@ const CellEditor = ({ initialContent, cellWidth, cellHeight, cellId, linkedGroup
         })
       }
     }
-
-    canvas.on('object:modified', saveCanvasContent)
-    canvas.on('object:added', saveCanvasContent)
-    canvas.on('object:removed', saveCanvasContent)
-
-    return () => {
-      canvas.dispose() // Nettoyage lors du démontage
-    }
-  }, [initialContent, cellWidth, cellHeight, cellId, linkedGroup, dispatch])
-
-  const addNewObject = (type) => {
-    const canvas = canvasInstance.current
-    if (!canvas) return
-
-    let newObject
-    switch (type) {
-      case 'Rect':
-        newObject = new fabric.Rect({
-          left: 10,
-          top: 10,
-          width: 50,
-          height: 50,
-          fill: 'rgba(255, 0, 0, 0.5)',
-          id: Math.random().toString(36).substr(2, 9)
-        })
-        break
-      case 'Circle':
-        newObject = new fabric.Circle({
-          left: 10,
-          top: 10,
-          radius: 30,
-          fill: 'rgba(0, 0, 255, 0.5)',
-          id: Math.random().toString(36).substr(2, 9)
-        })
-        break
-      case 'Image':
-        fabric.Image.fromURL('https://via.placeholder.com/100', (img) => {
-          img.set({
-            left: 10,
-            top: 10,
-            scaleX: 0.5,
-            scaleY: 0.5,
-            id: Math.random().toString(36).substr(2, 9),
-            type: 'Image'
-          })
-          canvas.add(img)
-          canvas.setActiveObject(img)
-        })
-        return
-      default:
-        newObject = new fabric.IText('Nouveau texte', {
-          left: 10,
-          top: 10,
-          fontSize: 16,
-          fill: '#000',
-          id: Math.random().toString(36).substr(2, 9)
-        })
-    }
-    canvas.add(newObject)
-    canvas.setActiveObject(newObject)
   }
 
   return (
     <div style={{ marginTop: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-        <button onClick={() => addNewObject('IText')}>Ajouter IText</button>
-        <button onClick={() => addNewObject('Rect')}>Ajouter Rectangle</button>
-        <button onClick={() => addNewObject('Circle')}>Ajouter Cercle</button>
-        <button onClick={() => addNewObject('Image')}>Ajouter Image</button>
-      </div>
+      <button
+        onClick={addNewIText}
+        style={{
+          display: 'block',
+          margin: '10px auto',
+          padding: '10px 20px',
+          backgroundColor: '#007bff',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer'
+        }}
+      >
+        Ajouter un objet IText
+      </button>
       <canvas
         ref={canvasRef}
         style={{
