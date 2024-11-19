@@ -1,5 +1,5 @@
 import React from 'react'
-import IconButton from '../ui/IconButton'
+import IconButton from '../../ui/IconButton'
 import { faFont } from '@fortawesome/free-solid-svg-icons'
 import * as fabric from 'fabric'
 

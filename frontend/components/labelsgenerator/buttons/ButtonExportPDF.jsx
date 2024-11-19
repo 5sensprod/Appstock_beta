@@ -1,8 +1,8 @@
 import React, { useContext } from 'react'
-import { GridContext } from '../../context/GridContext'
-import IconButton from '../ui/IconButton'
+import { GridContext } from '../../../context/GridContext'
+import IconButton from '../../ui/IconButton'
 import { faFilePdf } from '@fortawesome/free-solid-svg-icons'
-import { exportGridToPDF } from './GridExporter'
+import { exportGridToPDF } from '../GridExporter'
 
 const ButtonExportPDF = () => {
   const { state } = useContext(GridContext)

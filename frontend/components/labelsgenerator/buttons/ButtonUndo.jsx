@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
-import { GridContext } from '../../context/GridContext'
-import IconButton from '../ui/IconButton'
+import { GridContext } from '../../../context/GridContext'
+import IconButton from '../../ui/IconButton'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 
 const ButtonUndo = () => {

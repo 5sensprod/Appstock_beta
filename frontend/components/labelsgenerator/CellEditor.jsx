@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import * as fabric from 'fabric'
 import styles from '../labels/FabricDesigner.module.css'
-import ButtonText from './ButtonText'
+import ButtonText from './buttons/ButtonText'
 
 const CellEditor = ({ initialContent, cellWidth, cellHeight, cellId, linkedGroup, dispatch }) => {
   const canvasRef = useRef(null) // Référence pour le canvas
