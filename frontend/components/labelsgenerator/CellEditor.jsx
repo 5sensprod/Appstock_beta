@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import * as fabric from 'fabric'
+import styles from '../labels/FabricDesigner.module.css'
+import ButtonText from './ButtonText'
 
 const CellEditor = ({ initialContent, cellWidth, cellHeight, cellId, linkedGroup, dispatch }) => {
   const canvasRef = useRef(null) // Référence pour le canvas
@@ -66,76 +68,24 @@ const CellEditor = ({ initialContent, cellWidth, cellHeight, cellId, linkedGroup
     }
   }, [initialContent, cellWidth, cellHeight, cellId, linkedGroup, dispatch])
 
-  const addNewIText = () => {
-    const canvas = canvasInstance.current
-    if (canvas) {
-      const iText = new fabric.IText('Nouveau texte', {
-        left: 10,
-        top: 10,
-        fontSize: 16,
-        fill: '#000',
-        editable: true,
-        id: Math.random().toString(36).substr(2, 9) // Génère un ID unique pour l'objet
-      })
-      canvas.add(iText)
-      canvas.setActiveObject(iText)
-
-      // Sauvegarde immédiate après ajout
-      const updatedContent = canvas.getObjects('i-text').map((obj) => ({
-        id: obj.id || Math.random().toString(36).substr(2, 9), // Générer un ID unique si nécessaire
-        type: 'IText',
-        text: obj.text,
-        left: obj.left,
-        top: obj.top,
-        fontSize: obj.fontSize,
-        fill: obj.fill
-      }))
-
-      dispatch({
-        type: 'UPDATE_CELL_CONTENT',
-        payload: { id: cellId, content: updatedContent }
-      })
-
-      // Synchroniser les autres cellules du groupe
-      if (linkedGroup && linkedGroup.length > 1) {
-        linkedGroup.forEach((linkedCellId) => {
-          if (linkedCellId !== cellId) {
-            dispatch({
-              type: 'UPDATE_CELL_CONTENT',
-              payload: { id: linkedCellId, content: updatedContent }
-            })
-          }
-        })
-      }
-    }
-  }
-
   return (
-    <div style={{ marginTop: '20px' }}>
-      <button
-        onClick={addNewIText}
-        style={{
-          display: 'block',
-          margin: '10px auto',
-          padding: '10px 20px',
-          backgroundColor: '#007bff',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer'
-        }}
-      >
-        Ajouter un objet IText
-      </button>
-      <canvas
-        ref={canvasRef}
-        style={{
-          border: '1px solid #ccc',
-          display: 'block',
-          margin: '0 auto'
-        }}
-      />
-    </div>
+    <>
+      {' '}
+      <div className="my-4">
+        {' '}
+        <ButtonText
+          cellId={cellId}
+          linkedGroup={linkedGroup}
+          canvasInstance={canvasInstance} // Passe directement l'instance de canvas
+          dispatch={dispatch}
+        />
+      </div>
+      <div className={styles.canvasContainer}>
+        {/* Bouton Ajouter Texte */}
+
+        <canvas ref={canvasRef} className={styles.sampleCanvas} />
+      </div>
+    </>
   )
 }
 
