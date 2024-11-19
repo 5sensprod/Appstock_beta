@@ -14,6 +14,7 @@ export const initialGridState = {
   cellContents: {
     default: [
       {
+        type: 'IText', // Type explicite
         text: 'Cliquez pour éditer',
         left: 10,
         top: 10,
@@ -227,17 +228,24 @@ export function gridReducer(state, action) {
       // Si la cellule existe, conserver ses anciens flags
       const existingContent = state.cellContents[id] || []
 
-      // Préserver les flags, notamment `linkedByCsv`
+      // Préserver les flags, notamment `linkedByCsv`, et garantir que `type` est défini
       const updatedContent = content.map((item) => {
         const existingItem = existingContent.find((oldItem) => oldItem.id === item.id)
         return {
           ...item,
-          linkedByCsv: existingItem?.linkedByCsv || false // Conserver le flag si présent
+          type: item.type || existingItem?.type || 'IText', // Définit le type par défaut
+          linkedByCsv: existingItem?.linkedByCsv || false
         }
       })
 
+      // Validation pour les objets non textuels
+      const isObjectEmpty = (obj) => {
+        if (obj.type === 'IText') return !obj.text?.trim()
+        return false // Les autres types d'objets ne sont jamais "vides"
+      }
+
       // Si le nouveau contenu est vide, supprimez la cellule
-      if (!content || (content.length === 0 && updatedContent.every((item) => !item.text.trim()))) {
+      if (!content || (content.length === 0 && updatedContent.every(isObjectEmpty))) {
         delete newCellContents[id]
       } else {
         newCellContents[id] = updatedContent
