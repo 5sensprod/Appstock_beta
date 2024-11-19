@@ -1,45 +1,92 @@
-import React, { createContext, useReducer } from 'react'
-import * as fabric from 'fabric'
+import React, { createContext, useRef, useContext, useReducer } from 'react'
+import useCanvasObjectHandler from '../hooks/useCanvasObjectHandler'
+import useCanvasTransformAndConstraints from '../hooks/useCanvasTransformAndConstraints'
+import useInitializeCanvas from '../hooks/useInitializeCanvas'
+import useCanvasObjectActions from '../hooks/useCanvasObjectActions'
+import { canvasReducer, initialCanvasState } from '../reducers/canvasReducer'
 
-export const CanvasContext = createContext()
+const CanvasContext = createContext()
 
-const initialState = {
-  canvas: null, // Instance Fabric.js
-  objects: [] // Objets sauvegardés liés au canvas
+const useCanvas = () => {
+  const context = useContext(CanvasContext)
+  if (!context) throw new Error('useCanvas must be used within a CanvasProvider')
+  return context
 }
 
-function canvasReducer(state, action) {
-  switch (action.type) {
-    case 'SET_CANVAS':
-      return {
-        ...state,
-        canvas: action.payload
-      }
+const CanvasProvider = ({ children }) => {
+  const canvasRef = useRef(null)
+  const [canvasState, dispatchCanvasAction] = useReducer(canvasReducer, initialCanvasState)
 
-    case 'ADD_OBJECT': {
-      const { canvas } = state
-      if (canvas) {
-        const newObject = new fabric.IText(action.payload.props.text, action.payload.props)
-        canvas.add(newObject)
-        canvas.setActiveObject(newObject)
-        canvas.renderAll()
-      }
-      return state
-    }
+  const { canvas, zoomLevel, selectedColor, selectedFont, selectedObject, labelConfig } =
+    canvasState
 
-    case 'UPDATE_OBJECTS':
-      return {
-        ...state,
-        objects: action.payload
-      }
+  // Initialisation du canevas
+  useInitializeCanvas(canvas, labelConfig, dispatchCanvasAction, canvasRef)
 
-    default:
-      return state
+  // Gestion des transformations et des contraintes
+  const { updateCanvasSize, handleZoomChange } = useCanvasTransformAndConstraints(
+    canvas,
+    labelConfig,
+    dispatchCanvasAction
+  )
+
+  // Gestion des objets sur le canevas
+  const { isShapeSelected, isTextSelected, isImageSelected, isQRCodeSelected } =
+    useCanvasObjectHandler(
+      canvas,
+      selectedObject,
+      selectedColor,
+      selectedFont,
+      dispatchCanvasAction
+    )
+
+  // Actions pour les objets
+  const {
+    onAddCircle,
+    onAddRectangle,
+    onAddText,
+    onAddTextCsv,
+    onAddImage,
+    onAddQrCode,
+    onUpdateQrCode,
+    onAddQrCodeCsv
+  } = useCanvasObjectActions(canvas, labelConfig, selectedColor, selectedFont)
+
+  // Valeurs et actions exposées par le contexte
+  const value = {
+    canvasRef,
+    canvas,
+    zoomLevel,
+    updateCanvasSize,
+    handleZoomChange,
+    labelConfig,
+    setLabelConfig: (config) => dispatchCanvasAction({ type: 'SET_LABEL_CONFIG', payload: config }),
+    selectedColor,
+    setSelectedColor: (color) => dispatchCanvasAction({ type: 'SET_COLOR', payload: color }),
+    selectedObject,
+    setSelectedObject: (obj) => dispatchCanvasAction({ type: 'SET_SELECTED_OBJECT', payload: obj }),
+    selectedFont,
+    setSelectedFont: (font) => dispatchCanvasAction({ type: 'SET_FONT', payload: font }),
+    // Actions pour les objets
+    onAddCircle,
+    onAddRectangle,
+    onAddText,
+    onAddTextCsv,
+    onAddImage,
+    onAddQrCode,
+    onAddQrCodeCsv,
+    onUpdateQrCode,
+    // Vérifications du type d'objet
+    isShapeSelected,
+    isTextSelected,
+    isImageSelected,
+    isQRCodeSelected,
+    // Dispatcher pour des actions personnalisées
+    dispatchCanvasAction,
+    canvasState
   }
+
+  return <CanvasContext.Provider value={value}>{children}</CanvasContext.Provider>
 }
 
-export const CanvasProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(canvasReducer, initialState)
-
-  return <CanvasContext.Provider value={{ state, dispatch }}>{children}</CanvasContext.Provider>
-}
+export { CanvasContext, CanvasProvider, useCanvas }
