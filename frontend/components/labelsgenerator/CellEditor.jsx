@@ -59,10 +59,11 @@ const CellEditor = ({ initialContent, cellWidth, cellHeight, cellId, linkedGroup
       const canvas = canvasInstance.current
       if (!canvas) return
 
+      // Inclure toutes les shapes et IText
       const updatedContent = canvas.getObjects().map((obj) => {
         const commonProperties = {
           id: obj.id || Math.random().toString(36).substr(2, 9),
-          type: obj.type?.toLowerCase() || 'unknown', // Normalise le type en minuscule
+          type: obj.type === 'i-text' ? 'IText' : obj.type, // Convertir `i-text` en `IText`
           left: obj.left,
           top: obj.top,
           fill: obj.fill,
@@ -74,20 +75,19 @@ const CellEditor = ({ initialContent, cellWidth, cellHeight, cellId, linkedGroup
         if (obj.type === 'i-text') {
           return {
             ...commonProperties,
-            type: 'i-text',
             text: obj.text,
             fontSize: obj.fontSize
           }
         } else if (obj.type === 'rect' || obj.type === 'triangle') {
           return {
             ...commonProperties,
-            width: obj.width,
-            height: obj.height
+            width: obj.width * (obj.scaleX || 1),
+            height: obj.height * (obj.scaleY || 1)
           }
         } else if (obj.type === 'circle') {
           return {
             ...commonProperties,
-            radius: obj.radius
+            radius: obj.radius * (obj.scaleX || 1) // Fabric utilise scaleX pour agrandir les cercles
           }
         }
 
@@ -95,11 +95,13 @@ const CellEditor = ({ initialContent, cellWidth, cellHeight, cellId, linkedGroup
         return commonProperties
       })
 
+      // Mise à jour de la cellule via UPDATE_CELL_CONTENT
       dispatch({
         type: 'UPDATE_CELL_CONTENT',
         payload: { id: cellId, content: updatedContent }
       })
 
+      // Synchroniser les cellules liées si applicable
       if (linkedGroup && linkedGroup.length > 1) {
         linkedGroup.forEach((linkedCellId) => {
           if (linkedCellId !== cellId) {

@@ -14,12 +14,48 @@ const loadCanvasDesign = (cellIndex, cellContent, cellWidth, cellHeight, scaleFa
 
     try {
       cellContent.forEach((objectData) => {
-        const fabricObject = new fabric.IText(objectData.text, {
-          left: objectData.left * scaleFactor,
-          top: objectData.top * scaleFactor,
-          fontSize: objectData.fontSize * scaleFactor,
-          fill: objectData.fill || '#000'
-        })
+        let fabricObject
+
+        switch (objectData.type) {
+          case 'IText':
+            fabricObject = new fabric.IText(objectData.text || '', {
+              left: objectData.left * scaleFactor,
+              top: objectData.top * scaleFactor,
+              fontSize: objectData.fontSize * scaleFactor,
+              fill: objectData.fill || '#000'
+            })
+            break
+          case 'rect':
+            fabricObject = new fabric.Rect({
+              left: objectData.left * scaleFactor,
+              top: objectData.top * scaleFactor,
+              fill: objectData.fill || '#000',
+              width: objectData.width * scaleFactor,
+              height: objectData.height * scaleFactor
+            })
+            break
+          case 'circle':
+            fabricObject = new fabric.Circle({
+              left: objectData.left * scaleFactor,
+              top: objectData.top * scaleFactor,
+              fill: objectData.fill || '#000',
+              radius: objectData.radius * scaleFactor
+            })
+            break
+          case 'triangle':
+            fabricObject = new fabric.Triangle({
+              left: objectData.left * scaleFactor,
+              top: objectData.top * scaleFactor,
+              fill: objectData.fill || '#000',
+              width: objectData.width * scaleFactor,
+              height: objectData.height * scaleFactor
+            })
+            break
+          default:
+            console.warn(`Type d'objet inconnu lors du chargement : ${objectData.type}`)
+            return // Ignore les objets inconnus
+        }
+
         tempCanvas.add(fabricObject)
       })
 
