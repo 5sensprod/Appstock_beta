@@ -74,12 +74,13 @@ const CellEditor = ({ initialContent, cellWidth, cellHeight, cellId, linkedGroup
         top: 10,
         fontSize: 16,
         fill: '#000',
-        editable: true
+        editable: true,
+        id: Math.random().toString(36).substr(2, 9) // Génère un ID unique pour l'objet
       })
       canvas.add(iText)
       canvas.setActiveObject(iText)
 
-      // Appeler manuellement la logique de mise à jour
+      // Sauvegarde immédiate après ajout
       const updatedContent = canvas.getObjects('i-text').map((obj) => ({
         id: obj.id || Math.random().toString(36).substr(2, 9), // Générer un ID unique si nécessaire
         type: 'IText',
@@ -95,16 +96,14 @@ const CellEditor = ({ initialContent, cellWidth, cellHeight, cellId, linkedGroup
         payload: { id: cellId, content: updatedContent }
       })
 
-      // Synchroniser les cellules liées si applicable
+      // Synchroniser les autres cellules du groupe
       if (linkedGroup && linkedGroup.length > 1) {
-        dispatch({
-          type: 'SYNC_CELL_LAYOUT',
-          payload: {
-            sourceId: cellId,
-            layout: updatedContent.reduce((acc, item) => {
-              acc[item.id] = { left: item.left, top: item.top }
-              return acc
-            }, {})
+        linkedGroup.forEach((linkedCellId) => {
+          if (linkedCellId !== cellId) {
+            dispatch({
+              type: 'UPDATE_CELL_CONTENT',
+              payload: { id: linkedCellId, content: updatedContent }
+            })
           }
         })
       }
