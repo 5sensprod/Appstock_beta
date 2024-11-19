@@ -122,12 +122,12 @@ const LabelsContent = () => {
 
         {selectedCellId && (
           <CellEditor
-            initialContent={initialContent}
+            initialContent={selectedCellId ? cellContents[selectedCellId] || [] : []} // Tableau vide si aucun contenu
             cellWidth={mmToPx(cellWidth)}
             cellHeight={mmToPx(cellHeight)}
             cellId={selectedCellId}
-            linkedGroup={findLinkedGroup(selectedCellId)} // Utilisation de la méthode centralisée
-            dispatch={dispatch} // Transmettre le dispatch pour synchronisation automatique
+            linkedGroup={selectedCellId ? findLinkedGroup(selectedCellId) : []} // Tableau vide si aucune cellule sélectionnée
+            dispatch={dispatch} // Synchronisation avec le reducer
           />
         )}
       </div>

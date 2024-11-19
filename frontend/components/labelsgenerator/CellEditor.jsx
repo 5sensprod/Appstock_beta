@@ -66,8 +66,68 @@ const CellEditor = ({ initialContent, cellWidth, cellHeight, cellId, linkedGroup
     }
   }, [initialContent, cellWidth, cellHeight, cellId, linkedGroup, dispatch])
 
+  const addNewIText = () => {
+    const canvas = canvasInstance.current
+    if (canvas) {
+      const iText = new fabric.IText('Nouveau texte', {
+        left: 10,
+        top: 10,
+        fontSize: 16,
+        fill: '#000',
+        editable: true
+      })
+      canvas.add(iText)
+      canvas.setActiveObject(iText)
+
+      // Appeler manuellement la logique de mise à jour
+      const updatedContent = canvas.getObjects('i-text').map((obj) => ({
+        id: obj.id || Math.random().toString(36).substr(2, 9), // Générer un ID unique si nécessaire
+        type: 'IText',
+        text: obj.text,
+        left: obj.left,
+        top: obj.top,
+        fontSize: obj.fontSize,
+        fill: obj.fill
+      }))
+
+      dispatch({
+        type: 'UPDATE_CELL_CONTENT',
+        payload: { id: cellId, content: updatedContent }
+      })
+
+      // Synchroniser les cellules liées si applicable
+      if (linkedGroup && linkedGroup.length > 1) {
+        dispatch({
+          type: 'SYNC_CELL_LAYOUT',
+          payload: {
+            sourceId: cellId,
+            layout: updatedContent.reduce((acc, item) => {
+              acc[item.id] = { left: item.left, top: item.top }
+              return acc
+            }, {})
+          }
+        })
+      }
+    }
+  }
+
   return (
     <div style={{ marginTop: '20px' }}>
+      <button
+        onClick={addNewIText}
+        style={{
+          display: 'block',
+          margin: '10px auto',
+          padding: '10px 20px',
+          backgroundColor: '#007bff',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer'
+        }}
+      >
+        Ajouter un objet IText
+      </button>
       <canvas
         ref={canvasRef}
         style={{
