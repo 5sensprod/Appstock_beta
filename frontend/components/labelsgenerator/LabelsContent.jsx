@@ -10,7 +10,9 @@ import ButtonReset from './buttons/ButtonReset'
 import ButtonUndo from './buttons/ButtonUndo'
 import ButtonRedo from './buttons/ButtonRedo'
 import ButtonExportPDF from './buttons/ButtonExportPDF'
-
+// import FabricDesigner from '../labels/FabricDesigner'
+import ZoomControl from '../labels/ZoomControl'
+import CanvasControl from '../labels/CanvasControl'
 const LabelsContent = () => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
   const { selectedCellId, cellContents, config } = state
@@ -41,6 +43,8 @@ const LabelsContent = () => {
         linkedGroup={selectedCellId ? findLinkedGroup(selectedCellId) : []} // Tableau vide si aucune cellule sélectionnée
         dispatch={dispatch} // Synchronisation avec le reducer
       />
+      <ZoomControl />
+      <CanvasControl />
     </div>
   )
 }
