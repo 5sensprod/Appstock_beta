@@ -11,18 +11,7 @@ export const initialGridState = {
   },
   grid: [], // Grille vide générée dynamiquement
   selectedCellId: null, // Aucun ID sélectionné au départ
-  cellContents: {
-    default: [
-      {
-        type: 'IText', // Type explicite
-        text: 'Cliquez pour éditer',
-        left: 10,
-        top: 10,
-        fontSize: 14,
-        fill: '#333'
-      }
-    ] // Contenu par défaut pour toute cellule non définie
-  },
+  cellContents: {},
   clipboard: null, // Contenu temporaire pour le copier-coller
   linkedGroups: [],
   currentPage: 0, // Page active
@@ -118,9 +107,6 @@ export function gridReducer(state, action) {
       const cellsPerPage = columns * rowsPerPage
       const grid = []
 
-      // Initialiser un nouvel objet pour les contenus des cellules
-      const newCellContents = { ...state.cellContents }
-
       for (let pageIndex = 0; pageIndex < state.totalPages; pageIndex++) {
         for (let i = 0; i < cellsPerPage; i++) {
           const row = Math.floor(i / columns)
@@ -143,7 +129,6 @@ export function gridReducer(state, action) {
       return {
         ...state,
         grid,
-        cellContents: newCellContents,
         cellsPerPage
       }
     }
@@ -154,11 +139,14 @@ export function gridReducer(state, action) {
 
       const newLinkedGroup = []
 
+      // Calculer le nombre de pages nécessaires en fonction des cellules par page
       const requiredPages = Math.ceil(rows.length / state.cellsPerPage)
       const totalPages = Math.max(state.totalPages, requiredPages)
 
+      // Mettre à jour le totalPages et générer une nouvelle grille
       const updatedState = gridReducer({ ...state, totalPages }, { type: 'GENERATE_GRID' })
 
+      // Associer les données du CSV aux cellules
       rows.forEach((row, index) => {
         const pageIndex = Math.floor(index / updatedState.cellsPerPage)
         const cellIndexInPage = index % updatedState.cellsPerPage
@@ -171,6 +159,7 @@ export function gridReducer(state, action) {
         const rowInPage = Math.floor(cellIndexInPage / columns)
         const cellId = `${pageIndex}-${rowInPage}-${col}`
 
+        // Générer le contenu de la cellule à partir des données du CSV
         const cellContent = Object.entries(row).map(([key, value], idx) => ({
           id: `${key}-${idx}`,
           type: 'IText',
@@ -179,13 +168,15 @@ export function gridReducer(state, action) {
           top: 10,
           fontSize: 14,
           fill: '#333',
-          linkedByCsv: true // Indicateur que cette cellule provient du CSV
+          linkedByCsv: true // Indiquer que cette cellule est liée au CSV
         }))
 
+        // Ajouter le contenu au cellContents
         newCellContents[cellId] = cellContent
         newLinkedGroup.push(cellId)
       })
 
+      // Nettoyer les contenus des cellules pour correspondre aux cellules existantes dans la grille
       const cleanedCellContents = Object.keys(newCellContents)
         .filter((key) => updatedState.grid.some((cell) => cell.id === key))
         .reduce((acc, key) => {
@@ -195,13 +186,11 @@ export function gridReducer(state, action) {
 
       const newState = {
         ...updatedState,
-        cellContents: {
-          ...cleanedCellContents,
-          default: state.cellContents.default
-        },
+        cellContents: cleanedCellContents,
         linkedGroups: [...state.linkedGroups, newLinkedGroup]
       }
 
+      // Appliquer la gestion d'undo/redo
       return withUndoRedo(state, newState)
     }
 
@@ -269,11 +258,11 @@ export function gridReducer(state, action) {
     case 'COPY_CELL': {
       const { cellId } = action.payload
 
-      // Récupérer le contenu actuel de la cellule à sauvegarder ou utiliser le contenu par défaut
-      const cellContent = state.cellContents[cellId] || state.cellContents.default
+      // Récupérer le contenu actuel de la cellule ou considérer comme vide
+      const cellContent = state.cellContents[cellId] || []
 
-      // Si aucun contenu n'est disponible (ni dans la cellule ni par défaut), ne rien faire
-      if (!cellContent) return state
+      // Si la cellule est vide, ne rien faire
+      if (cellContent.length === 0) return state
 
       // Sauvegarde automatique avant de copier
       const updatedCellContents = {
@@ -417,35 +406,23 @@ export function gridReducer(state, action) {
     case 'RESET_CELL': {
       const { cellId } = action.payload
 
-      const defaultContent = state.cellContents.default || [
-        {
-          text: 'Cliquez pour éditer',
-          left: 10,
-          top: 10,
-          fontSize: 14,
-          fill: '#333'
-        }
-      ]
-
+      // Créer un contenu vide pour la cellule
       const newCellContents = { ...state.cellContents }
-      newCellContents[cellId] = [
-        ...defaultContent.map((item) => ({
-          ...item,
-          isInitialContent: true,
-          linkedByCsv: false
-        }))
-      ]
+      newCellContents[cellId] = [] // Une cellule réinitialisée est désormais vide
 
+      // Mettre à jour les groupes liés
       const updatedGroups = state.linkedGroups
-        .map((group) => group.filter((id) => id !== cellId))
-        .filter((group) => group.length > 1)
+        .map((group) => group.filter((id) => id !== cellId)) // Retirer la cellule des groupes liés
+        .filter((group) => group.length > 1) // Conserver uniquement les groupes valides (2 cellules ou plus)
 
+      // Construire le nouvel état
       const newState = {
         ...state,
         cellContents: newCellContents,
         linkedGroups: updatedGroups
       }
 
+      // Appliquer la gestion de undo/redo
       return withUndoRedo(state, newState)
     }
 

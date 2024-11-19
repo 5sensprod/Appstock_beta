@@ -118,9 +118,9 @@ const LabelsContent = () => {
         {selectedCellId && (
           <CellEditor
             initialContent={
-              selectedCellId
-                ? cellContents[selectedCellId] || cellContents.default
-                : cellContents.default
+              selectedCellId && cellContents[selectedCellId]
+                ? cellContents[selectedCellId] // Contenu existant pour la cellule
+                : [] // Cellule vide par défaut
             }
             cellWidth={mmToPx(cellWidth)}
             cellHeight={mmToPx(cellHeight)}
