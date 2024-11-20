@@ -6,6 +6,7 @@ import useCanvasObjectActions from '../hooks/useCanvasObjectActions'
 import { canvasReducer, initialCanvasState } from '../reducers/canvasReducer'
 import { syncGridConfigToLabelConfig } from '../utils/configSync'
 import { GridContext } from './GridContext'
+import { mmToPx } from '../utils/conversionUtils'
 
 const CanvasContext = createContext()
 
@@ -63,6 +64,19 @@ const CanvasProvider = ({ children }) => {
       canvas.setZoom(canvasState.zoomLevel)
     }
   }, [canvas, canvasState.zoomLevel])
+
+  useEffect(() => {
+    if (canvas) {
+      const newWidth = mmToPx(labelConfig.labelWidth) * canvasState.zoomLevel
+      const newHeight = mmToPx(labelConfig.labelHeight) * canvasState.zoomLevel
+
+      canvas.setWidth(newWidth)
+      canvas.setHeight(newHeight)
+      canvas.setZoom(canvasState.zoomLevel) // Applique le zoom réel
+
+      canvas.renderAll()
+    }
+  }, [canvas, labelConfig, canvasState.zoomLevel])
 
   // Valeurs et actions exposées par le contexte
   const value = {
