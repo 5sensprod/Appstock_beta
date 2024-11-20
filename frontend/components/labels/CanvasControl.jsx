@@ -6,39 +6,68 @@ import { GridContext } from '../../context/GridContext'
 
 function convertCellContentToCanvasObjects(cellContent) {
   return cellContent.map((item) => ({
-    // Fabric.js n'a pas besoin de "type", on ne l'inclut pas ici
     text: item.text,
     left: item.left,
     top: item.top,
     fontSize: item.fontSize,
     fill: item.fill,
-    id: item.id, // Conservé pour traçabilité si nécessaire
-    fontFamily: 'Arial', // Défaut si manquant
-    angle: 0, // Fabric.js nécessite cet attribut
-    editable: true // Permet l'édition dans Fabric.js
+    id: item.id,
+    fontFamily: 'Arial',
+    angle: 0,
+    editable: true
   }))
 }
 
 export default function CanvasControl() {
-  const { canvasRef, canvas } = useCanvas() // Récupère l'instance Fabric.js et la référence du canvas
-  const { state } = useContext(GridContext)
+  const { canvasRef, canvas } = useCanvas()
+  const { state, dispatch } = useContext(GridContext) // Inclure dispatch
   const { selectedCellId, cellContents } = state
 
+  // Charger les données dans le canevas
   useEffect(() => {
     if (canvas && selectedCellId && cellContents[selectedCellId]) {
       const objects = convertCellContentToCanvasObjects(cellContents[selectedCellId])
 
-      canvas.clear() // Nettoyer le canevas avant de charger de nouveaux objets
+      canvas.clear()
 
-      // Ajouter les objets au canevas
       objects.forEach((obj) => {
-        const fabricObject = new fabric.IText(obj.text, { ...obj })
+        const { text, ...fabricOptions } = obj
+        const fabricObject = new fabric.IText(text, fabricOptions)
         canvas.add(fabricObject)
       })
 
-      canvas.renderAll() // Forcer le rendu
+      canvas.renderAll()
     }
   }, [canvas, selectedCellId, cellContents])
+
+  // Écouter les modifications du canevas et synchroniser avec cellContents
+  useEffect(() => {
+    if (!canvas || !selectedCellId) return
+
+    const handleObjectModified = () => {
+      const updatedObjects = canvas.getObjects().map((obj) => ({
+        id: obj.id,
+        type: 'IText',
+        text: obj.text,
+        left: obj.left,
+        top: obj.top,
+        fontSize: obj.fontSize,
+        fill: obj.fill
+      }))
+
+      // Utiliser dispatch au lieu de state.dispatch
+      dispatch({
+        type: 'UPDATE_CELL_CONTENT',
+        payload: { id: selectedCellId, content: updatedObjects }
+      })
+    }
+
+    canvas.on('object:modified', handleObjectModified)
+
+    return () => {
+      canvas.off('object:modified', handleObjectModified)
+    }
+  }, [canvas, selectedCellId, dispatch])
 
   return (
     <div className={styles.canvasContainer}>
