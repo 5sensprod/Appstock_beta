@@ -36,7 +36,6 @@ const useCanvasTransformAndConstraints = (
   // Synchroniser zoom et dimensions
   useEffect(() => {
     if (canvas) {
-      console.log('Synchronizing zoom and dimensions in useCanvasTransformAndConstraints')
       const newWidth = mmToPx(labelConfig.labelWidth) * canvasState.zoomLevel
       const newHeight = mmToPx(labelConfig.labelHeight) * canvasState.zoomLevel
 
