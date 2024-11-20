@@ -20,10 +20,9 @@ function convertCellContentToCanvasObjects(cellContent) {
 
 export default function CanvasControl() {
   const { canvasRef, canvas } = useCanvas()
-  const { state, dispatch } = useContext(GridContext) // Inclure dispatch
+  const { state, dispatch, findLinkedGroup } = useContext(GridContext) // Inclure findLinkedGroup
   const { selectedCellId, cellContents } = state
 
-  // Charger les données dans le canevas
   useEffect(() => {
     if (canvas && selectedCellId && cellContents[selectedCellId]) {
       const objects = convertCellContentToCanvasObjects(cellContents[selectedCellId])
@@ -40,7 +39,6 @@ export default function CanvasControl() {
     }
   }, [canvas, selectedCellId, cellContents])
 
-  // Écouter les modifications du canevas et synchroniser avec cellContents
   useEffect(() => {
     if (!canvas || !selectedCellId) return
 
@@ -55,11 +53,27 @@ export default function CanvasControl() {
         fill: obj.fill
       }))
 
-      // Utiliser dispatch au lieu de state.dispatch
+      // Dispatch UPDATE_CELL_CONTENT
       dispatch({
         type: 'UPDATE_CELL_CONTENT',
         payload: { id: selectedCellId, content: updatedObjects }
       })
+
+      // Vérifier si la cellule appartient à un groupe lié
+      const linkedGroup = findLinkedGroup(selectedCellId)
+      if (linkedGroup && linkedGroup.length > 1) {
+        // Construire le layout
+        const layout = updatedObjects.reduce((acc, item) => {
+          acc[item.id] = { left: item.left, top: item.top }
+          return acc
+        }, {})
+
+        // Dispatch SYNC_CELL_LAYOUT
+        dispatch({
+          type: 'SYNC_CELL_LAYOUT',
+          payload: { sourceId: selectedCellId, layout }
+        })
+      }
     }
 
     canvas.on('object:modified', handleObjectModified)
@@ -67,7 +81,7 @@ export default function CanvasControl() {
     return () => {
       canvas.off('object:modified', handleObjectModified)
     }
-  }, [canvas, selectedCellId, dispatch])
+  }, [canvas, selectedCellId, dispatch, findLinkedGroup])
 
   return (
     <div className={styles.canvasContainer}>
