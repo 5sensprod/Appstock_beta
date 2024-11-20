@@ -15,8 +15,8 @@ function convertCellContentToCanvasObjects(cellContent) {
     id: item.id,
     fontFamily: item.fontFamily || 'Arial',
     angle: item.angle || 0,
-    scaleX: item.scaleX || 1, // Applique la valeur par défaut si non spécifiée
-    scaleY: item.scaleY || 1, // Applique la valeur par défaut si non spécifiée
+    scaleX: item.scaleX || 1,
+    scaleY: item.scaleY || 1,
     editable: true
   }))
 }
@@ -43,10 +43,11 @@ export default function CanvasControl() {
       const existingObjects = canvas.getObjects()
       const newObjects = convertCellContentToCanvasObjects(cellContents[selectedCellId])
 
-      // Comparer les objets actuels avec ceux du canvas
       if (JSON.stringify(existingObjects) === JSON.stringify(newObjects)) {
         return
       }
+
+      const activeObject = canvas.getActiveObject() // Sauvegarder l'objet actif
 
       canvas.clear()
       newObjects.forEach((obj) => {
@@ -54,6 +55,14 @@ export default function CanvasControl() {
         const fabricObject = new fabric.IText(text, fabricOptions)
         canvas.add(fabricObject)
       })
+
+      if (activeObject) {
+        const restoredObject = canvas.getObjects().find((obj) => obj.id === activeObject.id)
+        if (restoredObject) {
+          canvas.setActiveObject(restoredObject) // Restaurer l'objet actif après le chargement
+        }
+      }
+
       canvas.renderAll()
     }
 
@@ -67,11 +76,11 @@ export default function CanvasControl() {
         left: obj.left,
         top: obj.top,
         fontSize: obj.fontSize,
-        fill: obj.fill, // Capture la couleur
-        fontFamily: obj.fontFamily, // Capture la police
-        angle: obj.angle || 0, // Capture l'angle
-        scaleX: obj.scaleX, // Capture le scale horizontal
-        scaleY: obj.scaleY // Capture le scale vertical
+        fill: obj.fill,
+        fontFamily: obj.fontFamily,
+        angle: obj.angle || 0,
+        scaleX: obj.scaleX,
+        scaleY: obj.scaleY
       }))
 
       dispatch({
@@ -101,8 +110,12 @@ export default function CanvasControl() {
       }
 
       if (activeObject) {
-        canvas.setActiveObject(activeObject) // Restaurer l'objet actif
+        const restoredObject = canvas.getObjects().find((obj) => obj.id === activeObject.id)
+        if (restoredObject) {
+          canvas.setActiveObject(restoredObject) // Restaurer l'objet actif
+        }
       }
+
       canvas.renderAll()
     }
 
