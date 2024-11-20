@@ -4,6 +4,8 @@ import useCanvasTransformAndConstraints from '../hooks/useCanvasTransformAndCons
 import useInitializeCanvas from '../hooks/useInitializeCanvas'
 import useCanvasObjectActions from '../hooks/useCanvasObjectActions'
 import { canvasReducer, initialCanvasState } from '../reducers/canvasReducer'
+import { syncGridConfigToLabelConfig } from '../utils/configSync'
+import { GridContext } from './GridContext'
 
 const CanvasContext = createContext()
 
@@ -16,9 +18,13 @@ const useCanvas = () => {
 const CanvasProvider = ({ children }) => {
   const canvasRef = useRef(null)
   const [canvasState, dispatchCanvasAction] = useReducer(canvasReducer, initialCanvasState)
+  const { state: gridState } = useContext(GridContext) // Récupère `config` depuis `GridContext`
+  const { config } = gridState
 
-  const { canvas, zoomLevel, selectedColor, selectedFont, selectedObject, labelConfig } =
-    canvasState
+  // Convertir `config` de GridContext en `labelConfig`
+  const labelConfig = syncGridConfigToLabelConfig(config)
+
+  const { canvas, zoomLevel, selectedColor, selectedFont, selectedObject } = canvasState
 
   // Initialisation du canevas
   useInitializeCanvas(canvas, labelConfig, dispatchCanvasAction, canvasRef)
@@ -51,7 +57,7 @@ const CanvasProvider = ({ children }) => {
     onUpdateQrCode,
     onAddQrCodeCsv
   } = useCanvasObjectActions(canvas, labelConfig, selectedColor, selectedFont)
-
+  console.log('LabelConfig:', labelConfig)
   // Valeurs et actions exposées par le contexte
   const value = {
     canvasRef,
@@ -59,7 +65,7 @@ const CanvasProvider = ({ children }) => {
     zoomLevel,
     updateCanvasSize,
     handleZoomChange,
-    labelConfig,
+    labelConfig, // Synchronisé avec GridContext via syncGridConfigToLabelConfig
     setLabelConfig: (config) => dispatchCanvasAction({ type: 'SET_LABEL_CONFIG', payload: config }),
     selectedColor,
     setSelectedColor: (color) => dispatchCanvasAction({ type: 'SET_COLOR', payload: color }),
