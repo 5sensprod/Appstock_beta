@@ -176,6 +176,8 @@ export function gridReducer(state, action) {
         newLinkedGroup.push(cellId)
       })
 
+      console.log('cellContents après IMPORT_CSV :', newCellContents)
+
       // Nettoyer les contenus des cellules pour correspondre aux cellules existantes dans la grille
       const cleanedCellContents = Object.keys(newCellContents)
         .filter((key) => updatedState.grid.some((cell) => cell.id === key))
