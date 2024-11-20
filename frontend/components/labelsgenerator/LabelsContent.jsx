@@ -17,7 +17,8 @@ const LabelsContent = () => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
   const { selectedCellId, cellContents, config } = state
   const { cellWidth, cellHeight } = config
-
+  const cellContent =
+    selectedCellId && cellContents[selectedCellId] ? cellContents[selectedCellId] : []
   return (
     <div className={styles.app}>
       {/* Canvas Section */}
@@ -32,16 +33,13 @@ const LabelsContent = () => {
       </div>
 
       <CellEditor
-        initialContent={
-          selectedCellId && cellContents[selectedCellId]
-            ? cellContents[selectedCellId] // Contenu existant pour la cellule
-            : [] // Cellule vide par défaut
-        }
+        key={selectedCellId} // Utilisez selectedCellId pour la clé
+        initialContent={cellContent}
         cellWidth={mmToPx(cellWidth)}
         cellHeight={mmToPx(cellHeight)}
         cellId={selectedCellId}
-        linkedGroup={selectedCellId ? findLinkedGroup(selectedCellId) : []} // Tableau vide si aucune cellule sélectionnée
-        dispatch={dispatch} // Synchronisation avec le reducer
+        linkedGroup={selectedCellId ? findLinkedGroup(selectedCellId) : []}
+        dispatch={dispatch}
       />
       <FabricDesigner />
       {/* <ZoomControl />
