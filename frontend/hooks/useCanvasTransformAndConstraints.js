@@ -4,38 +4,6 @@ import { useCallback, useEffect } from 'react'
 import { mmToPx } from '../utils/conversionUtils'
 
 const useCanvasTransformAndConstraints = (canvas, labelConfig, dispatchCanvasAction) => {
-  // Mise à jour de la taille du canevas
-  const updateCanvasSize = useCallback(
-    (newSize) => {
-      if (canvas) {
-        const newWidthPx = mmToPx(newSize.labelWidth || labelConfig.labelWidth)
-        const newHeightPx = mmToPx(newSize.labelHeight || labelConfig.labelHeight)
-
-        dispatchCanvasAction({
-          type: 'SET_LABEL_CONFIG',
-          payload: { ...labelConfig, ...newSize }
-        })
-
-        canvas.setZoom(1)
-        dispatchCanvasAction({ type: 'SET_ZOOM', payload: 1 })
-
-        canvas.setWidth(newWidthPx)
-        canvas.setHeight(newHeightPx)
-
-        canvas.getObjects().forEach((obj) => {
-          obj.scaleX = obj.originalScaleX || obj.scaleX
-          obj.scaleY = obj.originalScaleY || obj.scaleY
-          obj.left = obj.originalLeft || obj.left
-          obj.top = obj.originalTop || obj.top
-          obj.setCoords()
-        })
-
-        canvas.renderAll()
-      }
-    },
-    [canvas, labelConfig, dispatchCanvasAction]
-  )
-
   // Gestion du zoom
   const handleZoomChange = useCallback(
     (newZoom) => {
@@ -99,7 +67,7 @@ const useCanvasTransformAndConstraints = (canvas, labelConfig, dispatchCanvasAct
     }
   }, [canvas, restrictObjectMovement])
 
-  return { updateCanvasSize, handleZoomChange }
+  return { handleZoomChange }
 }
 
 export default useCanvasTransformAndConstraints

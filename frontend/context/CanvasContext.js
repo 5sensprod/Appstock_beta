@@ -1,4 +1,4 @@
-import React, { createContext, useRef, useContext, useReducer } from 'react'
+import React, { createContext, useRef, useContext, useReducer, useEffect } from 'react'
 import useCanvasObjectHandler from '../hooks/useCanvasObjectHandler'
 import useCanvasTransformAndConstraints from '../hooks/useCanvasTransformAndConstraints'
 import useInitializeCanvas from '../hooks/useInitializeCanvas'
@@ -30,7 +30,7 @@ const CanvasProvider = ({ children }) => {
   useInitializeCanvas(canvas, labelConfig, dispatchCanvasAction, canvasRef)
 
   // Gestion des transformations et des contraintes
-  const { updateCanvasSize, handleZoomChange } = useCanvasTransformAndConstraints(
+  const { handleZoomChange } = useCanvasTransformAndConstraints(
     canvas,
     labelConfig,
     dispatchCanvasAction
@@ -57,13 +57,18 @@ const CanvasProvider = ({ children }) => {
     onUpdateQrCode,
     onAddQrCodeCsv
   } = useCanvasObjectActions(canvas, labelConfig, selectedColor, selectedFont)
-  console.log('LabelConfig:', labelConfig)
+
+  useEffect(() => {
+    if (canvas && canvasState.zoomLevel !== canvas.getZoom()) {
+      canvas.setZoom(canvasState.zoomLevel)
+    }
+  }, [canvas, canvasState.zoomLevel])
+
   // Valeurs et actions exposées par le contexte
   const value = {
     canvasRef,
     canvas,
     zoomLevel,
-    updateCanvasSize,
     handleZoomChange,
     labelConfig, // Synchronisé avec GridContext via syncGridConfigToLabelConfig
     setLabelConfig: (config) => dispatchCanvasAction({ type: 'SET_LABEL_CONFIG', payload: config }),
