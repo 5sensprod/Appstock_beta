@@ -20,23 +20,35 @@ function convertCellContentToCanvasObjects(cellContent) {
 
 export default function CanvasControl() {
   const { canvasRef, canvas } = useCanvas()
-  const { state, dispatch, findLinkedGroup } = useContext(GridContext) // Inclure findLinkedGroup
+  const { state, dispatch, findLinkedGroup } = useContext(GridContext)
   const { selectedCellId, cellContents } = state
 
   useEffect(() => {
-    if (canvas && selectedCellId && cellContents[selectedCellId]) {
-      const objects = convertCellContentToCanvasObjects(cellContents[selectedCellId])
+    if (!canvas) return
 
+    // Nettoyer le canevas si la cellule sélectionnée est vide ou inexistante
+    if (
+      !selectedCellId ||
+      !cellContents[selectedCellId] ||
+      cellContents[selectedCellId].length === 0
+    ) {
       canvas.clear()
-
-      objects.forEach((obj) => {
-        const { text, ...fabricOptions } = obj
-        const fabricObject = new fabric.IText(text, fabricOptions)
-        canvas.add(fabricObject)
-      })
-
       canvas.renderAll()
+      return
     }
+
+    // Charger les objets si la cellule contient des données
+    const objects = convertCellContentToCanvasObjects(cellContents[selectedCellId])
+
+    canvas.clear()
+
+    objects.forEach((obj) => {
+      const { text, ...fabricOptions } = obj
+      const fabricObject = new fabric.IText(text, fabricOptions)
+      canvas.add(fabricObject)
+    })
+
+    canvas.renderAll()
   }, [canvas, selectedCellId, cellContents])
 
   useEffect(() => {
@@ -53,22 +65,18 @@ export default function CanvasControl() {
         fill: obj.fill
       }))
 
-      // Dispatch UPDATE_CELL_CONTENT
       dispatch({
         type: 'UPDATE_CELL_CONTENT',
         payload: { id: selectedCellId, content: updatedObjects }
       })
 
-      // Vérifier si la cellule appartient à un groupe lié
       const linkedGroup = findLinkedGroup(selectedCellId)
       if (linkedGroup && linkedGroup.length > 1) {
-        // Construire le layout
         const layout = updatedObjects.reduce((acc, item) => {
           acc[item.id] = { left: item.left, top: item.top }
           return acc
         }, {})
 
-        // Dispatch SYNC_CELL_LAYOUT
         dispatch({
           type: 'SYNC_CELL_LAYOUT',
           payload: { sourceId: selectedCellId, layout }
