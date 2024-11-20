@@ -4,6 +4,7 @@ import styles from './FabricDesigner.module.css'
 import { useCanvas } from '../../context/CanvasContext'
 import { GridContext } from '../../context/GridContext'
 
+// Conversion des données de contenu en objets Fabric
 function convertCellContentToCanvasObjects(cellContent) {
   return cellContent.map((item) => ({
     text: item.text,
@@ -12,8 +13,10 @@ function convertCellContentToCanvasObjects(cellContent) {
     fontSize: item.fontSize,
     fill: item.fill,
     id: item.id,
-    fontFamily: 'Arial',
-    angle: 0,
+    fontFamily: item.fontFamily || 'Arial',
+    angle: item.angle || 0,
+    scaleX: item.scaleX || 1, // Applique la valeur par défaut si non spécifiée
+    scaleY: item.scaleY || 1, // Applique la valeur par défaut si non spécifiée
     editable: true
   }))
 }
@@ -26,43 +29,49 @@ export default function CanvasControl() {
   useEffect(() => {
     if (!canvas) return
 
-    // Nettoyer le canevas si la cellule sélectionnée est vide ou inexistante
-    if (
-      !selectedCellId ||
-      !cellContents[selectedCellId] ||
-      cellContents[selectedCellId].length === 0
-    ) {
+    const loadCanvasObjects = () => {
+      if (
+        !selectedCellId ||
+        !cellContents[selectedCellId] ||
+        cellContents[selectedCellId].length === 0
+      ) {
+        canvas.clear()
+        canvas.renderAll()
+        return
+      }
+
+      const existingObjects = canvas.getObjects()
+      const newObjects = convertCellContentToCanvasObjects(cellContents[selectedCellId])
+
+      // Comparer les objets actuels avec ceux du canvas
+      if (JSON.stringify(existingObjects) === JSON.stringify(newObjects)) {
+        return
+      }
+
       canvas.clear()
+      newObjects.forEach((obj) => {
+        const { text, ...fabricOptions } = obj
+        const fabricObject = new fabric.IText(text, fabricOptions)
+        canvas.add(fabricObject)
+      })
       canvas.renderAll()
-      return
     }
 
-    // Charger les objets si la cellule contient des données
-    const objects = convertCellContentToCanvasObjects(cellContents[selectedCellId])
+    const handleModification = () => {
+      const activeObject = canvas.getActiveObject() // Sauvegarder l'objet actif
 
-    canvas.clear()
-
-    objects.forEach((obj) => {
-      const { text, ...fabricOptions } = obj
-      const fabricObject = new fabric.IText(text, fabricOptions)
-      canvas.add(fabricObject)
-    })
-
-    canvas.renderAll()
-  }, [canvas, selectedCellId, cellContents])
-
-  useEffect(() => {
-    if (!canvas || !selectedCellId) return
-
-    const handleObjectModified = () => {
       const updatedObjects = canvas.getObjects().map((obj) => ({
         id: obj.id,
-        type: 'IText',
+        type: obj.type,
         text: obj.text,
         left: obj.left,
         top: obj.top,
         fontSize: obj.fontSize,
-        fill: obj.fill
+        fill: obj.fill, // Capture la couleur
+        fontFamily: obj.fontFamily, // Capture la police
+        angle: obj.angle || 0, // Capture l'angle
+        scaleX: obj.scaleX, // Capture le scale horizontal
+        scaleY: obj.scaleY // Capture le scale vertical
       }))
 
       dispatch({
@@ -73,7 +82,15 @@ export default function CanvasControl() {
       const linkedGroup = findLinkedGroup(selectedCellId)
       if (linkedGroup && linkedGroup.length > 1) {
         const layout = updatedObjects.reduce((acc, item) => {
-          acc[item.id] = { left: item.left, top: item.top }
+          acc[item.id] = {
+            left: item.left,
+            top: item.top,
+            fill: item.fill,
+            scaleX: item.scaleX,
+            scaleY: item.scaleY,
+            fontFamily: item.fontFamily,
+            angle: item.angle || 0
+          }
           return acc
         }, {})
 
@@ -82,14 +99,23 @@ export default function CanvasControl() {
           payload: { sourceId: selectedCellId, layout }
         })
       }
+
+      if (activeObject) {
+        canvas.setActiveObject(activeObject) // Restaurer l'objet actif
+      }
+      canvas.renderAll()
     }
 
-    canvas.on('object:modified', handleObjectModified)
+    // Charger les objets initiaux
+    loadCanvasObjects()
+
+    const handleEvents = ['object:modified', 'object:changed']
+    handleEvents.forEach((event) => canvas.on(event, handleModification))
 
     return () => {
-      canvas.off('object:modified', handleObjectModified)
+      handleEvents.forEach((event) => canvas.off(event, handleModification))
     }
-  }, [canvas, selectedCellId, dispatch, findLinkedGroup])
+  }, [canvas, selectedCellId, cellContents, dispatch, findLinkedGroup])
 
   return (
     <div className={styles.canvasContainer}>

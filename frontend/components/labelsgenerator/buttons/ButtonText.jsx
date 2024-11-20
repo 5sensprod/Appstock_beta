@@ -10,8 +10,10 @@ const ButtonText = ({ cellId, linkedGroup, canvasInstance, dispatch }) => {
       const iText = new fabric.IText('Nouveau texte', {
         left: 10,
         top: 10,
+        angle: 0,
         fontSize: 16,
         fill: '#000',
+        fontFamily: 'Lato',
         editable: true,
         id: Math.random().toString(36).substr(2, 9) // Génère un ID unique
       })
@@ -26,6 +28,7 @@ const ButtonText = ({ cellId, linkedGroup, canvasInstance, dispatch }) => {
         left: obj.left,
         top: obj.top,
         fontSize: obj.fontSize,
+        fontFamily: obj.fontFamily,
         fill: obj.fill
       }))
 

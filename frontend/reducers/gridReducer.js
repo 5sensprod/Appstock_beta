@@ -216,27 +216,23 @@ export function gridReducer(state, action) {
       const { id, content } = action.payload
       const newCellContents = { ...state.cellContents }
 
-      // Si la cellule existe, conserver ses anciens flags
       const existingContent = state.cellContents[id] || []
 
-      // Préserver les flags, notamment `linkedByCsv`, et garantir que `type` est défini
       const updatedContent = content.map((item) => {
         const existingItem = existingContent.find((oldItem) => oldItem.id === item.id)
         return {
           ...item,
-          type: item.type || existingItem?.type || 'IText', // Définit le type par défaut
-          linkedByCsv: existingItem?.linkedByCsv || false
+          type: item.type || existingItem?.type || 'IText',
+          linkedByCsv: existingItem?.linkedByCsv || false,
+          scaleX: item.scaleX || existingItem?.scaleX || 1, // Préserve le scaleX
+          scaleY: item.scaleY || existingItem?.scaleY || 1, // Préserve le scaleY
+          fill: item.fill || existingItem?.fill || '#000000', // Préserve la couleur
+          fontFamily: item.fontFamily || existingItem?.fontFamily || 'Arial', // Préserve la police
+          angle: item.angle || existingItem?.angle || 0 // Préserve l'angle
         }
       })
 
-      // Validation pour les objets non textuels
-      const isObjectEmpty = (obj) => {
-        if (obj.type === 'IText') return !obj.text?.trim()
-        return false // Les autres types d'objets ne sont jamais "vides"
-      }
-
-      // Si le nouveau contenu est vide, supprimez la cellule
-      if (!content || (content.length === 0 && updatedContent.every(isObjectEmpty))) {
+      if (!content || updatedContent.every((obj) => !obj.text?.trim())) {
         delete newCellContents[id]
       } else {
         newCellContents[id] = updatedContent
@@ -248,6 +244,35 @@ export function gridReducer(state, action) {
       }
 
       return withUndoRedo(state, newState)
+    }
+
+    case 'SYNC_CELL_LAYOUT': {
+      const { sourceId, layout } = action.payload
+
+      const linkedGroup = state.linkedGroups.find((group) => group.includes(sourceId))
+      if (!linkedGroup) return state
+
+      const updatedCellContents = { ...state.cellContents }
+
+      linkedGroup.forEach((cellId) => {
+        if (updatedCellContents[cellId]) {
+          updatedCellContents[cellId] = updatedCellContents[cellId].map((item) => ({
+            ...item,
+            left: layout[item.id]?.left ?? item.left,
+            top: layout[item.id]?.top ?? item.top,
+            scaleX: layout[item.id]?.scaleX ?? item.scaleX, // Synchronise le scaleX
+            scaleY: layout[item.id]?.scaleY ?? item.scaleY, // Synchronise le scaleY
+            fill: layout[item.id]?.fill ?? item.fill, // Synchronise la couleur
+            fontFamily: layout[item.id]?.fontFamily ?? item.fontFamily, // Synchronise la police
+            angle: layout[item.id]?.angle ?? item.angle // Synchronise l'angle
+          }))
+        }
+      })
+
+      return {
+        ...state,
+        cellContents: updatedCellContents
+      }
     }
 
     case 'SET_PAGE': {
@@ -290,33 +315,6 @@ export function gridReducer(state, action) {
         ...state,
         clipboard: { cellId }, // Ajouter la cellule au presse-papiers
         cellContents: updatedCellContents // Mettre à jour les contenus après sauvegarde
-      }
-    }
-
-    case 'SYNC_CELL_LAYOUT': {
-      const { sourceId, layout } = action.payload
-
-      // Trouver le groupe lié auquel appartient la cellule source
-      const linkedGroup = state.linkedGroups.find((group) => group.includes(sourceId))
-
-      if (!linkedGroup) return state // Si aucun groupe lié, ne rien faire
-
-      const updatedCellContents = { ...state.cellContents }
-
-      linkedGroup.forEach((cellId) => {
-        if (updatedCellContents[cellId]) {
-          // Synchroniser chaque objet IText basé sur son identifiant unique (id)
-          updatedCellContents[cellId] = updatedCellContents[cellId].map((item) => ({
-            ...item,
-            left: layout[item.id]?.left ?? item.left, // Synchronise la position `left`
-            top: layout[item.id]?.top ?? item.top // Synchronise la position `top`
-          }))
-        }
-      })
-
-      return {
-        ...state,
-        cellContents: updatedCellContents
       }
     }
 
