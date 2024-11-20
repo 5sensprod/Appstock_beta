@@ -1,9 +1,12 @@
-// frontend/hooks/useCanvasTransformAndConstraints.js
-
 import { useCallback, useEffect } from 'react'
 import { mmToPx } from '../utils/conversionUtils'
 
-const useCanvasTransformAndConstraints = (canvas, labelConfig, dispatchCanvasAction) => {
+const useCanvasTransformAndConstraints = (
+  canvas,
+  labelConfig,
+  canvasState,
+  dispatchCanvasAction
+) => {
   // Gestion du zoom
   const handleZoomChange = useCallback(
     (newZoom) => {
@@ -29,6 +32,21 @@ const useCanvasTransformAndConstraints = (canvas, labelConfig, dispatchCanvasAct
     },
     [canvas, dispatchCanvasAction, labelConfig]
   )
+
+  // Synchroniser zoom et dimensions
+  useEffect(() => {
+    if (canvas) {
+      console.log('Synchronizing zoom and dimensions in useCanvasTransformAndConstraints')
+      const newWidth = mmToPx(labelConfig.labelWidth) * canvasState.zoomLevel
+      const newHeight = mmToPx(labelConfig.labelHeight) * canvasState.zoomLevel
+
+      canvas.setWidth(newWidth)
+      canvas.setHeight(newHeight)
+      canvas.setZoom(canvasState.zoomLevel)
+
+      canvas.renderAll()
+    }
+  }, [canvas, labelConfig, canvasState.zoomLevel])
 
   // Restrictions sur les objets (mouvement/redimensionnement)
   const restrictObjectMovement = useCallback(
