@@ -1,3 +1,5 @@
+//frontend\context\CanvasContext.js
+
 import React, { createContext, useRef, useContext, useReducer } from 'react'
 import useCanvasObjectHandler from '../hooks/useCanvasObjectHandler'
 import useCanvasTransformAndConstraints from '../hooks/useCanvasTransformAndConstraints'

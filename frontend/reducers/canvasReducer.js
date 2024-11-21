@@ -7,14 +7,7 @@ export const initialCanvasState = {
   selectedColor: '#000000',
   selectedFont: 'Lato',
   backgroundColor: 'white',
-  labelConfig: {
-    labelWidth: 48.5,
-    labelHeight: 25.5,
-    offsetTop: 22,
-    offsetLeft: 8,
-    spacingVertical: 0,
-    spacingHorizontal: 0
-  },
+  labelConfig: {},
   objects: [],
   nextObjectId: 1
 }
