@@ -215,14 +215,30 @@ export function gridReducer(state, action) {
 
     case 'UPDATE_CELL_CONTENT': {
       const { id, content } = action.payload
+      const newCellContents = { ...state.cellContents }
 
-      return {
-        ...state,
-        cellContents: {
-          ...state.cellContents,
-          [id]: content
+      const existingContent = state.cellContents[id] || []
+
+      const updatedContent = content.map((item) => {
+        const existingItem = existingContent.find((oldItem) => oldItem.id === item.id)
+        return {
+          ...item,
+          linkedByCsv: existingItem?.linkedByCsv || false
         }
+      })
+
+      if (!content || updatedContent.every((obj) => !obj.text?.trim())) {
+        delete newCellContents[id]
+      } else {
+        newCellContents[id] = updatedContent
       }
+
+      const newState = {
+        ...state,
+        cellContents: newCellContents
+      }
+
+      return withUndoRedo(state, newState)
     }
 
     case 'SYNC_CELL_LAYOUT': {
