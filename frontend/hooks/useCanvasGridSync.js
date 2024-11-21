@@ -36,8 +36,7 @@ const useCanvasGridSync = (canvas) => {
 
     const newObjects = convertCellContentToCanvasObjects(cellContents[selectedCellId])
 
-    const previousActiveObject = canvas.getActiveObject() // Sauvegarder l'objet actif
-
+    const previousActiveObject = canvas.getActiveObject()
     // Vider le canvas existant et charger les nouveaux objets
     canvas.clear()
     newObjects.forEach((obj) => {

@@ -45,13 +45,7 @@ const CanvasProvider = ({ children }) => {
 
   // Gestion des objets sur le canevas
   const { isShapeSelected, isTextSelected, isImageSelected, isQRCodeSelected } =
-    useCanvasObjectHandler(
-      canvas,
-      selectedObject,
-      selectedColor,
-      selectedFont,
-      dispatchCanvasAction
-    )
+    useCanvasObjectHandler(canvas, selectedObject, dispatchCanvasAction)
 
   // Actions pour les objets
   const {
