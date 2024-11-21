@@ -7,7 +7,8 @@ import FontFaceObserver from 'fontfaceobserver'
 
 export default function TextMenu({ onAddText, selectedObject }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
-  const { selectedColor, selectedFont, dispatchCanvasAction } = useCanvas()
+  const { selectedColor, selectedFont, dispatchCanvasAction, handleCanvasModification } =
+    useCanvas()
 
   const pickerRef = useRef(null)
 
@@ -37,10 +38,17 @@ export default function TextMenu({ onAddText, selectedObject }) {
     if (isTextSelected) {
       selectedObject.set({ fill: color })
       selectedObject.canvas.renderAll()
+
+      // Dispatch pour mettre à jour les propriétés
       dispatchCanvasAction({
         type: 'SET_OBJECT_PROPERTIES',
         payload: { id: selectedObject.id, properties: { color } }
       })
+
+      // Force handleCanvasModification
+      if (selectedObject.canvas && typeof handleCanvasModification === 'function') {
+        handleCanvasModification()
+      }
     } else {
       dispatchCanvasAction({
         type: 'SET_OBJECT_PROPERTIES',
@@ -57,13 +65,20 @@ export default function TextMenu({ onAddText, selectedObject }) {
         .then(() => {
           selectedObject.set({ fontFamily })
           selectedObject.canvas.renderAll()
+
+          // Dispatch pour mettre à jour les propriétés
           dispatchCanvasAction({
             type: 'SET_OBJECT_PROPERTIES',
             payload: { id: selectedObject.id, properties: { font: fontFamily } }
           })
+
+          // Force handleCanvasModification
+          if (selectedObject.canvas && typeof handleCanvasModification === 'function') {
+            handleCanvasModification()
+          }
         })
         .catch((e) => {
-          console.error(`Error loading font ${fontFamily}`, e)
+          console.error(`Erreur de chargement de la police ${fontFamily}`, e)
         })
     } else {
       dispatchCanvasAction({

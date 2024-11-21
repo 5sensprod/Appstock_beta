@@ -15,7 +15,6 @@ export const initialCanvasState = {
 export const canvasReducer = (state, action) => {
   switch (action.type) {
     case 'SET_CANVAS':
-      console.log('Action SET_CANVAS: Canvas instance set.')
       return { ...state, canvas: action.payload }
 
     case 'SET_LABEL_CONFIG':
@@ -38,7 +37,6 @@ export const canvasReducer = (state, action) => {
       return { ...state, zoomLevel: action.payload }
 
     case 'SET_SELECTED_OBJECT':
-      // console.log('Action SET_SELECTED_OBJECT: Selected object updated:', action.payload)
       return { ...state, selectedObject: action.payload }
 
     case 'SET_OBJECT_PROPERTIES':

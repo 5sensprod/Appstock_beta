@@ -23,11 +23,9 @@ const useCanvasGridSync = (canvas) => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
   const { selectedCellId, cellContents } = state
 
-  // Charger les objets sur le canvas à partir de cellContents
   const loadCanvasObjects = useCallback(() => {
     if (!canvas) return
 
-    // Si aucun contenu n'est lié à la cellule sélectionnée, vider le canvas
     if (!selectedCellId || !cellContents[selectedCellId]?.length) {
       canvas.clear()
       canvas.renderAll()
@@ -37,7 +35,6 @@ const useCanvasGridSync = (canvas) => {
     const newObjects = convertCellContentToCanvasObjects(cellContents[selectedCellId])
 
     const previousActiveObject = canvas.getActiveObject()
-    // Vider le canvas existant et charger les nouveaux objets
     canvas.clear()
     newObjects.forEach((obj) => {
       const { text, ...fabricOptions } = obj
@@ -45,7 +42,6 @@ const useCanvasGridSync = (canvas) => {
       canvas.add(fabricObject)
     })
 
-    // Restaurer l'objet actif basé sur l'ID si nécessaire
     if (previousActiveObject) {
       const restoredObject = canvas.getObjects().find((obj) => obj.id === previousActiveObject.id)
       if (restoredObject) {
@@ -56,10 +52,9 @@ const useCanvasGridSync = (canvas) => {
     canvas.renderAll()
   }, [canvas, selectedCellId, cellContents])
 
-  // Gérer les modifications sur le canvas et mettre à jour cellContents
   const handleCanvasModification = useCallback(() => {
     if (!canvas || !selectedCellId) return
-
+    // Récupérer les objets mis à jour
     const updatedObjects = canvas.getObjects().map((obj) => ({
       id: obj.id,
       text: obj.text,
@@ -73,13 +68,16 @@ const useCanvasGridSync = (canvas) => {
       scaleY: obj.scaleY
     }))
 
-    // Mettre à jour le contenu de la cellule sélectionnée dans le GridContext
+    dispatch({
+      type: 'SET_OBJECTS',
+      payload: updatedObjects
+    })
+
     dispatch({
       type: 'UPDATE_CELL_CONTENT',
       payload: { id: selectedCellId, content: updatedObjects }
     })
 
-    // Synchroniser les cellules liées si nécessaire
     const linkedGroup = findLinkedGroup(selectedCellId)
     if (linkedGroup && linkedGroup.length > 1) {
       const layout = updatedObjects.reduce((acc, item) => {
@@ -102,22 +100,22 @@ const useCanvasGridSync = (canvas) => {
     }
   }, [canvas, selectedCellId, dispatch, findLinkedGroup])
 
-  // Effet principal pour gérer la synchronisation
   useEffect(() => {
     if (!canvas) return
 
-    // Charger les objets initiaux sur le canvas
     loadCanvasObjects()
 
-    // Ajouter des gestionnaires d'événements pour détecter les modifications
     const events = ['object:modified', 'object:added', 'object:removed']
     events.forEach((event) => canvas.on(event, handleCanvasModification))
 
     return () => {
-      // Nettoyer les gestionnaires d'événements lors du démontage
       events.forEach((event) => canvas.off(event, handleCanvasModification))
     }
   }, [canvas, loadCanvasObjects, handleCanvasModification])
+
+  return {
+    handleCanvasModification // Expose la fonction pour CanvasContext
+  }
 }
 
 export default useCanvasGridSync

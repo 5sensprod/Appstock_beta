@@ -33,7 +33,8 @@ const CanvasProvider = ({ children }) => {
   useInitializeCanvas(canvas, labelConfig, dispatchCanvasAction, canvasRef)
 
   // Synchronisation entre Canvas et Grid
-  useCanvasGridSync(canvas)
+  // Synchronisation entre Canvas et Grid
+  const { handleCanvasModification } = useCanvasGridSync(canvas)
 
   // Gestion des transformations et des contraintes
   const { handleZoomChange } = useCanvasTransformAndConstraints(
@@ -87,6 +88,7 @@ const CanvasProvider = ({ children }) => {
     isTextSelected,
     isImageSelected,
     isQRCodeSelected,
+    handleCanvasModification,
     // Dispatcher pour des actions personnalisées
     dispatchCanvasAction,
     canvasState
