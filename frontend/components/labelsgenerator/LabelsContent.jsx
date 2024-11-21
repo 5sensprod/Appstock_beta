@@ -3,7 +3,7 @@ import styles from '../labels/FabricDesigner.module.css'
 import MenuCell from './MenuCell'
 import Menu from '../labels/Menu'
 import ZoomControl from '../labels/ZoomControl'
-import CanvasControl from '../labels/CanvasControl'
+import CanvasControl from '../labels/CanvasControl copy'
 
 const LabelsContent = () => {
   return (

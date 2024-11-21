@@ -15,7 +15,7 @@ const ButtonText = ({ cellId, linkedGroup, canvasInstance, dispatch }) => {
         fill: '#000',
         fontFamily: 'Lato',
         editable: true,
-        id: Math.random().toString(36).substr(2, 9) // Génère un ID unique
+        id: Math.random().toString(36).substring(2, 11) // Génère un ID unique
       })
       canvas.add(iText)
       canvas.setActiveObject(iText)
