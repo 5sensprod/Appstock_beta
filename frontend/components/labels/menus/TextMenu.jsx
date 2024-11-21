@@ -1,5 +1,3 @@
-// components/labels/menus/TextMenu.jsx
-
 import React, { useState, useEffect, useRef } from 'react'
 import { faTextHeight, faPalette } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../../ui/IconButton'
@@ -39,8 +37,15 @@ export default function TextMenu({ onAddText, selectedObject }) {
     if (isTextSelected) {
       selectedObject.set({ fill: color })
       selectedObject.canvas.renderAll()
+      dispatchCanvasAction({
+        type: 'SET_OBJECT_PROPERTIES',
+        payload: { id: selectedObject.id, properties: { color } }
+      })
     } else {
-      dispatchCanvasAction({ type: 'SET_COLOR', payload: color })
+      dispatchCanvasAction({
+        type: 'SET_OBJECT_PROPERTIES',
+        payload: { properties: { color } }
+      })
     }
   }
 
@@ -52,12 +57,19 @@ export default function TextMenu({ onAddText, selectedObject }) {
         .then(() => {
           selectedObject.set({ fontFamily })
           selectedObject.canvas.renderAll()
+          dispatchCanvasAction({
+            type: 'SET_OBJECT_PROPERTIES',
+            payload: { id: selectedObject.id, properties: { font: fontFamily } }
+          })
         })
         .catch((e) => {
           console.error(`Error loading font ${fontFamily}`, e)
         })
     } else {
-      dispatchCanvasAction({ type: 'SET_FONT', payload: fontFamily })
+      dispatchCanvasAction({
+        type: 'SET_OBJECT_PROPERTIES',
+        payload: { properties: { font: fontFamily } }
+      })
     }
   }
 
