@@ -66,7 +66,7 @@ export default function TextMenu({ onAddText, selectedObject }) {
           selectedObject.set({ fontFamily })
           selectedObject.canvas.renderAll()
 
-          // Dispatch pour mettre à jour les propriétés
+          // Dispatch pour mettre à jour les propriétés de l'objet sélectionné
           dispatchCanvasAction({
             type: 'SET_OBJECT_PROPERTIES',
             payload: { id: selectedObject.id, properties: { font: fontFamily } }
@@ -81,9 +81,10 @@ export default function TextMenu({ onAddText, selectedObject }) {
           console.error(`Erreur de chargement de la police ${fontFamily}`, e)
         })
     } else {
+      // Mettre à jour le font globalement si aucun objet n'est sélectionné
       dispatchCanvasAction({
-        type: 'SET_OBJECT_PROPERTIES',
-        payload: { properties: { font: fontFamily } }
+        type: 'SET_SELECTED_FONT',
+        payload: fontFamily
       })
     }
   }
@@ -115,7 +116,7 @@ export default function TextMenu({ onAddText, selectedObject }) {
       )}
 
       <select
-        value={currentFont}
+        value={currentFont || selectedFont} // Utilisez selectedFont comme fallback
         onChange={(e) => handleFontChange(e.target.value)}
         className="rounded border bg-white p-2 shadow"
       >

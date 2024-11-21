@@ -26,6 +26,12 @@ export const canvasReducer = (state, action) => {
         }
       }
 
+    case 'SET_SELECTED_FONT':
+      return {
+        ...state,
+        selectedFont: action.payload
+      }
+
     case 'SET_OBJECTS':
       console.log('Action CanvasReducer SET_OBJECTS déclenchée avec payload :', action.payload)
       return {
