@@ -21,7 +21,7 @@ const convertCellContentToCanvasObjects = (cellContent) => {
         text: item.text,
         fontSize: item.fontSize,
         fontFamily: item.fontFamily || 'Arial',
-        type: 'i-text' // Type Fabric.js
+        type: 'i-text'
       }
     } else if (item.type === 'textbox') {
       return {
@@ -30,20 +30,28 @@ const convertCellContentToCanvasObjects = (cellContent) => {
         fontSize: item.fontSize,
         fontFamily: item.fontFamily || 'Arial',
         width: item.width || 200,
-        type: 'textbox' // Type Fabric.js
+        type: 'textbox'
       }
     } else if (item.type === 'rect') {
       return {
         ...commonProperties,
         width: item.width || 50,
         height: item.height || 50,
-        type: 'rect' // Type Fabric.js
+        type: 'rect'
       }
     } else if (item.type === 'circle') {
       return {
         ...commonProperties,
         radius: item.radius || 25,
-        type: 'circle' // Type Fabric.js
+        type: 'circle'
+      }
+    } else if (item.type === 'image') {
+      return {
+        ...commonProperties,
+        src: item.src,
+        width: item.width || 100,
+        height: item.height || 100,
+        type: 'image'
       }
     }
 
@@ -72,7 +80,6 @@ const useCanvasGridSync = (canvas) => {
     newObjects.forEach((obj) => {
       let fabricObject
 
-      // Exclure `type` des options passées à Fabric.js
       const { type, ...fabricOptions } = obj
 
       if (type === 'i-text' || type === 'text') {
@@ -83,6 +90,16 @@ const useCanvasGridSync = (canvas) => {
         fabricObject = new fabric.Rect(fabricOptions)
       } else if (type === 'circle') {
         fabricObject = new fabric.Circle(fabricOptions)
+      } else if (type === 'image') {
+        fabric.Image.fromURL(obj.src, (img) => {
+          img.set({
+            ...fabricOptions,
+            width: obj.width,
+            height: obj.height
+          })
+          canvas.add(img)
+        })
+        return
       } else {
         console.warn(`Type d'objet non géré : ${type}`)
         return
@@ -144,6 +161,14 @@ const useCanvasGridSync = (canvas) => {
           ...baseProperties,
           type: 'circle',
           radius: obj.radius * obj.scaleX
+        }
+      } else if (obj.type === 'image') {
+        return {
+          ...baseProperties,
+          type: 'image',
+          src: obj.getSrc(), // Utilise la méthode getSrc pour obtenir l'URL de l'image
+          width: obj.width * obj.scaleX,
+          height: obj.height * obj.scaleY
         }
       }
 
