@@ -8,6 +8,7 @@ import useCanvasObjectActions from '../hooks/useCanvasObjectActions'
 import { canvasReducer, initialCanvasState } from '../reducers/canvasReducer'
 import { syncGridConfigToLabelConfig } from '../utils/configSync'
 import { GridContext } from './GridContext'
+import useCanvasGridSync from '../hooks/useCanvasGridSync'
 
 const CanvasContext = createContext()
 
@@ -30,6 +31,9 @@ const CanvasProvider = ({ children }) => {
 
   // Initialisation du canevas
   useInitializeCanvas(canvas, labelConfig, dispatchCanvasAction, canvasRef)
+
+  // Synchronisation entre Canvas et Grid
+  useCanvasGridSync(canvas)
 
   // Gestion des transformations et des contraintes
   const { handleZoomChange } = useCanvasTransformAndConstraints(

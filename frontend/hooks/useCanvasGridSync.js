@@ -1,6 +1,5 @@
 import { useEffect, useCallback, useContext } from 'react'
 import * as fabric from 'fabric'
-import { useCanvas } from '../context/CanvasContext'
 import { GridContext } from '../context/GridContext'
 
 // Conversion des données de contenu en objets Fabric.js
@@ -20,8 +19,7 @@ const convertCellContentToCanvasObjects = (cellContent) => {
   }))
 }
 
-const useCanvasGridSync = () => {
-  const { canvas } = useCanvas() // Accéder au canvas et sa référence
+const useCanvasGridSync = (canvas) => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
   const { selectedCellId, cellContents } = state
 
@@ -65,7 +63,6 @@ const useCanvasGridSync = () => {
 
     const updatedObjects = canvas.getObjects().map((obj) => ({
       id: obj.id,
-      type: obj.type,
       text: obj.text,
       left: obj.left,
       top: obj.top,

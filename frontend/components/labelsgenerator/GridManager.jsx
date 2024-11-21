@@ -2,7 +2,6 @@
 import React, { useContext } from 'react'
 import { GridContext } from '../../context/GridContext'
 import GridCell from './GridCell'
-import useCanvasGridSync from '../../hooks/useCanvasGridSync'
 
 const GridManager = () => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
@@ -12,9 +11,6 @@ const GridManager = () => {
 
   // Filtrer les cellules pour la page courante
   const currentPageCells = grid.filter((cell) => cell.pageIndex === currentPage)
-
-  // Appel du hook de synchronisation
-  useCanvasGridSync()
 
   const handleSelectCell = (id) => {
     dispatch({ type: 'SELECT_CELL', payload: id })
