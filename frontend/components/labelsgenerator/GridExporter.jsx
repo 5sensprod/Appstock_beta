@@ -19,8 +19,9 @@ const loadCanvasDesign = (cellIndex, cellContent, cellWidth, cellHeight, scaleFa
         // Exclure les propriétés interdites comme "type"
         const { type, ...objectProps } = objectData
 
-        switch (type) {
-          case 'IText':
+        switch (type.toLowerCase()) {
+          case 'i-text':
+          case 'text':
             fabricObject = new fabric.IText(objectProps.text || '', {
               ...objectProps,
               left: objectProps.left * scaleFactor,
@@ -28,7 +29,16 @@ const loadCanvasDesign = (cellIndex, cellContent, cellWidth, cellHeight, scaleFa
               fontSize: (objectProps.fontSize || 12) * scaleFactor
             })
             break
-          case 'Rect':
+          case 'textbox':
+            fabricObject = new fabric.Textbox(objectProps.text || '', {
+              ...objectProps,
+              left: objectProps.left * scaleFactor,
+              top: objectProps.top * scaleFactor,
+              fontSize: (objectProps.fontSize || 12) * scaleFactor,
+              width: (objectProps.width || 100) * scaleFactor
+            })
+            break
+          case 'rect':
             fabricObject = new fabric.Rect({
               ...objectProps,
               left: objectProps.left * scaleFactor,
@@ -37,18 +47,17 @@ const loadCanvasDesign = (cellIndex, cellContent, cellWidth, cellHeight, scaleFa
               height: (objectProps.height || 50) * scaleFactor
             })
             break
-          case 'Circle':
+          case 'circle':
             fabricObject = new fabric.Circle({
               ...objectProps,
-              left: (objectProps.left + (objectProps.radius || 25)) * scaleFactor, // Ajuster pour centrer
-              top: (objectProps.top + (objectProps.radius || 25)) * scaleFactor, // Ajuster pour centrer
+              left: (objectProps.left + (objectProps.radius || 25)) * scaleFactor,
+              top: (objectProps.top + (objectProps.radius || 25)) * scaleFactor,
               radius: (objectProps.radius || 25) * scaleFactor,
-              originX: 'center', // Définit l'origine au centre horizontal
-              originY: 'center' // Définit l'origine au centre vertical
+              originX: 'center',
+              originY: 'center'
             })
             break
-
-          case 'Triangle':
+          case 'triangle':
             fabricObject = new fabric.Triangle({
               ...objectProps,
               left: objectProps.left * scaleFactor,
@@ -57,7 +66,7 @@ const loadCanvasDesign = (cellIndex, cellContent, cellWidth, cellHeight, scaleFa
               height: (objectProps.height || 50) * scaleFactor
             })
             break
-          case 'Image':
+          case 'image':
             fabric.Image.fromURL(objectProps.src, (img) => {
               img.set({
                 ...objectProps,

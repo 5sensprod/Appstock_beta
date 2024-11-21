@@ -161,16 +161,45 @@ export function gridReducer(state, action) {
         const cellId = `${pageIndex}-${rowInPage}-${col}`
 
         // Générer le contenu de la cellule à partir des données du CSV
-        const cellContent = Object.entries(row).map(([key, value], idx) => ({
-          id: `${key}-${idx}`,
-          type: 'IText',
-          text: value,
-          left: 10 + idx * 50,
-          top: 10,
-          fontSize: 14,
-          fill: '#333',
-          linkedByCsv: true // Indiquer que cette cellule est liée au CSV
-        }))
+        const cellContent = Object.entries(row).map(([key, value], idx) => {
+          const type = key.includes('shape') ? 'rect' : 'i-text' // Exemple : différencier les types basés sur le header CSV
+
+          if (type === 'i-text') {
+            return {
+              id: `${key}-${idx}`,
+              type: 'i-text',
+              text: value,
+              left: 10 + idx * 50,
+              top: 10,
+              fontSize: 14,
+              fill: '#333',
+              linkedByCsv: true // Indiquer que cette cellule est liée au CSV
+            }
+          } else if (type === 'rect') {
+            return {
+              id: `${key}-${idx}`,
+              type: 'rect',
+              width: 50,
+              height: 30,
+              left: 10 + idx * 60,
+              top: 20,
+              fill: '#ccc',
+              linkedByCsv: true
+            }
+          }
+
+          // Ajouter d'autres types si nécessaire
+          return {
+            id: `${key}-${idx}`,
+            type: 'i-text', // Fallback
+            text: value,
+            left: 10 + idx * 50,
+            top: 10,
+            fontSize: 14,
+            fill: '#333',
+            linkedByCsv: true
+          }
+        })
 
         // Ajouter le contenu au cellContents
         newCellContents[cellId] = cellContent
@@ -217,22 +246,31 @@ export function gridReducer(state, action) {
       const { id, content } = action.payload
       const newCellContents = { ...state.cellContents }
 
+      // Récupérer le contenu existant pour la cellule
       const existingContent = state.cellContents[id] || []
 
+      // Mettre à jour les contenus
       const updatedContent = content.map((item) => {
         const existingItem = existingContent.find((oldItem) => oldItem.id === item.id)
+
+        // Assurez-vous de ne pas modifier les propriétés immuables comme `type`
+        const { type, ...otherProperties } = item
+
         return {
-          ...item,
-          linkedByCsv: existingItem?.linkedByCsv || false
+          ...otherProperties,
+          type, // Réinsérer le type explicitement
+          linkedByCsv: existingItem?.linkedByCsv || false // Conserver les liens CSV si existants
         }
       })
 
-      if (!content || updatedContent.every((obj) => !obj.text?.trim())) {
+      // Vérifiez si le contenu est vide ou invalide pour supprimer la cellule
+      if (!content || updatedContent.every((obj) => obj.type === 'text' && !obj.text?.trim())) {
         delete newCellContents[id]
       } else {
         newCellContents[id] = updatedContent
       }
 
+      // Créer un nouvel état avec undo/redo
       const newState = {
         ...state,
         cellContents: newCellContents
@@ -244,6 +282,7 @@ export function gridReducer(state, action) {
     case 'SYNC_CELL_LAYOUT': {
       const { sourceId, layout } = action.payload
 
+      // Trouver le groupe lié
       const linkedGroup = state.linkedGroups.find((group) => group.includes(sourceId))
       if (!linkedGroup) return state
 
@@ -251,16 +290,63 @@ export function gridReducer(state, action) {
 
       linkedGroup.forEach((cellId) => {
         if (updatedCellContents[cellId]) {
-          updatedCellContents[cellId] = updatedCellContents[cellId].map((item) => ({
-            ...item,
-            left: layout[item.id]?.left ?? item.left,
-            top: layout[item.id]?.top ?? item.top,
-            scaleX: layout[item.id]?.scaleX ?? item.scaleX, // Synchronise le scaleX
-            scaleY: layout[item.id]?.scaleY ?? item.scaleY, // Synchronise le scaleY
-            fill: layout[item.id]?.fill ?? item.fill, // Synchronise la couleur
-            fontFamily: layout[item.id]?.fontFamily ?? item.fontFamily, // Synchronise la police
-            angle: layout[item.id]?.angle ?? item.angle // Synchronise l'angle
-          }))
+          updatedCellContents[cellId] = updatedCellContents[cellId].map((item) => {
+            const layoutItem = layout[item.id] || {}
+
+            // Gestion spécifique selon le type
+            if (item.type === 'text' || item.type === 'i-text') {
+              return {
+                ...item,
+                left: layoutItem.left ?? item.left,
+                top: layoutItem.top ?? item.top,
+                scaleX: layoutItem.scaleX ?? item.scaleX,
+                scaleY: layoutItem.scaleY ?? item.scaleY,
+                fill: layoutItem.fill ?? item.fill,
+                fontFamily: layoutItem.fontFamily ?? item.fontFamily,
+                fontSize: layoutItem.fontSize ?? item.fontSize,
+                angle: layoutItem.angle ?? item.angle
+              }
+            } else if (item.type === 'textbox') {
+              return {
+                ...item,
+                left: layoutItem.left ?? item.left,
+                top: layoutItem.top ?? item.top,
+                scaleX: layoutItem.scaleX ?? item.scaleX,
+                scaleY: layoutItem.scaleY ?? item.scaleY,
+                fill: layoutItem.fill ?? item.fill,
+                fontFamily: layoutItem.fontFamily ?? item.fontFamily,
+                fontSize: layoutItem.fontSize ?? item.fontSize,
+                width: layoutItem.width ?? item.width, // Spécifique à textbox
+                angle: layoutItem.angle ?? item.angle
+              }
+            } else if (item.type === 'rect') {
+              return {
+                ...item,
+                left: layoutItem.left ?? item.left,
+                top: layoutItem.top ?? item.top,
+                scaleX: layoutItem.scaleX ?? item.scaleX,
+                scaleY: layoutItem.scaleY ?? item.scaleY,
+                fill: layoutItem.fill ?? item.fill,
+                width: layoutItem.width ?? item.width, // Propriété spécifique à rect
+                height: layoutItem.height ?? item.height, // Propriété spécifique à rect
+                angle: layoutItem.angle ?? item.angle
+              }
+            } else if (item.type === 'circle') {
+              return {
+                ...item,
+                left: layoutItem.left ?? item.left,
+                top: layoutItem.top ?? item.top,
+                scaleX: layoutItem.scaleX ?? item.scaleX,
+                scaleY: layoutItem.scaleY ?? item.scaleY,
+                fill: layoutItem.fill ?? item.fill,
+                radius: layoutItem.radius ?? item.radius, // Propriété spécifique à circle
+                angle: layoutItem.angle ?? item.angle
+              }
+            }
+
+            // Retournez l'objet tel quel pour les types inconnus
+            return item
+          })
         }
       })
 

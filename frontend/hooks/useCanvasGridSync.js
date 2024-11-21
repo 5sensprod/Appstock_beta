@@ -4,19 +4,51 @@ import { GridContext } from '../context/GridContext'
 
 // Conversion des données de contenu en objets Fabric.js
 const convertCellContentToCanvasObjects = (cellContent) => {
-  return cellContent.map((item) => ({
-    text: item.text,
-    left: item.left,
-    top: item.top,
-    fontSize: item.fontSize,
-    fill: item.fill,
-    id: item.id,
-    fontFamily: item.fontFamily || 'Arial',
-    angle: item.angle || 0,
-    scaleX: item.scaleX || 1,
-    scaleY: item.scaleY || 1,
-    editable: true
-  }))
+  return cellContent.map((item) => {
+    const commonProperties = {
+      id: item.id,
+      left: item.left,
+      top: item.top,
+      fill: item.fill,
+      angle: item.angle || 0,
+      scaleX: item.scaleX || 1,
+      scaleY: item.scaleY || 1
+    }
+
+    if (item.type === 'i-text' || item.type === 'text') {
+      return {
+        ...commonProperties,
+        text: item.text,
+        fontSize: item.fontSize,
+        fontFamily: item.fontFamily || 'Arial',
+        type: 'i-text' // Type Fabric.js
+      }
+    } else if (item.type === 'textbox') {
+      return {
+        ...commonProperties,
+        text: item.text,
+        fontSize: item.fontSize,
+        fontFamily: item.fontFamily || 'Arial',
+        width: item.width || 200,
+        type: 'textbox' // Type Fabric.js
+      }
+    } else if (item.type === 'rect') {
+      return {
+        ...commonProperties,
+        width: item.width || 50,
+        height: item.height || 50,
+        type: 'rect' // Type Fabric.js
+      }
+    } else if (item.type === 'circle') {
+      return {
+        ...commonProperties,
+        radius: item.radius || 25,
+        type: 'circle' // Type Fabric.js
+      }
+    }
+
+    throw new Error(`Type d'objet non pris en charge : ${item.type}`)
+  })
 }
 
 const useCanvasGridSync = (canvas) => {
@@ -36,9 +68,26 @@ const useCanvasGridSync = (canvas) => {
 
     const previousActiveObject = canvas.getActiveObject()
     canvas.clear()
+
     newObjects.forEach((obj) => {
-      const { text, ...fabricOptions } = obj
-      const fabricObject = new fabric.IText(text, fabricOptions)
+      let fabricObject
+
+      // Exclure `type` des options passées à Fabric.js
+      const { type, ...fabricOptions } = obj
+
+      if (type === 'i-text' || type === 'text') {
+        fabricObject = new fabric.IText(obj.text, fabricOptions)
+      } else if (type === 'textbox') {
+        fabricObject = new fabric.Textbox(obj.text, fabricOptions)
+      } else if (type === 'rect') {
+        fabricObject = new fabric.Rect(fabricOptions)
+      } else if (type === 'circle') {
+        fabricObject = new fabric.Circle(fabricOptions)
+      } else {
+        console.warn(`Type d'objet non géré : ${type}`)
+        return
+      }
+
       canvas.add(fabricObject)
     })
 
@@ -54,19 +103,52 @@ const useCanvasGridSync = (canvas) => {
 
   const handleCanvasModification = useCallback(() => {
     if (!canvas || !selectedCellId) return
-    // Récupérer les objets mis à jour
-    const updatedObjects = canvas.getObjects().map((obj) => ({
-      id: obj.id,
-      text: obj.text,
-      left: obj.left,
-      top: obj.top,
-      fontSize: obj.fontSize,
-      fill: obj.fill,
-      fontFamily: obj.fontFamily,
-      angle: obj.angle || 0,
-      scaleX: obj.scaleX,
-      scaleY: obj.scaleY
-    }))
+
+    const updatedObjects = canvas.getObjects().map((obj) => {
+      const baseProperties = {
+        id: obj.id,
+        left: obj.left,
+        top: obj.top,
+        fill: obj.fill,
+        angle: obj.angle || 0,
+        scaleX: obj.scaleX,
+        scaleY: obj.scaleY
+      }
+
+      if (obj.type === 'i-text') {
+        return {
+          ...baseProperties,
+          type: 'i-text',
+          text: obj.text,
+          fontSize: obj.fontSize,
+          fontFamily: obj.fontFamily
+        }
+      } else if (obj.type === 'textbox') {
+        return {
+          ...baseProperties,
+          type: 'textbox',
+          text: obj.text,
+          fontSize: obj.fontSize,
+          fontFamily: obj.fontFamily,
+          width: obj.width
+        }
+      } else if (obj.type === 'rect') {
+        return {
+          ...baseProperties,
+          type: 'rect',
+          width: obj.width * obj.scaleX,
+          height: obj.height * obj.scaleY
+        }
+      } else if (obj.type === 'circle') {
+        return {
+          ...baseProperties,
+          type: 'circle',
+          radius: obj.radius * obj.scaleX
+        }
+      }
+
+      throw new Error(`Type d'objet non pris en charge : ${obj.type}`)
+    })
 
     dispatch({
       type: 'SET_OBJECTS',
