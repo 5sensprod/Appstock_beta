@@ -1,3 +1,4 @@
+//frontend\components\labelsgenerator\GridManager.jsx
 import React, { useContext } from 'react'
 import { GridContext } from '../../context/GridContext'
 import GridCell from './GridCell'

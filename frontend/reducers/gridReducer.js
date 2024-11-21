@@ -1,3 +1,4 @@
+//frontend\reducers\gridReducer.js
 export const initialGridState = {
   config: {
     cellWidth: 48.5,

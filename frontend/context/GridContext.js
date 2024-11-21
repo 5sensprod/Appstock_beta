@@ -1,3 +1,4 @@
+//frontend\context\GridContext.js
 import React, { createContext, useReducer, useEffect } from 'react'
 import { gridReducer, initialGridState } from '../reducers/gridReducer'
 
