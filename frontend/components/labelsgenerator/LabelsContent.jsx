@@ -32,7 +32,7 @@ const LabelsContent = () => {
         <ButtonExportPDF />
       </div>
 
-      <CellEditor
+      {/* <CellEditor
         key={selectedCellId} // Utilisez selectedCellId pour la clé
         initialContent={cellContent}
         cellWidth={mmToPx(cellWidth)}
@@ -40,7 +40,7 @@ const LabelsContent = () => {
         cellId={selectedCellId}
         linkedGroup={selectedCellId ? findLinkedGroup(selectedCellId) : []}
         dispatch={dispatch}
-      />
+      /> */}
       <FabricDesigner />
       {/* <ZoomControl />
       <CanvasControl /> */}

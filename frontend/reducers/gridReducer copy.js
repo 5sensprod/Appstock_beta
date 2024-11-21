@@ -215,14 +215,36 @@ export function gridReducer(state, action) {
 
     case 'UPDATE_CELL_CONTENT': {
       const { id, content } = action.payload
+      const newCellContents = { ...state.cellContents }
 
-      return {
-        ...state,
-        cellContents: {
-          ...state.cellContents,
-          [id]: content
+      const existingContent = state.cellContents[id] || []
+
+      const updatedContent = content.map((item) => {
+        const existingItem = existingContent.find((oldItem) => oldItem.id === item.id)
+        return {
+          ...item,
+          type: item.type || existingItem?.type || 'IText',
+          linkedByCsv: existingItem?.linkedByCsv || false,
+          scaleX: item.scaleX || existingItem?.scaleX || 1, // Préserve le scaleX
+          scaleY: item.scaleY || existingItem?.scaleY || 1, // Préserve le scaleY
+          fill: item.fill || existingItem?.fill || '#000000', // Préserve la couleur
+          fontFamily: item.fontFamily || existingItem?.fontFamily || 'Arial', // Préserve la police
+          angle: item.angle || existingItem?.angle || 0 // Préserve l'angle
         }
+      })
+
+      if (!content || updatedContent.every((obj) => !obj.text?.trim())) {
+        delete newCellContents[id]
+      } else {
+        newCellContents[id] = updatedContent
       }
+
+      const newState = {
+        ...state,
+        cellContents: newCellContents
+      }
+
+      return withUndoRedo(state, newState)
     }
 
     case 'SYNC_CELL_LAYOUT': {
