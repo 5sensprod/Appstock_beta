@@ -35,21 +35,26 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
               height: mmToPx(labelConfig.labelWidth / 2)
             })
 
+            // Ajout des propriétés personnalisées
             fabricImg.set({
               isQRCode: true,
-              qrText: text
+              qrText: text,
+              id: Math.random().toString(36).substring(2, 11) // Ajout d'un ID unique
             })
 
+            // Ajout à la sérialisation
             fabricImg.toObject = (function (toObject) {
               return function () {
                 return Object.assign(toObject.call(this), {
                   isQRCode: true,
-                  qrText: text
+                  qrText: text,
+                  id: this.id
                 })
               }
             })(fabricImg.toObject)
 
-            centerObject(fabricImg) // Centrer le QR code
+            // Centre et ajoute le QR code au canvas
+            centerObject(fabricImg)
             canvas.add(fabricImg)
             canvas.setActiveObject(fabricImg)
             canvas.renderAll()

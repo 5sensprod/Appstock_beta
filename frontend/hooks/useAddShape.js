@@ -5,12 +5,27 @@ import useAddObjectToCanvas from './useAddObjectToCanvas'
 const useAddShape = (canvas, labelConfig, selectedColor) => {
   const { centerObject } = useAddObjectToCanvas(labelConfig)
 
-  const onAddCircle = useCallback(() => {
-    if (!canvas) {
-      console.error('Canvas is not initialized.')
-      return
-    }
+  // Fonction générique pour ajouter une forme
+  const addShape = useCallback(
+    (shape) => {
+      if (!canvas) {
+        console.error('Canvas is not initialized.')
+        return
+      }
 
+      // Ajoute un ID unique à la forme
+      shape.id = Math.random().toString(36).substring(2, 11)
+
+      // Centre et ajoute la forme au canvas
+      centerObject(shape)
+      canvas.add(shape)
+      canvas.setActiveObject(shape)
+      canvas.renderAll()
+    },
+    [canvas, centerObject]
+  )
+
+  const onAddCircle = useCallback(() => {
     const minDimension = Math.min(labelConfig.labelWidth, labelConfig.labelHeight)
     const circleRadius = minDimension / 2.5
 
@@ -22,18 +37,10 @@ const useAddShape = (canvas, labelConfig, selectedColor) => {
       strokeUniform: true
     })
 
-    centerObject(circle) // Centrer le cercle
-    canvas.add(circle)
-    canvas.setActiveObject(circle)
-    canvas.renderAll()
-  }, [canvas, labelConfig, selectedColor, centerObject])
+    addShape(circle)
+  }, [labelConfig, selectedColor, addShape])
 
   const onAddRectangle = useCallback(() => {
-    if (!canvas) {
-      console.error('Canvas is not initialized.')
-      return
-    }
-
     const rectWidth = labelConfig.labelWidth / 1.1
     const rectHeight = labelConfig.labelHeight / 1.1
 
@@ -43,11 +50,8 @@ const useAddShape = (canvas, labelConfig, selectedColor) => {
       fill: selectedColor
     })
 
-    centerObject(rectangle) // Centrer le rectangle
-    canvas.add(rectangle)
-    canvas.setActiveObject(rectangle)
-    canvas.renderAll()
-  }, [canvas, labelConfig, selectedColor, centerObject])
+    addShape(rectangle)
+  }, [labelConfig, selectedColor, addShape])
 
   return { onAddCircle, onAddRectangle }
 }

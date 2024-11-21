@@ -29,6 +29,7 @@ const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
       return
     }
 
+    // Création de l'objet texte
     const textBox = new fabric.Textbox('Votre texte ici', {
       fontSize,
       fill: selectedColor || 'black',
@@ -36,7 +37,11 @@ const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
       fontFamily: selectedFont || 'Lato'
     })
 
-    centerObject(textBox) // Centrer l'objet
+    // Ajout d'un ID unique
+    textBox.id = Math.random().toString(36).substring(2, 11)
+
+    // Centrer l'objet et l'ajouter au canvas
+    centerObject(textBox)
     canvas.add(textBox)
     canvas.setActiveObject(textBox)
     canvas.renderAll()

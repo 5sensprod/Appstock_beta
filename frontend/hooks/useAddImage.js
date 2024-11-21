@@ -28,6 +28,9 @@ const useAddImage = (canvas, labelConfig) => {
             scaleY: scaleFactor
           })
 
+          // Ajoute un ID unique à l'image
+          fabricImg.id = Math.random().toString(36).substring(2, 11)
+
           centerObject(fabricImg) // Centrer l'image
           canvas.add(fabricImg)
           canvas.setActiveObject(fabricImg)
@@ -35,7 +38,7 @@ const useAddImage = (canvas, labelConfig) => {
         }
 
         imgElement.onerror = () => {
-          console.error("Erreur lors du chargement de l'image.")
+          // Gestion des erreurs lors du chargement de l'image
         }
       }
 
