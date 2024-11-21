@@ -1,10 +1,10 @@
-import React, { useEffect, useContext, useCallback } from 'react'
+import { useEffect, useCallback, useContext } from 'react'
 import * as fabric from 'fabric'
 import { useCanvas } from '../context/CanvasContext'
 import { GridContext } from '../context/GridContext'
 
-// Conversion des données de contenu en objets Fabric
-function convertCellContentToCanvasObjects(cellContent) {
+// Conversion des données de contenu en objets Fabric.js
+const convertCellContentToCanvasObjects = (cellContent) => {
   return cellContent.map((item) => ({
     text: item.text,
     left: item.left,
@@ -20,20 +20,17 @@ function convertCellContentToCanvasObjects(cellContent) {
   }))
 }
 
-export default function CanvasControl() {
-  const { canvasRef, canvas } = useCanvas()
+const useCanvasGridSync = () => {
+  const { canvas } = useCanvas() // Accéder au canvas et sa référence
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
   const { selectedCellId, cellContents } = state
 
+  // Charger les objets sur le canvas à partir de cellContents
   const loadCanvasObjects = useCallback(() => {
     if (!canvas) return
 
     // Si aucun contenu n'est lié à la cellule sélectionnée, vider le canvas
-    if (
-      !selectedCellId ||
-      !cellContents[selectedCellId] ||
-      cellContents[selectedCellId].length === 0
-    ) {
+    if (!selectedCellId || !cellContents[selectedCellId]?.length) {
       canvas.clear()
       canvas.renderAll()
       return
@@ -41,9 +38,9 @@ export default function CanvasControl() {
 
     const newObjects = convertCellContentToCanvasObjects(cellContents[selectedCellId])
 
-    const previousActiveObject = canvas.getActiveObject() // Sauvegarde l'objet actif
+    const previousActiveObject = canvas.getActiveObject() // Sauvegarder l'objet actif
 
-    // Supprimer les anciens objets et charger les nouveaux
+    // Vider le canvas existant et charger les nouveaux objets
     canvas.clear()
     newObjects.forEach((obj) => {
       const { text, ...fabricOptions } = obj
@@ -51,8 +48,8 @@ export default function CanvasControl() {
       canvas.add(fabricObject)
     })
 
+    // Restaurer l'objet actif basé sur l'ID si nécessaire
     if (previousActiveObject) {
-      // Restaurer l'objet actif basé sur l'ID
       const restoredObject = canvas.getObjects().find((obj) => obj.id === previousActiveObject.id)
       if (restoredObject) {
         canvas.setActiveObject(restoredObject)
@@ -61,10 +58,10 @@ export default function CanvasControl() {
 
     canvas.renderAll()
   }, [canvas, selectedCellId, cellContents])
+
+  // Gérer les modifications sur le canvas et mettre à jour cellContents
   const handleCanvasModification = useCallback(() => {
     if (!canvas || !selectedCellId) return
-
-    const previousActiveObject = canvas.getActiveObject() // Sauvegarde l'objet actif
 
     const updatedObjects = canvas.getObjects().map((obj) => ({
       id: obj.id,
@@ -80,7 +77,7 @@ export default function CanvasControl() {
       scaleY: obj.scaleY
     }))
 
-    // Mettre à jour le contenu de la cellule sélectionnée
+    // Mettre à jour le contenu de la cellule sélectionnée dans le GridContext
     dispatch({
       type: 'UPDATE_CELL_CONTENT',
       payload: { id: selectedCellId, content: updatedObjects }
@@ -107,22 +104,13 @@ export default function CanvasControl() {
         payload: { sourceId: selectedCellId, layout }
       })
     }
-
-    // Restaurer l'objet actif après la mise à jour
-    if (previousActiveObject) {
-      const restoredObject = canvas.getObjects().find((obj) => obj.id === previousActiveObject.id)
-      if (restoredObject) {
-        canvas.setActiveObject(restoredObject)
-      }
-    }
-
-    canvas.renderAll()
   }, [canvas, selectedCellId, dispatch, findLinkedGroup])
 
+  // Effet principal pour gérer la synchronisation
   useEffect(() => {
     if (!canvas) return
 
-    // Charger les objets initiaux
+    // Charger les objets initiaux sur le canvas
     loadCanvasObjects()
 
     // Ajouter des gestionnaires d'événements pour détecter les modifications
@@ -130,14 +118,10 @@ export default function CanvasControl() {
     events.forEach((event) => canvas.on(event, handleCanvasModification))
 
     return () => {
-      // Nettoyer les gestionnaires d'événements
+      // Nettoyer les gestionnaires d'événements lors du démontage
       events.forEach((event) => canvas.off(event, handleCanvasModification))
     }
   }, [canvas, loadCanvasObjects, handleCanvasModification])
-
-  return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <canvas ref={canvasRef} style={{ border: '1px solid #ccc', width: '100%', height: '100%' }} />
-    </div>
-  )
 }
+
+export default useCanvasGridSync
