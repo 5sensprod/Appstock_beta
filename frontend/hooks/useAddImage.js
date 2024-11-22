@@ -23,7 +23,7 @@ const useAddImage = (canvas, labelConfig) => {
           const canvasHeight = mmToPx(labelConfig.labelHeight)
           const scaleFactor = Math.min(canvasWidth / imgWidth, canvasHeight / imgHeight)
 
-          const fabricImg = new fabric.Image(imgElement, {
+          const fabricImg = new fabric.FabricImage(imgElement, {
             scaleX: scaleFactor,
             scaleY: scaleFactor
           })
