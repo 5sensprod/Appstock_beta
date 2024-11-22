@@ -1,5 +1,4 @@
 //frontend\context\CanvasContext.js
-
 import React, { createContext, useRef, useContext, useReducer } from 'react'
 import useCanvasObjectHandler from '../hooks/useCanvasObjectHandler'
 import useCanvasTransformAndConstraints from '../hooks/useCanvasTransformAndConstraints'
@@ -33,14 +32,13 @@ const CanvasProvider = ({ children }) => {
   useInitializeCanvas(canvas, labelConfig, dispatchCanvasAction, canvasRef)
 
   // Synchronisation entre Canvas et Grid
-  // Synchronisation entre Canvas et Grid
-  const { handleCanvasModification } = useCanvasGridSync(canvas)
+  // const { handleCanvasModification } = useCanvasGridSync(canvas)
 
   // Gestion des transformations et des contraintes
   const { handleZoomChange } = useCanvasTransformAndConstraints(
     canvas,
     labelConfig,
-    canvasState, // Ajoutez canvasState ici
+    canvasState,
     dispatchCanvasAction
   )
 
@@ -49,16 +47,8 @@ const CanvasProvider = ({ children }) => {
     useCanvasObjectHandler(canvas, selectedObject, dispatchCanvasAction)
 
   // Actions pour les objets
-  const {
-    onAddCircle,
-    onAddRectangle,
-    onAddText,
-    onAddTextCsv,
-    onAddImage,
-    onAddQrCode,
-    onUpdateQrCode,
-    onAddQrCodeCsv
-  } = useCanvasObjectActions(canvas, labelConfig, selectedColor, selectedFont)
+  const { onAddCircle, onAddRectangle, onAddText, onAddImage, onAddQrCode, onUpdateQrCode } =
+    useCanvasObjectActions(canvas, labelConfig, selectedColor, selectedFont)
 
   // Valeurs et actions exposées par le contexte
   const value = {
@@ -78,17 +68,15 @@ const CanvasProvider = ({ children }) => {
     onAddCircle,
     onAddRectangle,
     onAddText,
-    onAddTextCsv,
     onAddImage,
     onAddQrCode,
-    onAddQrCodeCsv,
     onUpdateQrCode,
     // Vérifications du type d'objet
     isShapeSelected,
     isTextSelected,
     isImageSelected,
     isQRCodeSelected,
-    handleCanvasModification,
+    // handleCanvasModification,
     // Dispatcher pour des actions personnalisées
     dispatchCanvasAction,
     canvasState

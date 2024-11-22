@@ -12,7 +12,9 @@ export const initialGridState = {
   },
   grid: [], // Grille vide générée dynamiquement
   selectedCellId: null, // Aucun ID sélectionné au départ
-  cellContents: {},
+  cellContents: {
+    backgroundColor: 'white'
+  },
   clipboard: null, // Contenu temporaire pour le copier-coller
   linkedGroups: [],
   currentPage: 0, // Page active

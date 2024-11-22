@@ -2,63 +2,6 @@ import { useEffect, useCallback, useContext } from 'react'
 import * as fabric from 'fabric'
 import { GridContext } from '../context/GridContext'
 
-// Conversion des données de contenu en objets Fabric.js
-const convertCellContentToCanvasObjects = (cellContent) => {
-  return cellContent.map((item) => {
-    const commonProperties = {
-      id: item.id,
-      left: item.left,
-      top: item.top,
-      fill: item.fill,
-      angle: item.angle || 0,
-      scaleX: item.scaleX || 1,
-      scaleY: item.scaleY || 1
-    }
-
-    if (item.type === 'i-text' || item.type === 'text') {
-      return {
-        ...commonProperties,
-        text: item.text,
-        fontSize: item.fontSize,
-        fontFamily: item.fontFamily || 'Arial',
-        type: 'i-text'
-      }
-    } else if (item.type === 'textbox') {
-      return {
-        ...commonProperties,
-        text: item.text,
-        fontSize: item.fontSize,
-        fontFamily: item.fontFamily || 'Arial',
-        width: item.width || 200,
-        type: 'textbox'
-      }
-    } else if (item.type === 'rect') {
-      return {
-        ...commonProperties,
-        width: item.width || 50,
-        height: item.height || 50,
-        type: 'rect'
-      }
-    } else if (item.type === 'circle') {
-      return {
-        ...commonProperties,
-        radius: item.radius || 25,
-        type: 'circle'
-      }
-    } else if (item.type === 'image') {
-      return {
-        ...commonProperties,
-        src: item.src,
-        width: item.width || 100,
-        height: item.height || 100,
-        type: 'image'
-      }
-    }
-
-    throw new Error(`Type d'objet non pris en charge : ${item.type}`)
-  })
-}
-
 const useCanvasGridSync = (canvas) => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
   const { selectedCellId, cellContents } = state
@@ -72,7 +15,7 @@ const useCanvasGridSync = (canvas) => {
       return
     }
 
-    const newObjects = convertCellContentToCanvasObjects(cellContents[selectedCellId])
+    const newObjects = cellContents[selectedCellId]
 
     const previousActiveObject = canvas.getActiveObject()
     canvas.clear()
@@ -173,11 +116,6 @@ const useCanvasGridSync = (canvas) => {
       }
 
       throw new Error(`Type d'objet non pris en charge : ${obj.type}`)
-    })
-
-    dispatch({
-      type: 'SET_OBJECTS',
-      payload: updatedObjects
     })
 
     dispatch({

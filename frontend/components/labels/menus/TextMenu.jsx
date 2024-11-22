@@ -39,58 +39,61 @@ export default function TextMenu({ onAddText, selectedObject }) {
       selectedObject.set({ fill: color })
       selectedObject.canvas.renderAll()
 
-      // Dispatch pour mettre à jour les propriétés
+      // Dispatch pour mettre à jour les propriétés de l'objet sélectionné
       dispatchCanvasAction({
         type: 'SET_OBJECT_PROPERTIES',
         payload: { id: selectedObject.id, properties: { color } }
       })
 
-      // Force handleCanvasModification
+      // Gérer les modifications du canevas
       if (selectedObject.canvas && typeof handleCanvasModification === 'function') {
         handleCanvasModification()
       }
     } else {
+      // Mettre à jour la couleur par défaut si aucun objet n'est sélectionné
       dispatchCanvasAction({
-        type: 'SET_OBJECT_PROPERTIES',
-        payload: { properties: { color } }
+        type: 'SET_SELECTED_COLOR',
+        payload: color
       })
     }
   }
 
   const handleFontChange = (fontFamily) => {
-    if (isTextSelected) {
-      const fontObserver = new FontFaceObserver(fontFamily)
-      fontObserver
-        .load()
-        .then(() => {
+    const fontObserver = new FontFaceObserver(fontFamily)
+
+    fontObserver
+      .load()
+      .then(() => {
+        if (isTextSelected) {
+          // Appliquez la police à l'objet sélectionné
           selectedObject.set({ fontFamily })
           selectedObject.canvas.renderAll()
 
-          // Dispatch pour mettre à jour les propriétés de l'objet sélectionné
           dispatchCanvasAction({
             type: 'SET_OBJECT_PROPERTIES',
             payload: { id: selectedObject.id, properties: { font: fontFamily } }
           })
 
-          // Force handleCanvasModification
+          // Gérer les modifications du canevas
           if (selectedObject.canvas && typeof handleCanvasModification === 'function') {
             handleCanvasModification()
           }
-        })
-        .catch((e) => {
-          console.error(`Erreur de chargement de la police ${fontFamily}`, e)
-        })
-    } else {
-      // Mettre à jour le font globalement si aucun objet n'est sélectionné
-      dispatchCanvasAction({
-        type: 'SET_SELECTED_FONT',
-        payload: fontFamily
+        } else {
+          // Mettre à jour la police par défaut
+          dispatchCanvasAction({
+            type: 'SET_SELECTED_FONT',
+            payload: fontFamily
+          })
+        }
       })
-    }
+      .catch((error) => {
+        console.error(`Erreur lors du chargement de la police ${fontFamily}:`, error)
+      })
   }
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
+      {/* Bouton Ajouter Texte */}
       <IconButton
         onClick={onAddText}
         icon={faTextHeight}
@@ -100,6 +103,7 @@ export default function TextMenu({ onAddText, selectedObject }) {
         iconSize="text-xl"
       />
 
+      {/* Bouton Choisir Couleur */}
       <IconButton
         onClick={toggleColorPicker}
         icon={faPalette}
@@ -109,14 +113,16 @@ export default function TextMenu({ onAddText, selectedObject }) {
         iconSize="text-xl"
       />
 
+      {/* Sélecteur de Couleur */}
       {isColorPickerOpen && (
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
           <ColorPicker color={currentColor} setSelectedColor={handleColorChange} />
         </div>
       )}
 
+      {/* Sélecteur de Police */}
       <select
-        value={currentFont || selectedFont} // Utilisez selectedFont comme fallback
+        value={currentFont || selectedFont}
         onChange={(e) => handleFontChange(e.target.value)}
         className="rounded border bg-white p-2 shadow"
       >
