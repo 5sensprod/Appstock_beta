@@ -34,7 +34,7 @@ const useCanvasGridSync = (canvas) => {
       } else if (type === 'circle') {
         fabricObject = new fabric.Circle(fabricOptions)
       } else if (type === 'image') {
-        fabric.Image.fromURL(obj.src, (img) => {
+        fabric.FabricImage.fromURL(obj.src, (img) => {
           img.set({
             ...fabricOptions,
             width: obj.width,
@@ -96,22 +96,22 @@ const useCanvasGridSync = (canvas) => {
         return {
           ...baseProperties,
           type: 'rect',
-          width: obj.width * obj.scaleX,
-          height: obj.height * obj.scaleY
+          width: obj.width,
+          height: obj.height
         }
       } else if (obj.type === 'circle') {
         return {
           ...baseProperties,
           type: 'circle',
-          radius: obj.radius * obj.scaleX
+          radius: obj.radius
         }
       } else if (obj.type === 'image') {
         return {
           ...baseProperties,
           type: 'image',
           src: obj.getSrc(), // Utilise la méthode getSrc pour obtenir l'URL de l'image
-          width: obj.width * obj.scaleX,
-          height: obj.height * obj.scaleY
+          width: obj.width,
+          height: obj.height
         }
       }
 
