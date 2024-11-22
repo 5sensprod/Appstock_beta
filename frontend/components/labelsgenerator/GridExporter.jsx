@@ -67,7 +67,7 @@ const loadCanvasDesign = (cellIndex, cellContent, cellWidth, cellHeight, scaleFa
             })
             break
           case 'image':
-            fabric.Image.fromURL(objectProps.src, (img) => {
+            fabric.FabricImage.fromURL(objectProps.src, (img) => {
               img.set({
                 ...objectProps,
                 left: objectProps.left * scaleFactor,
