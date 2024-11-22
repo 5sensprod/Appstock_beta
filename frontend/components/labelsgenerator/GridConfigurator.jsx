@@ -1,14 +1,14 @@
 import React, { useContext, useState } from 'react'
 import { GridContext } from '../../context/GridContext'
-import CSVImporter from './CSVImporter' // Import du composant CSVImporter
+import CSVImporter from './CSVImporter'
 
 const validateConfigValue = (key, value, config) => {
   const { pageWidth, pageHeight } = config
 
   if (['offsetTop', 'offsetLeft', 'spacingHorizontal', 'spacingVertical'].includes(key)) {
     if (value < 0) return 'La valeur doit être supérieure ou égale à 0.'
-  } else {
-    if (value <= 0) return 'La valeur doit être supérieure à 0.'
+  } else if (value <= 0) {
+    return 'La valeur doit être supérieure à 0.'
   }
 
   if (
@@ -20,6 +20,25 @@ const validateConfigValue = (key, value, config) => {
 
   return null
 }
+
+const ConfigInput = ({ id, label, value, error, onChange, max }) => (
+  <div>
+    <label htmlFor={id} className="block text-gray-600 dark:text-gray-300">
+      {label}
+    </label>
+    <input
+      type="number"
+      id={id}
+      className="w-full rounded border border-gray-300 p-2 focus:outline-none focus:ring focus:ring-blue-300 dark:bg-dark-background dark:text-dark-text"
+      value={value}
+      onChange={onChange}
+      step="0.1"
+      min="0"
+      max={max}
+    />
+    {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+  </div>
+)
 
 const GridConfigurator = () => {
   const { state, dispatch } = useContext(GridContext)
@@ -62,37 +81,28 @@ const GridConfigurator = () => {
   }
 
   return (
-    <div>
-      <h4>Configuration</h4>
+    <div className="rounded bg-white p-4 shadow dark:bg-gray-800">
+      <h4 className="mb-4 text-lg font-semibold text-gray-800 dark:text-gray-100">Configuration</h4>
       {Object.keys(errors).length > 0 && (
-        <p style={{ color: 'red', fontWeight: 'bold' }}>Veuillez corriger les erreurs.</p>
+        <p className="mb-4 font-medium text-red-500">Veuillez corriger les erreurs.</p>
       )}
       <form className="mb-6 grid grid-cols-2 gap-4">
         {inputs.map((input) => (
-          <div key={input.id}>
-            <label htmlFor={input.id} className="block text-gray-600 dark:text-gray-300">
-              {input.label}
-            </label>
-            <input
-              type="number"
-              id={input.id}
-              className="w-full rounded border border-gray-300 p-2 dark:bg-dark-background dark:text-dark-text"
-              value={input.value}
-              onChange={handleChange}
-              step="0.1"
-              min="0"
-              max={
-                input.id === 'cellWidth'
-                  ? config.pageWidth
-                  : input.id === 'cellHeight'
-                    ? config.pageHeight
-                    : undefined
-              }
-            />
-            {errors[input.id] && (
-              <p style={{ color: 'red', fontSize: '12px' }}>{errors[input.id]}</p>
-            )}
-          </div>
+          <ConfigInput
+            key={input.id}
+            id={input.id}
+            label={input.label}
+            value={input.value}
+            error={errors[input.id]}
+            onChange={handleChange}
+            max={
+              input.id === 'cellWidth'
+                ? config.pageWidth
+                : input.id === 'cellHeight'
+                  ? config.pageHeight
+                  : undefined
+            }
+          />
         ))}
       </form>
       <CSVImporter />

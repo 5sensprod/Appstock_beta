@@ -1,4 +1,3 @@
-//frontend\components\labelsgenerator\GridManager.jsx
 import React, { useContext } from 'react'
 import { GridContext } from '../../context/GridContext'
 import GridCell from './GridCell'
@@ -16,27 +15,29 @@ const GridManager = () => {
     dispatch({ type: 'SELECT_CELL', payload: id })
   }
 
+  const navigatePage = (direction) => {
+    const newPage = currentPage + direction
+    dispatch({ type: 'SET_PAGE', payload: { page: newPage } })
+  }
+
   return (
-    <div>
+    <div className="space-y-4">
       {/* Navigation entre pages */}
-      <div style={{ marginBottom: '10px', textAlign: 'center' }}>
+      <div className="flex items-center justify-center space-x-4">
         <button
-          onClick={() => dispatch({ type: 'SET_PAGE', payload: { page: currentPage - 1 } })}
+          onClick={() => navigatePage(-1)}
           disabled={currentPage === 0}
+          className="rounded bg-gray-200 px-4 py-2 text-gray-800 disabled:opacity-50"
         >
           Précédent
         </button>
-        <span style={{ margin: '0 10px' }}>
+        <span className="text-gray-700">
           Page {currentPage + 1} / {totalPages}
         </span>
         <button
-          onClick={() =>
-            dispatch({
-              type: 'SET_PAGE',
-              payload: { page: currentPage + 1 }
-            })
-          }
+          onClick={() => navigatePage(1)}
           disabled={currentPage === totalPages - 1}
+          className="rounded bg-gray-200 px-4 py-2 text-gray-800 disabled:opacity-50"
         >
           Suivant
         </button>
@@ -44,24 +45,12 @@ const GridManager = () => {
 
       {/* Conteneur principal représentant la page */}
       <div
+        className="relative w-full border-2 border-black bg-white"
         style={{
-          position: 'relative',
-          width: '100%',
-          height: '0',
-          paddingBottom: `${(pageHeight / pageWidth) * 100}%`, // Ratio A4
-          background: '#fff',
-          border: '2px solid #000',
-          boxSizing: 'border-box'
+          paddingBottom: `${(pageHeight / pageWidth) * 100}%` // Ratio de la page (ex: A4)
         }}
       >
-        <div
-          style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            overflow: 'hidden'
-          }}
-        >
+        <div className="absolute inset-0 overflow-hidden">
           {currentPageCells.map((cell) => {
             const linkedGroup = findLinkedGroup(cell.id)
             const isLinkedAndSelected =
