@@ -7,9 +7,9 @@ export const initialCanvasState = {
   selectedColor: '#000000',
   selectedFont: 'Lato',
   backgroundColor: 'white',
-  labelConfig: {},
-  objects: [],
-  nextObjectId: 1
+  labelConfig: {}
+  // objects: [],
+  // nextObjectId: 1
 }
 
 export const canvasReducer = (state, action) => {
@@ -32,12 +32,12 @@ export const canvasReducer = (state, action) => {
         selectedFont: action.payload
       }
 
-    case 'SET_OBJECTS':
-      console.log('Action CanvasReducer SET_OBJECTS déclenchée avec payload :', action.payload)
-      return {
-        ...state,
-        objects: action.payload
-      }
+    // case 'SET_OBJECTS':
+    //   console.log('Action CanvasReducer SET_OBJECTS déclenchée avec payload :', action.payload)
+    //   return {
+    //     ...state,
+    //     objects: action.payload
+    //   }
 
     case 'SET_ZOOM':
       return { ...state, zoomLevel: action.payload }

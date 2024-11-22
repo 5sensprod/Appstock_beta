@@ -17,7 +17,7 @@ const useCanvasObjectActions = (canvas, labelConfig, selectedColor, selectedFont
   )
 
   // Centralise l'ajout de texte
-  const { onAddText, onAddTextCsv } = useAddText(
+  const { onAddText } = useAddText(
     canvas,
     labelConfig,
     selectedColor,
@@ -29,7 +29,7 @@ const useCanvasObjectActions = (canvas, labelConfig, selectedColor, selectedFont
   const onAddImage = useAddImage(canvas, labelConfig, addObjectToCanvas)
 
   // Centralise l'ajout de QR Codes
-  const { onAddQrCode, onUpdateQrCode, onAddQrCodeCsv } = useAddQRCode(
+  const { onAddQrCode, onUpdateQrCode } = useAddQRCode(
     canvas,
     labelConfig,
     selectedColor,
@@ -42,11 +42,9 @@ const useCanvasObjectActions = (canvas, labelConfig, selectedColor, selectedFont
     onAddCircle,
     onAddRectangle,
     onAddText,
-    onAddTextCsv,
     onAddImage,
     onAddQrCode,
-    onUpdateQrCode,
-    onAddQrCodeCsv
+    onUpdateQrCode
   }
 }
 

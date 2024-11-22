@@ -76,11 +76,9 @@ const useCanvasTransformAndConstraints = (
     if (!canvas) return
 
     canvas.on('object:moving', restrictObjectMovement)
-    canvas.on('object:scaling', restrictObjectMovement)
 
     return () => {
       canvas.off('object:moving', restrictObjectMovement)
-      canvas.off('object:scaling', restrictObjectMovement)
     }
   }, [canvas, restrictObjectMovement])
 

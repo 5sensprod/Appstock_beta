@@ -47,33 +47,7 @@ const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
     canvas.renderAll()
   }, [canvas, labelConfig, selectedColor, selectedFont, loadAndApplyFont, centerObject])
 
-  const onAddTextCsv = useCallback(
-    async (text = 'Votre texte ici', fontFamily = 'Lato', fillColor = 'black', fontSize = 16) => {
-      await loadAndApplyFont(fontFamily)
-
-      if (!canvas) {
-        console.error('Canvas is not initialized.')
-        return null
-      }
-
-      const textBox = new fabric.Textbox(text, {
-        fontSize,
-        fill: fillColor,
-        textAlign: 'left',
-        fontFamily
-      })
-
-      centerObject(textBox) // Centrer l'objet
-      canvas.add(textBox)
-      canvas.setActiveObject(textBox)
-      canvas.renderAll()
-
-      return textBox
-    },
-    [canvas, loadAndApplyFont, centerObject]
-  )
-
-  return { onAddText, onAddTextCsv }
+  return { onAddText }
 }
 
 export default useAddText

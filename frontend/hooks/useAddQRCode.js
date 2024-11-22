@@ -109,67 +109,7 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
     [canvas, selectedColor, labelConfig]
   )
 
-  const onAddQrCodeCsv = useCallback(
-    (text, callback) => {
-      if (!canvas) return
-
-      const validColor = rgbToHex(selectedColor || '#000000')
-
-      QRCode.toDataURL(
-        text,
-        {
-          width: mmToPx(labelConfig.labelWidth / 2), // Utiliser la moitié de la largeur de l'étiquette
-          margin: 2,
-          color: { dark: validColor, light: '#ffffff' }
-        },
-        (err, url) => {
-          if (err) {
-            console.error('Erreur lors de la génération du QR code :', err)
-            return callback && callback()
-          }
-
-          const imgElement = new Image()
-          imgElement.src = url
-
-          imgElement.onload = () => {
-            const fabricImg = new fabric.Image(imgElement, {
-              width: mmToPx(labelConfig.labelWidth / 2),
-              height: mmToPx(labelConfig.labelWidth / 2)
-            })
-
-            fabricImg.set({
-              isQRCode: true,
-              qrText: text
-            })
-
-            fabricImg.toObject = (function (toObject) {
-              return function () {
-                return Object.assign(toObject.call(this), {
-                  isQRCode: true,
-                  qrText: text
-                })
-              }
-            })(fabricImg.toObject)
-
-            centerObject(fabricImg) // Centrer le QR code
-            canvas.add(fabricImg)
-            canvas.setActiveObject(fabricImg)
-            canvas.renderAll()
-
-            if (callback) callback()
-          }
-
-          imgElement.onerror = () => {
-            console.error("Erreur lors du chargement de l'image QR code.")
-            if (callback) callback()
-          }
-        }
-      )
-    },
-    [selectedColor, labelConfig, centerObject, canvas]
-  )
-
-  return { onAddQrCode, onUpdateQrCode, onAddQrCodeCsv }
+  return { onAddQrCode, onUpdateQrCode }
 }
 
 export default useAddQRCode
