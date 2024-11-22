@@ -1,5 +1,4 @@
-//frontend\context\CanvasContext.js
-import React, { createContext, useRef, useContext, useReducer } from 'react'
+import React, { createContext, useRef, useContext, useReducer, useEffect } from 'react'
 import useCanvasObjectHandler from '../hooks/useCanvasObjectHandler'
 import useCanvasTransformAndConstraints from '../hooks/useCanvasTransformAndConstraints'
 import useInitializeCanvas from '../hooks/useInitializeCanvas'
@@ -50,6 +49,38 @@ const CanvasProvider = ({ children }) => {
   const { onAddCircle, onAddRectangle, onAddText, onAddImage, onAddQrCode, onUpdateQrCode } =
     useCanvasObjectActions(canvas, labelConfig, selectedColor, selectedFont)
 
+  // Ajout des logs pour surveiller les objets du canevas
+  useEffect(() => {
+    if (!canvas) return
+
+    const logObjectChanges = (eventName, obj) => {
+      console.log(`Canvas Event: ${eventName}`, {
+        id: obj?.id || 'N/A',
+        type: obj?.type || 'unknown',
+        left: obj?.left,
+        top: obj?.top,
+        fill: obj?.fill || 'N/A',
+        fontFamily: obj?.fontFamily || 'N/A'
+      })
+    }
+
+    const handleObjectAdded = (e) => logObjectChanges('object:added', e.target)
+    const handleObjectModified = (e) => logObjectChanges('object:modified', e.target)
+    const handleObjectRemoved = (e) => logObjectChanges('object:removed', e.target)
+
+    canvas.on('object:added', handleObjectAdded)
+    canvas.on('object:modified', handleObjectModified)
+    canvas.on('object:removed', handleObjectRemoved)
+
+    return () => {
+      canvas.off('object:added', handleObjectAdded)
+      canvas.off('object:modified', handleObjectModified)
+      canvas.off('object:removed', handleObjectRemoved)
+    }
+  }, [canvas])
+
+  const { handleCanvasModification } = useCanvasGridSync(canvas)
+
   // Valeurs et actions exposées par le contexte
   const value = {
     canvasRef,
@@ -76,9 +107,9 @@ const CanvasProvider = ({ children }) => {
     isTextSelected,
     isImageSelected,
     isQRCodeSelected,
-    // handleCanvasModification,
     // Dispatcher pour des actions personnalisées
     dispatchCanvasAction,
+    handleCanvasModification,
     canvasState
   }
 
