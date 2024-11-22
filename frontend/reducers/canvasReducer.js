@@ -6,7 +6,6 @@ export const initialCanvasState = {
   selectedObject: null,
   selectedColor: '#000000',
   selectedFont: 'Lato',
-  backgroundColor: 'white',
   labelConfig: {}
 }
 
@@ -14,15 +13,6 @@ export const canvasReducer = (state, action) => {
   switch (action.type) {
     case 'SET_CANVAS':
       return { ...state, canvas: action.payload }
-
-    case 'SET_LABEL_CONFIG':
-      return {
-        ...state,
-        labelConfig: {
-          ...state.labelConfig,
-          ...action.payload
-        }
-      }
 
     case 'SET_SELECTED_FONT':
       return {

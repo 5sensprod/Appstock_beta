@@ -8,7 +8,8 @@ export const initialGridState = {
     spacingHorizontal: 0,
     spacingVertical: 0,
     pageWidth: 210, // A4 dimensions
-    pageHeight: 297
+    pageHeight: 297,
+    backgroundColor: 'white'
   },
   grid: [], // Grille vide générée dynamiquement
   selectedCellId: null, // Aucun ID sélectionné au départ

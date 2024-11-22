@@ -9,8 +9,13 @@ const useCanvasGridSync = (canvas) => {
   const loadCanvasObjects = useCallback(() => {
     if (!canvas) return
 
+    // Sauvegarder le backgroundColor actuel
+    const currentBackgroundColor = canvas.backgroundColor
+
+    // Si aucun contenu dans la cellule sélectionnée, nettoyer le canevas
     if (!selectedCellId || !cellContents[selectedCellId]?.length) {
       canvas.clear()
+      canvas.backgroundColor = currentBackgroundColor // Rétablir le backgroundColor
       canvas.renderAll()
       return
     }
@@ -19,6 +24,9 @@ const useCanvasGridSync = (canvas) => {
 
     const previousActiveObject = canvas.getActiveObject()
     canvas.clear()
+
+    // Rétablir le backgroundColor après le clear
+    canvas.backgroundColor = currentBackgroundColor
 
     newObjects.forEach((obj) => {
       let fabricObject
