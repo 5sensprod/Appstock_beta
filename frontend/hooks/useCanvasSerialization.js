@@ -1,6 +1,24 @@
 import { useCallback, useEffect } from 'react'
 
 const useCanvasSerialization = (canvas, dispatchCanvasAction) => {
+  // Fonction pour sauvegarder l'état du canvas
+  const saveAndUpdateState = useCallback(() => {
+    if (!canvas) return
+    try {
+      const serializedState = canvas.toJSON(['id', 'selectable', 'scaleX', 'scaleY'])
+
+      // Sauvegarder l'état du canvas
+      dispatchCanvasAction({
+        type: 'SAVE_CANVAS_STATE',
+        payload: serializedState
+      })
+
+      console.log('Canvas state saved after modification:', serializedState)
+    } catch (error) {
+      console.error('Error saving canvas state:', error)
+    }
+  }, [canvas, dispatchCanvasAction])
+
   // Effet pour la surveillance des changements de propriétés
   useEffect(() => {
     if (!canvas) return
@@ -14,80 +32,69 @@ const useCanvasSerialization = (canvas, dispatchCanvasAction) => {
       }
     }
 
-    const handleTextModified = (e) => {
+    const handleObjectModified = (e) => {
       if (!e?.target) return
 
       const target = e.target
-      if (target.type === 'i-text' || target.type === 'textbox') {
-        console.log('Text object modified:', {
-          type: target.type,
-          color: target.fill,
-          font: target.fontFamily,
-          text: target.text
-        })
+      console.log('Object modified:', {
+        type: target.type,
+        scaleX: target.scaleX,
+        scaleY: target.scaleY
+      })
 
-        // Mettre à jour les propriétés globales si nécessaire
-        dispatchCanvasAction({
-          type: 'SET_OBJECT_PROPERTIES',
-          payload: {
-            color: target.fill,
-            font: target.fontFamily
-          }
-        })
-
-        saveAndUpdateState()
-      }
+      // Sauvegarde après modification
+      saveAndUpdateState()
     }
 
-    const saveAndUpdateState = () => {
-      try {
-        const serializedState = canvas.toJSON(['id', 'selectable'])
+    const handleObjectScaled = (e) => {
+      if (!e?.target) return
 
-        // Sauvegarder l'état du canvas
-        dispatchCanvasAction({
-          type: 'SAVE_CANVAS_STATE',
-          payload: serializedState
-        })
+      const target = e.target
+      console.log('Object scaled:', {
+        type: target.type,
+        scaleX: target.scaleX,
+        scaleY: target.scaleY
+      })
 
-        console.log('Canvas state saved after modification:', serializedState)
-      } catch (error) {
-        console.error('Error saving canvas state:', error)
-      }
+      // Sauvegarde après redimensionnement
+      saveAndUpdateState()
     }
 
-    // Ajouter les écouteurs spécifiques au texte
+    // Ajouter les écouteurs pour les événements pertinents
     canvas.on('object:added', handleObjectAdded)
-    canvas.on('object:modified', handleTextModified)
-    canvas.on('selection:created', handleTextModified)
-    canvas.on('selection:updated', handleTextModified)
-    canvas.on('text:changed', handleTextModified)
+    canvas.on('object:modified', handleObjectModified)
+    canvas.on('object:scaled', handleObjectScaled)
 
     // Nettoyage
     return () => {
       canvas.off('object:added', handleObjectAdded)
-      canvas.off('object:modified', handleTextModified)
-      canvas.off('selection:created', handleTextModified)
-      canvas.off('selection:updated', handleTextModified)
-      canvas.off('text:changed', handleTextModified)
+      canvas.off('object:modified', handleObjectModified)
+      canvas.off('object:scaled', handleObjectScaled)
     }
-  }, [canvas, dispatchCanvasAction])
+  }, [canvas, dispatchCanvasAction, saveAndUpdateState])
 
-  // Fonction pour mettre à jour les propriétés du texte
-  const updateTextProperties = useCallback(
+  // Fonction pour mettre à jour les propriétés des objets
+  const updateObjectProperties = useCallback(
     (object, properties) => {
       if (!object || !properties) return
 
       try {
         const updates = {}
 
+        // Appliquer les modifications de couleur pour tous les types d'objets
         if (properties.color) {
           updates.fill = properties.color
         }
-        if (properties.font) {
-          updates.fontFamily = properties.font
+
+        // Appliquer des modifications spécifiques aux types de texte
+        if (object.type === 'i-text' || object.type === 'textbox') {
+          if (properties.font) {
+            updates.fontFamily = properties.font
+          }
         }
 
         object.set(updates)
+        object.setCoords() // Met à jour les coordonnées après modification
         canvas?.renderAll()
 
         // Dispatch les changements globaux
@@ -96,23 +103,17 @@ const useCanvasSerialization = (canvas, dispatchCanvasAction) => {
           payload: properties
         })
 
-        // Sauvegarder l'état
-        const serializedState = canvas.toJSON(['id', 'selectable'])
-        dispatchCanvasAction({
-          type: 'SAVE_CANVAS_STATE',
-          payload: serializedState
-        })
-
-        console.log('Text properties updated:', updates)
+        // Sauvegarder l'état après mise à jour
+        saveAndUpdateState()
       } catch (error) {
-        console.error('Error updating text properties:', error)
+        console.error('Error updating object properties:', error)
       }
     },
-    [canvas, dispatchCanvasAction]
+    [canvas, dispatchCanvasAction, saveAndUpdateState]
   )
 
   return {
-    updateTextProperties
+    updateObjectProperties
   }
 }
 

@@ -9,7 +9,7 @@ import useCanvasSerialization from '../../../hooks/useCanvasSerialization'
 export default function TextMenu({ onAddText, selectedObject }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
   const { canvas, selectedColor, selectedFont, dispatchCanvasAction } = useCanvas()
-  const { updateTextProperties } = useCanvasSerialization(canvas, dispatchCanvasAction)
+  const { updateObjectProperties } = useCanvasSerialization(canvas, dispatchCanvasAction)
 
   const pickerRef = useRef(null)
 
@@ -37,7 +37,7 @@ export default function TextMenu({ onAddText, selectedObject }) {
 
   const handleColorChange = (color) => {
     if (isTextSelected) {
-      updateTextProperties(selectedObject, { color })
+      updateObjectProperties(selectedObject, { color })
     } else {
       dispatchCanvasAction({
         type: 'SET_SELECTED_COLOR',
@@ -53,7 +53,7 @@ export default function TextMenu({ onAddText, selectedObject }) {
       .load()
       .then(() => {
         if (isTextSelected) {
-          updateTextProperties(selectedObject, { font: fontFamily })
+          updateObjectProperties(selectedObject, { font: fontFamily })
         } else {
           dispatchCanvasAction({
             type: 'SET_SELECTED_FONT',

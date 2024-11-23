@@ -3,10 +3,13 @@ import { faCircle, faSquare, faPalette } from '@fortawesome/free-solid-svg-icons
 import IconButton from '../../ui/IconButton'
 import ColorPicker from '../texttool/ColorPicker'
 import { useCanvas } from '../../../context/CanvasContext'
+import useCanvasSerialization from '../../../hooks/useCanvasSerialization'
 
 export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
-  const { selectedColor, dispatchCanvasAction } = useCanvas()
+  const { canvas, selectedColor, selectedObject, setSelectedColor, dispatchCanvasAction } =
+    useCanvas()
+  const { updateObjectProperties } = useCanvasSerialization(canvas, dispatchCanvasAction)
   const pickerRef = useRef(null)
 
   const toggleColorPicker = () => {
@@ -26,8 +29,20 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
     }
   }, [])
 
+  // Met à jour la couleur en fonction de l'objet sélectionné ou de la couleur globale
+  const handleColorChange = (color) => {
+    if (selectedObject && (selectedObject.type === 'circle' || selectedObject.type === 'rect')) {
+      // Met à jour la couleur de l'objet sélectionné
+      updateObjectProperties(selectedObject, { color })
+    } else {
+      // Sinon, met à jour la couleur globale
+      setSelectedColor(color)
+    }
+  }
+
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
+      {/* Ajouter un cercle */}
       <IconButton
         onClick={onAddCircle}
         icon={faCircle}
@@ -37,6 +52,7 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
         iconSize="text-xl"
       />
 
+      {/* Ajouter un rectangle */}
       <IconButton
         onClick={onAddRectangle}
         icon={faSquare}
@@ -46,6 +62,7 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
         iconSize="text-xl"
       />
 
+      {/* Choisir une couleur */}
       <IconButton
         onClick={toggleColorPicker}
         icon={faPalette}
@@ -55,13 +72,13 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
         iconSize="text-xl"
       />
 
+      {/* Color Picker */}
       {isColorPickerOpen && (
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
           <ColorPicker
-            color={selectedColor}
-            setSelectedColor={(color) =>
-              dispatchCanvasAction({ type: 'SET_COLOR', payload: color })
-            }
+            // La couleur affichée dans le ColorPicker dépend de l'objet sélectionné
+            color={selectedObject?.fill || selectedColor}
+            setSelectedColor={handleColorChange}
           />
         </div>
       )}

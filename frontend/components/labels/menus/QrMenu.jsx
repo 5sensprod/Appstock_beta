@@ -3,14 +3,17 @@ import IconButton from '../../ui/IconButton'
 import ColorPicker from '../texttool/ColorPicker'
 import { faQrcode, faPalette, faSync } from '@fortawesome/free-solid-svg-icons'
 import { useCanvas } from '../../../context/CanvasContext'
+import useCanvasSerialization from '../../../hooks/useCanvasSerialization'
 
 export default function QrMenu({ onAddQrCode, onUpdateQrCode, selectedQrText }) {
-  const { selectedColor, dispatchCanvasAction } = useCanvas()
+  const { canvas, selectedColor, selectedObject, dispatchCanvasAction } = useCanvas()
+  const { updateObjectProperties } = useCanvasSerialization(canvas, dispatchCanvasAction)
   const [qrText, setQrText] = useState(selectedQrText || '')
   const [isModified, setIsModified] = useState(false)
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
   const pickerRef = useRef(null)
 
+  // Synchronise le texte du QR Code sélectionné
   useEffect(() => {
     if (selectedQrText) {
       setQrText(selectedQrText)
@@ -18,6 +21,7 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode, selectedQrText }) 
     }
   }, [selectedQrText])
 
+  // Ajoute un nouveau QR Code
   const handleValidate = () => {
     if (qrText.trim()) {
       onAddQrCode(qrText)
@@ -26,6 +30,7 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode, selectedQrText }) 
     }
   }
 
+  // Met à jour un QR Code existant
   const handleUpdate = () => {
     if (isModified && qrText.trim()) {
       onUpdateQrCode(qrText, selectedColor)
@@ -33,18 +38,32 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode, selectedQrText }) 
     }
   }
 
+  // Met à jour le texte du QR Code
   const handleTextChange = (e) => {
     setQrText(e.target.value)
     setIsModified(true)
   }
 
+  // Change la couleur et met à jour le QR Code sélectionné si applicable
   const handleColorChangeAndUpdate = (color) => {
     dispatchCanvasAction({ type: 'SET_COLOR', payload: color })
-    if (qrText.trim()) {
+
+    // Vérifie si un objet QR Code est sélectionné
+    if (selectedObject && selectedObject.type === 'image') {
+      // Utilise `updateObjectProperties` pour centraliser la mise à jour
+      updateObjectProperties(selectedObject, { color })
+
+      // Mise à jour via onUpdateQrCode
+      if (qrText.trim()) {
+        onUpdateQrCode(qrText, color)
+      }
+    } else if (qrText.trim()) {
+      // Applique la couleur via onUpdateQrCode si aucun QR Code n'est sélectionné
       onUpdateQrCode(qrText, color)
     }
   }
 
+  // Ferme le `ColorPicker` si l'utilisateur clique en dehors
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
@@ -99,7 +118,10 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode, selectedQrText }) 
 
       {isColorPickerOpen && (
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
-          <ColorPicker color={selectedColor} setSelectedColor={handleColorChangeAndUpdate} />
+          <ColorPicker
+            color={selectedObject?.fill || selectedColor} // Affiche la couleur actuelle
+            setSelectedColor={handleColorChangeAndUpdate}
+          />
         </div>
       )}
     </div>
