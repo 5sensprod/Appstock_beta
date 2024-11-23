@@ -7,28 +7,28 @@ export const initialGridState = {
     offsetLeft: 8,
     spacingHorizontal: 0,
     spacingVertical: 0,
-    pageWidth: 210, // A4 dimensions
+    pageWidth: 210,
     pageHeight: 297,
     backgroundColor: 'white'
   },
-  grid: [], // Grille vide générée dynamiquement
-  selectedCellId: null, // Aucun ID sélectionné au départ
+  grid: [],
+  selectedCellId: null,
   cellContents: {
     backgroundColor: 'white'
   },
-  clipboard: null, // Contenu temporaire pour le copier-coller
+  clipboard: null,
   linkedGroups: [],
-  currentPage: 0, // Page active
+  currentPage: 0,
   totalPages: 1,
-  undoStack: [], // Historique des états précédents
-  redoStack: [] // Historique des états annulés
+  undoStack: [],
+  redoStack: []
 }
 
 function withUndoRedo(state, newState) {
   return {
     ...newState,
-    undoStack: [...state.undoStack, state], // Ajouter l'état actuel à undoStack
-    redoStack: [] // Réinitialiser redoStack après une nouvelle action
+    undoStack: [...state.undoStack, state],
+    redoStack: []
   }
 }
 
@@ -133,7 +133,8 @@ export function gridReducer(state, action) {
       return {
         ...state,
         grid,
-        cellsPerPage
+        cellsPerPage,
+        selectedCellId: grid.length > 0 ? grid[0].id : null
       }
     }
 
@@ -229,20 +230,10 @@ export function gridReducer(state, action) {
       return withUndoRedo(state, newState)
     }
 
-    case 'SELECT_FIRST_CELL': {
-      if (state.grid.length > 0) {
-        return {
-          ...state,
-          selectedCellId: state.grid[0].id // Sélectionne la première cellule par défaut
-        }
-      }
-      return state
-    }
-
     case 'SELECT_CELL':
       return {
         ...state,
-        selectedCellId: action.payload // Met à jour l'ID de la cellule sélectionnée
+        selectedCellId: action.payload
       }
 
     case 'UPDATE_CELL_CONTENT': {
