@@ -1,73 +1,77 @@
 import { useCallback, useEffect } from 'react'
 
 const useCanvasSerialization = (canvas, dispatchCanvasAction) => {
-  // Fonction pour sauvegarder l'état du canvas - simplifiée avec early return
+  // Fonction utilitaire pour gérer les erreurs
+  const safelyExecute = useCallback((fn, context) => {
+    try {
+      fn()
+    } catch (error) {
+      console.error('Error in:', context, error)
+    }
+  }, [])
+
+  // Sauvegarder l'état du canvas
   const saveAndUpdateState = useCallback(() => {
     if (!canvas) return
 
-    try {
+    safelyExecute(() => {
       const serializedState = canvas.toJSON(['id', 'selectable', 'scaleX', 'scaleY'])
       dispatchCanvasAction({
         type: 'SAVE_CANVAS_STATE',
         payload: serializedState
       })
       console.log('Canvas state saved:', serializedState)
-    } catch (error) {
-      console.error('Error saving canvas state:', error)
-    }
-  }, [canvas, dispatchCanvasAction])
+    }, 'saveAndUpdateState')
+  }, [canvas, dispatchCanvasAction, safelyExecute])
 
-  // Gestionnaire d'événements unifié
+  // Gestionnaire d'événements pour le canvas
   const handleCanvasEvent = useCallback(
     (e) => {
       if (!e?.target) return
 
       const target = e.target
-      const eventDetails = {
+      console.log('Event triggered:', e.e?.type || 'non-native-event', {
         type: target.type,
         scaleX: target.scaleX,
         scaleY: target.scaleY
-      }
+      })
 
-      // Vérification sécurisée pour éviter "undefined"
-      const nativeEventType = e.e?.type || 'non-native-event'
-
-      console.log(`Event triggered: ${nativeEventType}, Details:`, eventDetails)
       saveAndUpdateState()
     },
     [saveAndUpdateState]
   )
 
-  // Effet pour la surveillance des changements
+  // Ajout d'écouteurs d'événements
   useEffect(() => {
     if (!canvas) return
 
     console.log('Canvas initialized in serialization hook:', canvas)
 
-    // Configuration des événements
-    const events = ['object:added', 'object:modified', 'object:scaled']
+    const events = ['object:added', 'object:modified', 'object:scaled', 'object:removed']
 
-    // Ajout des écouteurs
+    // Enregistrement des événements
     events.forEach((event) => canvas.on(event, handleCanvasEvent))
 
-    // Nettoyage
-    return () => events.forEach((event) => canvas.off(event, handleCanvasEvent))
+    // Nettoyage des événements
+    return () => {
+      events.forEach((event) => canvas.off(event, handleCanvasEvent))
+    }
   }, [canvas, handleCanvasEvent])
 
-  // Fonction pour mettre à jour les propriétés des objets - simplifiée
+  // Mise à jour des propriétés d'un objet
   const updateObjectProperties = useCallback(
     (object, properties) => {
       if (!object || !properties || !canvas) return
 
-      const updates = {
-        ...(properties.color && { fill: properties.color }),
-        ...(properties.font &&
-          ['i-text', 'textbox'].includes(object.type) && {
-            fontFamily: properties.font
-          })
-      }
+      safelyExecute(() => {
+        const updates = {
+          ...(properties.color && { fill: properties.color }),
+          ...(properties.font &&
+            ['i-text', 'textbox'].includes(object.type) && {
+              fontFamily: properties.font
+            })
+        }
 
-      try {
         console.log('Updating object properties:', { object, properties, updates })
         object.set(updates)
         object.setCoords()
@@ -79,11 +83,9 @@ const useCanvasSerialization = (canvas, dispatchCanvasAction) => {
         })
 
         saveAndUpdateState()
-      } catch (error) {
-        console.error('Error updating object properties:', error)
-      }
+      }, 'updateObjectProperties')
     },
-    [canvas, dispatchCanvasAction, saveAndUpdateState]
+    [canvas, dispatchCanvasAction, saveAndUpdateState, safelyExecute]
   )
 
   return { updateObjectProperties }
