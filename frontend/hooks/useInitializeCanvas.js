@@ -5,7 +5,6 @@ import { mmToPx } from '../utils/conversionUtils'
 export default function useInitializeCanvas(canvas, labelConfig, dispatchCanvasAction, canvasRef) {
   useEffect(() => {
     if (!canvas && canvasRef.current) {
-      console.log('Initializing Fabric canvas:', canvasRef.current)
       const fabricCanvas = new fabric.Canvas(canvasRef.current, {
         preserveObjectStacking: true
       })
@@ -19,9 +18,8 @@ export default function useInitializeCanvas(canvas, labelConfig, dispatchCanvasA
 
   useEffect(() => {
     if (canvas) {
-      console.log('Updating Fabric canvas dimensions')
-      canvas.setWidth(mmToPx(labelConfig.labelWidth || 200))
-      canvas.setHeight(mmToPx(labelConfig.labelHeight || 100))
+      canvas.setWidth(mmToPx(labelConfig.labelWidth))
+      canvas.setHeight(mmToPx(labelConfig.labelHeight))
       canvas.renderAll()
     }
   }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
