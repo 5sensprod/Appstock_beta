@@ -1,34 +1,28 @@
-// frontend/hooks/useInitializeCanvas.js
-
 import { useEffect } from 'react'
 import * as fabric from 'fabric'
 import { mmToPx } from '../utils/conversionUtils'
-import { useContext } from 'react'
-import { GridContext } from '../context/GridContext'
 
-export default function useInitializeCanvas(canvas, dispatchCanvasAction, canvasRef) {
-  const { state: gridState } = useContext(GridContext)
-  const { config } = gridState
-
+export default function useInitializeCanvas(canvas, labelConfig, dispatchCanvasAction, canvasRef) {
   useEffect(() => {
-    if (!canvas) {
+    if (!canvas && canvasRef.current) {
+      console.log('Initializing Fabric canvas:', canvasRef.current)
       const fabricCanvas = new fabric.Canvas(canvasRef.current, {
         preserveObjectStacking: true
       })
 
-      // Utilisation des configurations depuis gridReducer
-      fabricCanvas.backgroundColor = config.backgroundColor
+      fabricCanvas.backgroundColor = labelConfig.backgroundColor || 'white'
       fabricCanvas.renderAll()
 
       dispatchCanvasAction({ type: 'SET_CANVAS', payload: fabricCanvas })
     }
-  }, [canvas, canvasRef, dispatchCanvasAction, config.backgroundColor])
+  }, [canvas, canvasRef, dispatchCanvasAction, labelConfig.backgroundColor])
 
   useEffect(() => {
     if (canvas) {
-      canvas.setWidth(mmToPx(config.cellWidth))
-      canvas.setHeight(mmToPx(config.cellHeight))
+      console.log('Updating Fabric canvas dimensions')
+      canvas.setWidth(mmToPx(labelConfig.labelWidth || 200))
+      canvas.setHeight(mmToPx(labelConfig.labelHeight || 100))
       canvas.renderAll()
     }
-  }, [canvas, config.cellWidth, config.cellHeight])
+  }, [canvas, labelConfig.labelWidth, labelConfig.labelHeight])
 }

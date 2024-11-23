@@ -21,7 +21,7 @@ const CanvasProvider = ({ children }) => {
     canvasState
 
   // Initialisation du canevas
-  useInitializeCanvas(canvas, dispatchCanvasAction, canvasRef)
+  useInitializeCanvas(canvas, labelConfig, dispatchCanvasAction, canvasRef)
 
   // Gestion des transformations et des contraintes
   const { handleZoomChange } = useCanvasTransformAndConstraints(
