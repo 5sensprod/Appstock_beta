@@ -5,10 +5,10 @@ export const initialCanvasState = {
   selectedColor: '#000000',
   selectedFont: 'Lato',
   labelConfig: {
-    labelWidth: 48.5, // Valeur par défaut pour largeur
-    labelHeight: 25, // Valeur par défaut pour hauteur
-    offsetTop: 22, // Valeur par défaut pour l'offset haut
-    offsetLeft: 8, // Valeur par défaut pour l'offset gauche
+    labelWidth: 48.5,
+    labelHeight: 25,
+    offsetTop: 22,
+    offsetLeft: 8,
     spacingVertical: 0,
     spacingHorizontal: 0
   }
@@ -47,7 +47,7 @@ export const canvasReducer = (state, action) => {
     case 'UPDATE_DIMENSIONS':
       return {
         ...state,
-        ...action.payload // Permet de mettre à jour `cellWidth`, `cellHeight`, etc.
+        ...action.payload
       }
 
     default:

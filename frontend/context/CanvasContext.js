@@ -4,6 +4,7 @@ import useCanvasTransformAndConstraints from '../hooks/useCanvasTransformAndCons
 import useInitializeCanvas from '../hooks/useInitializeCanvas'
 import useCanvasObjectActions from '../hooks/useCanvasObjectActions'
 import { canvasReducer, initialCanvasState } from '../reducers/canvasReducer'
+import useCanvasSerialization from '../hooks/useCanvasSerialization'
 
 const CanvasContext = createContext()
 
@@ -30,6 +31,8 @@ const CanvasProvider = ({ children }) => {
     canvasState,
     dispatchCanvasAction
   )
+
+  const { saveCanvasState, loadCanvasState } = useCanvasSerialization(canvas, dispatchCanvasAction)
 
   // Gestion des objets sur le canevas
   const { isShapeSelected, isTextSelected, isImageSelected, isQRCodeSelected } =
@@ -67,6 +70,8 @@ const CanvasProvider = ({ children }) => {
     isQRCodeSelected,
     // Dispatcher pour des actions personnalisées
     dispatchCanvasAction,
+    saveCanvasState, // Expose les fonctions du hook
+    loadCanvasState,
     canvasState
   }
 
