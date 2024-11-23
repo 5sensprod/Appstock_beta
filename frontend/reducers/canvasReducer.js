@@ -36,6 +36,11 @@ export const canvasReducer = (state, action) => {
     case 'SET_SELECTED_OBJECT':
       return { ...state, selectedObject: action.payload }
 
+    case 'SAVE_CANVAS_STATE':
+      return {
+        ...state,
+        canvasState: action.payload
+      }
     case 'SET_OBJECT_PROPERTIES':
       return {
         ...state,

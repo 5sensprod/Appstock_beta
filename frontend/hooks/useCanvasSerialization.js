@@ -1,106 +1,118 @@
 import { useCallback, useEffect } from 'react'
 
 const useCanvasSerialization = (canvas, dispatchCanvasAction) => {
-  // Effet pour configurer les écouteurs d'événements du canvas
+  // Effet pour la surveillance des changements de propriétés
   useEffect(() => {
     if (!canvas) return
 
     console.log('Canvas initialized in serialization hook', canvas)
 
     const handleObjectAdded = (e) => {
-      console.log('Object added to canvas:', e.target)
-      const state = canvas.toJSON()
-      console.log('New canvas state after object added:', state)
+      if (e.target) {
+        console.log('Object added to canvas:', e.target)
+        saveAndUpdateState()
+      }
     }
 
-    const handleObjectModified = (e) => {
-      console.log('Object modified on canvas:', e.target)
-      const state = canvas.toJSON()
-      console.log('New canvas state after modification:', state)
+    const handleTextModified = (e) => {
+      if (!e?.target) return
+
+      const target = e.target
+      if (target.type === 'i-text' || target.type === 'textbox') {
+        console.log('Text object modified:', {
+          type: target.type,
+          color: target.fill,
+          font: target.fontFamily,
+          text: target.text
+        })
+
+        // Mettre à jour les propriétés globales si nécessaire
+        dispatchCanvasAction({
+          type: 'SET_OBJECT_PROPERTIES',
+          payload: {
+            color: target.fill,
+            font: target.fontFamily
+          }
+        })
+
+        saveAndUpdateState()
+      }
     }
 
-    const handleObjectRemoved = (e) => {
-      console.log('Object removed from canvas:', e.target)
-      const state = canvas.toJSON()
-      console.log('New canvas state after removal:', state)
-    }
+    const saveAndUpdateState = () => {
+      try {
+        const serializedState = canvas.toJSON(['id', 'selectable'])
 
-    // Ajouter les écouteurs d'événements
-    canvas.on('object:added', handleObjectAdded)
-    canvas.on('object:modified', handleObjectModified)
-    canvas.on('object:removed', handleObjectRemoved)
-
-    // Nettoyage des écouteurs lors du démontage
-    return () => {
-      canvas.off('object:added', handleObjectAdded)
-      canvas.off('object:modified', handleObjectModified)
-      canvas.off('object:removed', handleObjectRemoved)
-    }
-  }, [canvas])
-
-  const saveCanvasState = useCallback(() => {
-    if (!canvas) {
-      console.error('Canvas is not initialized.')
-      return null
-    }
-
-    try {
-      console.log('Saving canvas state...')
-      console.log('Current objects on canvas:', canvas.getObjects())
-      const serializedState = canvas.toJSON()
-      console.log('Serialized state:', serializedState)
-
-      if (dispatchCanvasAction) {
+        // Sauvegarder l'état du canvas
         dispatchCanvasAction({
           type: 'SAVE_CANVAS_STATE',
           payload: serializedState
         })
-        console.log('State dispatched to reducer')
-      }
 
-      return serializedState
-    } catch (error) {
-      console.error('Error in saveCanvasState:', error)
-      return null
+        console.log('Canvas state saved after modification:', serializedState)
+      } catch (error) {
+        console.error('Error saving canvas state:', error)
+      }
+    }
+
+    // Ajouter les écouteurs spécifiques au texte
+    canvas.on('object:added', handleObjectAdded)
+    canvas.on('object:modified', handleTextModified)
+    canvas.on('selection:created', handleTextModified)
+    canvas.on('selection:updated', handleTextModified)
+    canvas.on('text:changed', handleTextModified)
+
+    // Nettoyage
+    return () => {
+      canvas.off('object:added', handleObjectAdded)
+      canvas.off('object:modified', handleTextModified)
+      canvas.off('selection:created', handleTextModified)
+      canvas.off('selection:updated', handleTextModified)
+      canvas.off('text:changed', handleTextModified)
     }
   }, [canvas, dispatchCanvasAction])
 
-  const loadCanvasState = useCallback(
-    (serializedState) => {
-      if (!canvas || !serializedState) {
-        console.error('Canvas or state missing:', { canvas: !!canvas, state: !!serializedState })
-        return
-      }
+  // Fonction pour mettre à jour les propriétés du texte
+  const updateTextProperties = useCallback(
+    (object, properties) => {
+      if (!object || !properties) return
 
       try {
-        console.log('Loading state:', serializedState)
-        canvas.loadFromJSON(serializedState, () => {
-          console.log('State loaded successfully')
-          console.log('Current objects:', canvas.getObjects())
-          canvas.renderAll()
-          dispatchCanvasAction?.({ type: 'SET_CANVAS_LOADED' })
+        const updates = {}
+
+        if (properties.color) {
+          updates.fill = properties.color
+        }
+        if (properties.font) {
+          updates.fontFamily = properties.font
+        }
+
+        object.set(updates)
+        canvas?.renderAll()
+
+        // Dispatch les changements globaux
+        dispatchCanvasAction({
+          type: 'SET_OBJECT_PROPERTIES',
+          payload: properties
         })
+
+        // Sauvegarder l'état
+        const serializedState = canvas.toJSON(['id', 'selectable'])
+        dispatchCanvasAction({
+          type: 'SAVE_CANVAS_STATE',
+          payload: serializedState
+        })
+
+        console.log('Text properties updated:', updates)
       } catch (error) {
-        console.error('Error in loadCanvasState:', error)
+        console.error('Error updating text properties:', error)
       }
     },
     [canvas, dispatchCanvasAction]
   )
 
-  // Fonction utilitaire pour vérifier l'état actuel
-  const logCurrentState = useCallback(() => {
-    if (!canvas) {
-      console.log('Canvas not available')
-      return
-    }
-    console.log('Current canvas objects:', canvas.getObjects())
-    console.log('Current canvas state:', canvas.toJSON())
-  }, [canvas])
-
   return {
-    saveCanvasState,
-    loadCanvasState,
-    logCurrentState
+    updateTextProperties
   }
 }
 

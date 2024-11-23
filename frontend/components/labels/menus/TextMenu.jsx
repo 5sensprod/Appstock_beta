@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useCanvas } from '../../../context/CanvasContext'
 import { faTextHeight, faPalette } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../../ui/IconButton'
 import ColorPicker from '../texttool/ColorPicker'
-import { useCanvas } from '../../../context/CanvasContext'
 import FontFaceObserver from 'fontfaceobserver'
+import useCanvasSerialization from '../../../hooks/useCanvasSerialization'
 
 export default function TextMenu({ onAddText, selectedObject }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
-  const { selectedColor, selectedFont, dispatchCanvasAction, handleCanvasModification } =
-    useCanvas()
+  const { canvas, selectedColor, selectedFont, dispatchCanvasAction } = useCanvas()
+  const { updateTextProperties } = useCanvasSerialization(canvas, dispatchCanvasAction)
 
   const pickerRef = useRef(null)
 
@@ -36,21 +37,8 @@ export default function TextMenu({ onAddText, selectedObject }) {
 
   const handleColorChange = (color) => {
     if (isTextSelected) {
-      selectedObject.set({ fill: color })
-      selectedObject.canvas.renderAll()
-
-      // Dispatch pour mettre à jour les propriétés de l'objet sélectionné
-      dispatchCanvasAction({
-        type: 'SET_OBJECT_PROPERTIES',
-        payload: { id: selectedObject.id, properties: { color } }
-      })
-
-      // Gérer les modifications du canevas
-      if (selectedObject.canvas && typeof handleCanvasModification === 'function') {
-        handleCanvasModification()
-      }
+      updateTextProperties(selectedObject, { color })
     } else {
-      // Mettre à jour la couleur par défaut si aucun objet n'est sélectionné
       dispatchCanvasAction({
         type: 'SET_SELECTED_COLOR',
         payload: color
@@ -65,21 +53,8 @@ export default function TextMenu({ onAddText, selectedObject }) {
       .load()
       .then(() => {
         if (isTextSelected) {
-          // Appliquez la police à l'objet sélectionné
-          selectedObject.set({ fontFamily })
-          selectedObject.canvas.renderAll()
-
-          dispatchCanvasAction({
-            type: 'SET_OBJECT_PROPERTIES',
-            payload: { id: selectedObject.id, properties: { font: fontFamily } }
-          })
-
-          // Gérer les modifications du canevas
-          if (selectedObject.canvas && typeof handleCanvasModification === 'function') {
-            handleCanvasModification()
-          }
+          updateTextProperties(selectedObject, { font: fontFamily })
         } else {
-          // Mettre à jour la police par défaut
           dispatchCanvasAction({
             type: 'SET_SELECTED_FONT',
             payload: fontFamily
