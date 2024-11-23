@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import { GridProvider } from '../context/GridContext'
 import { CanvasProvider } from '../context/CanvasContext'
-import GridConfigurator from '../components/labelsgenerator/GridConfigurator'
-import LabelsContent from '../components/labelsgenerator/LabelsContent' // Chemin correct pour LabelsContent
+// import GridConfigurator from '../components/labelsgenerator/GridConfigurator'
+import ConfigForm from '../components/labels/ConfigForm'
+// import LabelsContent from '../components/labelsgenerator/LabelsContent'
+import FabricDesigner from '../components/labels/FabricDesigner'
 import GridManager from '../components/labelsgenerator/GridManager'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -25,7 +27,8 @@ const LabelsPage = () => {
             }`}
           >
             <h2 className="mb-4 text-xl font-semibold">Aperçu de l'Étiquette</h2>
-            <LabelsContent />
+            {/* <LabelsContent /> */}
+            <FabricDesigner />
           </div>
 
           {/* Bouton pour afficher/cacher le panneau droit */}
@@ -50,7 +53,8 @@ const LabelsPage = () => {
               <>
                 <div className="rounded-lg border border-gray-300 bg-light-background p-4 dark:bg-dark-background">
                   <h2 className="mb-4 text-xl font-semibold">Configuration</h2>
-                  <GridConfigurator />
+                  {/* <GridConfigurator /> */}
+                  <ConfigForm />
                 </div>
 
                 {/* Section Disposition sur A4 */}

@@ -4,9 +4,6 @@ import useCanvasTransformAndConstraints from '../hooks/useCanvasTransformAndCons
 import useInitializeCanvas from '../hooks/useInitializeCanvas'
 import useCanvasObjectActions from '../hooks/useCanvasObjectActions'
 import { canvasReducer, initialCanvasState } from '../reducers/canvasReducer'
-import { syncGridConfigToLabelConfig } from '../utils/configSync'
-import { GridContext } from './GridContext'
-import useCanvasGridSync from '../hooks/useCanvasGridSync'
 
 const CanvasContext = createContext()
 
@@ -19,12 +16,9 @@ const useCanvas = () => {
 const CanvasProvider = ({ children }) => {
   const canvasRef = useRef(null)
   const [canvasState, dispatchCanvasAction] = useReducer(canvasReducer, initialCanvasState)
-  const { state: gridState } = useContext(GridContext)
 
-  // Convertir `config` de GridContext en `labelConfig`
-  const labelConfig = syncGridConfigToLabelConfig(gridState.config)
-
-  const { canvas, zoomLevel, selectedColor, selectedFont, selectedObject } = canvasState
+  const { canvas, zoomLevel, selectedColor, selectedFont, selectedObject, labelConfig } =
+    canvasState
 
   // Initialisation du canevas
   useInitializeCanvas(canvas, dispatchCanvasAction, canvasRef)
@@ -45,15 +39,13 @@ const CanvasProvider = ({ children }) => {
   const { onAddCircle, onAddRectangle, onAddText, onAddImage, onAddQrCode, onUpdateQrCode } =
     useCanvasObjectActions(canvas, labelConfig, selectedColor, selectedFont)
 
-  const { handleCanvasModification } = useCanvasGridSync(canvas)
-
   // Valeurs et actions exposées par le contexte
   const value = {
     canvasRef,
     canvas,
     zoomLevel,
     handleZoomChange,
-    labelConfig, // Synchronisé avec GridContext via syncGridConfigToLabelConfig
+    labelConfig,
     setLabelConfig: (config) => dispatchCanvasAction({ type: 'SET_LABEL_CONFIG', payload: config }),
     selectedColor,
     setSelectedColor: (color) => dispatchCanvasAction({ type: 'SET_COLOR', payload: color }),
@@ -75,7 +67,6 @@ const CanvasProvider = ({ children }) => {
     isQRCodeSelected,
     // Dispatcher pour des actions personnalisées
     dispatchCanvasAction,
-    handleCanvasModification,
     canvasState
   }
 
