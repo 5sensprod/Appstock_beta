@@ -47,7 +47,7 @@ const useCanvasSerialization = (canvas, dispatchCanvasAction) => {
 
     console.log('Canvas initialized in serialization hook:', canvas)
 
-    const events = ['object:added', 'object:modified', 'object:scaled', 'object:removed']
+    const events = ['object:added', 'object:modified', 'object:scaled', '']
 
     // Enregistrement des événements
     events.forEach((event) => canvas.on(event, handleCanvasEvent))

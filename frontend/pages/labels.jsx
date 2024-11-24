@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { CanvasProvider } from '../context/CanvasContext'
 import ConfigForm from '../components/labels/ConfigForm'
+import GridConfigurator from '../components/labelsgenerator/GridConfigurator'
 import FabricDesigner from '../components/labels/FabricDesigner'
 import GridManager from '../components/labelsgenerator/GridManager'
 import { GridProvider } from '../context/GridContext'
@@ -50,7 +51,8 @@ const LabelsPage = () => {
               <>
                 <div className="rounded-lg border border-gray-300 bg-light-background p-4 dark:bg-dark-background">
                   <h2 className="mb-4 text-xl font-semibold">Configuration</h2>
-                  <ConfigForm />
+                  {/* <ConfigForm /> */}
+                  <GridConfigurator />
                 </div>
 
                 {/* Section Disposition sur A4 */}

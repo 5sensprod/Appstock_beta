@@ -237,6 +237,8 @@ export function gridReducer(state, action) {
       }
 
     case 'UPDATE_CELL_CONTENT': {
+      console.log('State before update:', state)
+      console.log('Payload received:', action.payload)
       const { id, content } = action.payload
       const newCellContents = { ...state.cellContents }
 
