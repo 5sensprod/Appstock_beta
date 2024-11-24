@@ -27,6 +27,8 @@ const useCanvasGridSync = (canvas) => {
     console.log('Chargement des objets...')
 
     const currentBackgroundColor = canvas.backgroundColor
+    const previousActiveObject = canvas.getActiveObject() // Sauvegarder l'objet actif actuel
+
     canvas.clear()
     canvas.backgroundColor = currentBackgroundColor
 
@@ -53,6 +55,13 @@ const useCanvasGridSync = (canvas) => {
           pendingImages--
 
           if (pendingImages === 0) {
+            if (previousActiveObject) {
+              // Restaurer l'objet actif après ajout des images
+              const restoredObject = canvas
+                .getObjects()
+                .find((o) => o.id === previousActiveObject.id)
+              if (restoredObject) canvas.setActiveObject(restoredObject)
+            }
             canvas.renderAll()
             isLoadingRef.current = false
             ignoreNextUpdateRef.current = false
@@ -89,6 +98,11 @@ const useCanvasGridSync = (canvas) => {
 
     // Si pas d'images à charger, on termine directement
     if (pendingImages === 0) {
+      if (previousActiveObject) {
+        // Restaurer l'objet actif pour les autres types d'objets
+        const restoredObject = canvas.getObjects().find((o) => o.id === previousActiveObject.id)
+        if (restoredObject) canvas.setActiveObject(restoredObject)
+      }
       canvas.renderAll()
       isLoadingRef.current = false
       ignoreNextUpdateRef.current = false
