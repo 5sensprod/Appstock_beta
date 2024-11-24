@@ -37,11 +37,11 @@ export const createFabricObject = (obj, scaleFactor = 1) => {
       return Promise.resolve(
         new fabric.Circle({
           ...scaledOptions,
+          width: (scaledOptions.radius || 25) * 2, // Largeur = 2 * rayon
+          height: (scaledOptions.radius || 25) * 2, // Hauteur = 2 * rayon (optionnel si attendu)
           radius: scaledOptions.radius || 25,
-          left: (scaledOptions.left || 0) + (scaledOptions.radius || 25) * scaleFactor,
-          top: (scaledOptions.top || 0) + (scaledOptions.radius || 25) * scaleFactor,
-          originX: 'center',
-          originY: 'center'
+          originX: scaledOptions.originX || 'left',
+          originY: scaledOptions.originY || 'top'
         })
       )
     case 'triangle':
