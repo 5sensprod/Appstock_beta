@@ -167,7 +167,27 @@ const useCanvasGridSync = (canvas) => {
       type: 'UPDATE_CELL_CONTENT',
       payload: { id: selectedCellId, content: updatedObjects }
     })
-  }, [canvas, selectedCellId, dispatch])
+    const linkedGroup = findLinkedGroup(selectedCellId)
+    if (linkedGroup && linkedGroup.length > 1) {
+      const layout = updatedObjects.reduce((acc, item) => {
+        acc[item.id] = {
+          left: item.left,
+          top: item.top,
+          fill: item.fill,
+          scaleX: item.scaleX,
+          scaleY: item.scaleY,
+          fontFamily: item.fontFamily,
+          angle: item.angle || 0
+        }
+        return acc
+      }, {})
+
+      dispatch({
+        type: 'SYNC_CELL_LAYOUT',
+        payload: { sourceId: selectedCellId, layout, findLinkedGroup }
+      })
+    }
+  }, [canvas, selectedCellId, dispatch, findLinkedGroup])
 
   useEffect(() => {
     if (!canvas) return
