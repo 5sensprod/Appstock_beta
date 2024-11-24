@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useContext, useRef } from 'react'
 import * as fabric from 'fabric'
 import { GridContext } from '../context/GridContext'
+import _ from 'lodash' // Pour simplifier les comparaisons
 
 const useCanvasGridSync = (canvas) => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
@@ -9,13 +10,48 @@ const useCanvasGridSync = (canvas) => {
   const ignoreNextUpdateRef = useRef(false)
   const lastContentRef = useRef(null)
 
-  const loadCanvasObjects = useCallback(() => {
+  // Fonction pour créer des objets Fabric
+  const createFabricObject = (obj, canvas) => {
+    const { type, ...fabricOptions } = obj
+
+    if (type === 'image' && obj.src) {
+      const img = new Image()
+      img.src = obj.src
+      return new Promise((resolve, reject) => {
+        img.onload = () => {
+          resolve(
+            new fabric.Image(img, {
+              ...fabricOptions,
+              width: obj.width,
+              height: obj.height
+            })
+          )
+        }
+        img.onerror = reject
+      })
+    }
+
+    switch (type) {
+      case 'i-text':
+      case 'text':
+        return Promise.resolve(new fabric.IText(obj.text || '', fabricOptions))
+      case 'textbox':
+        return Promise.resolve(new fabric.Textbox(obj.text || '', fabricOptions))
+      case 'rect':
+        return Promise.resolve(new fabric.Rect(fabricOptions))
+      case 'circle':
+        return Promise.resolve(new fabric.Circle(fabricOptions))
+      default:
+        return Promise.resolve(null)
+    }
+  }
+
+  // Fonction pour charger les objets sur le canvas
+  const loadCanvasObjects = useCallback(async () => {
     if (!canvas || isLoadingRef.current) return
 
     const currentContent = cellContents[selectedCellId]
-
-    // Vérifier si le contenu a réellement changé
-    if (JSON.stringify(lastContentRef.current) === JSON.stringify(currentContent)) {
+    if (_.isEqual(lastContentRef.current, currentContent)) {
       console.log('Contenu identique, skip du rechargement')
       return
     }
@@ -24,103 +60,38 @@ const useCanvasGridSync = (canvas) => {
     isLoadingRef.current = true
     ignoreNextUpdateRef.current = true
 
-    console.log('Chargement des objets...')
-
     const currentBackgroundColor = canvas.backgroundColor
-    const previousActiveObject = canvas.getActiveObject() // Sauvegarder l'objet actif actuel
+    const previousActiveObject = canvas.getActiveObject()
 
     canvas.clear()
     canvas.backgroundColor = currentBackgroundColor
 
     const newObjects = currentContent || []
-    let pendingImages = 0
+    const fabricObjects = await Promise.all(
+      newObjects.map((obj) => createFabricObject(obj, canvas))
+    )
 
-    newObjects.forEach((obj) => {
-      const { type, ...fabricOptions } = obj
-
-      if (type === 'image' && obj.src) {
-        pendingImages++
-        const img = new Image()
-
-        img.onload = () => {
-          if (!canvas) return // Canvas peut avoir été détruit
-
-          const fabricImg = new fabric.Image(img, {
-            ...fabricOptions,
-            width: obj.width,
-            height: obj.height
-          })
-
-          canvas.add(fabricImg)
-          pendingImages--
-
-          if (pendingImages === 0) {
-            if (previousActiveObject) {
-              // Restaurer l'objet actif après ajout des images
-              const restoredObject = canvas
-                .getObjects()
-                .find((o) => o.id === previousActiveObject.id)
-              if (restoredObject) canvas.setActiveObject(restoredObject)
-            }
-            canvas.renderAll()
-            isLoadingRef.current = false
-            ignoreNextUpdateRef.current = false
-          }
-        }
-
-        img.onerror = () => {
-          pendingImages--
-          if (pendingImages === 0) {
-            isLoadingRef.current = false
-            ignoreNextUpdateRef.current = false
-          }
-        }
-
-        img.src = obj.src
-      } else {
-        let fabricObject
-
-        if (type === 'i-text' || type === 'text') {
-          fabricObject = new fabric.IText(obj.text || '', fabricOptions)
-        } else if (type === 'textbox') {
-          fabricObject = new fabric.Textbox(obj.text || '', fabricOptions)
-        } else if (type === 'rect') {
-          fabricObject = new fabric.Rect(fabricOptions)
-        } else if (type === 'circle') {
-          fabricObject = new fabric.Circle(fabricOptions)
-        }
-
-        if (fabricObject) {
-          canvas.add(fabricObject)
-        }
-      }
+    fabricObjects.forEach((fabricObject) => {
+      if (fabricObject) canvas.add(fabricObject)
     })
 
-    // Si pas d'images à charger, on termine directement
-    if (pendingImages === 0) {
-      if (previousActiveObject) {
-        // Restaurer l'objet actif pour les autres types d'objets
-        const restoredObject = canvas.getObjects().find((o) => o.id === previousActiveObject.id)
-        if (restoredObject) canvas.setActiveObject(restoredObject)
-      }
-      canvas.renderAll()
-      isLoadingRef.current = false
-      ignoreNextUpdateRef.current = false
+    if (previousActiveObject) {
+      const restoredObject = canvas.getObjects().find((o) => o.id === previousActiveObject.id)
+      if (restoredObject) canvas.setActiveObject(restoredObject)
     }
+
+    canvas.renderAll()
+    isLoadingRef.current = false
+    ignoreNextUpdateRef.current = false
   }, [canvas, selectedCellId, cellContents])
 
+  // Fonction pour synchroniser les modifications du canvas
   const handleCanvasModification = useCallback(() => {
-    if (!canvas || !selectedCellId || isLoadingRef.current || ignoreNextUpdateRef.current) {
-      return
-    }
+    if (!canvas || !selectedCellId || isLoadingRef.current || ignoreNextUpdateRef.current) return
 
     const objects = canvas.getObjects()
-    if (!objects || objects.length === 0) return
-
     const updatedObjects = objects
       .map((obj) => {
-        if (!obj) return null
-
         const baseProperties = {
           id: obj.id || Date.now().toString(),
           left: obj.left || 0,
@@ -131,47 +102,49 @@ const useCanvasGridSync = (canvas) => {
           scaleY: obj.scaleY || 1
         }
 
-        if (obj.type === 'image') {
-          return {
-            ...baseProperties,
-            type: 'image',
-            src: obj.getSrc ? obj.getSrc() : obj._element?.src || '',
-            width: obj.width || 0,
-            height: obj.height || 0
-          }
-        } else if (obj.type === 'i-text' || obj.type === 'text') {
-          return {
-            ...baseProperties,
-            type: 'i-text',
-            text: obj.text || '',
-            fontSize: obj.fontSize,
-            fontFamily: obj.fontFamily
-          }
-        } else if (obj.type === 'textbox') {
-          return {
-            ...baseProperties,
-            type: 'textbox',
-            text: obj.text || '',
-            fontSize: obj.fontSize,
-            fontFamily: obj.fontFamily,
-            width: obj.width
-          }
-        } else if (obj.type === 'rect') {
-          return {
-            ...baseProperties,
-            type: 'rect',
-            width: obj.width || 0,
-            height: obj.height || 0
-          }
-        } else if (obj.type === 'circle') {
-          return {
-            ...baseProperties,
-            type: 'circle',
-            radius: obj.radius || 0
-          }
+        switch (obj.type) {
+          case 'image':
+            return {
+              ...baseProperties,
+              type: 'image',
+              src: obj.getSrc ? obj.getSrc() : obj._element?.src || '',
+              width: obj.width || 0,
+              height: obj.height || 0
+            }
+          case 'i-text':
+          case 'text':
+            return {
+              ...baseProperties,
+              type: 'i-text',
+              text: obj.text || '',
+              fontSize: obj.fontSize,
+              fontFamily: obj.fontFamily
+            }
+          case 'textbox':
+            return {
+              ...baseProperties,
+              type: 'textbox',
+              text: obj.text || '',
+              fontSize: obj.fontSize,
+              fontFamily: obj.fontFamily,
+              width: obj.width
+            }
+          case 'rect':
+            return {
+              ...baseProperties,
+              type: 'rect',
+              width: obj.width || 0,
+              height: obj.height || 0
+            }
+          case 'circle':
+            return {
+              ...baseProperties,
+              type: 'circle',
+              radius: obj.radius || 0
+            }
+          default:
+            return null
         }
-
-        return null
       })
       .filter(Boolean)
 
@@ -181,6 +154,8 @@ const useCanvasGridSync = (canvas) => {
       type: 'UPDATE_CELL_CONTENT',
       payload: { id: selectedCellId, content: updatedObjects }
     })
+
+    // Synchronisation des groupes liés
     const linkedGroup = findLinkedGroup(selectedCellId)
     if (linkedGroup && linkedGroup.length > 1) {
       const layout = updatedObjects.reduce((acc, item) => {
@@ -198,7 +173,7 @@ const useCanvasGridSync = (canvas) => {
 
       dispatch({
         type: 'SYNC_CELL_LAYOUT',
-        payload: { sourceId: selectedCellId, layout, findLinkedGroup }
+        payload: { sourceId: selectedCellId, layout, linkedGroup }
       })
     }
   }, [canvas, selectedCellId, dispatch, findLinkedGroup])

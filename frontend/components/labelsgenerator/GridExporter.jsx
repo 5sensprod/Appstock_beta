@@ -1,108 +1,88 @@
 import { jsPDF } from 'jspdf'
 import * as fabric from 'fabric'
 import { mmToPx } from '../../utils/conversionUtils'
+import { loadCanvasObjects } from '../../utils/fabricUtils'
 
-// Fonction pour charger le design dans un canvas temporaire
-const loadCanvasDesign = (cellIndex, cellContent, cellWidth, cellHeight, scaleFactor = 4) => {
-  return new Promise((resolve, reject) => {
-    const canvasElement = document.createElement('canvas')
+const renderCircleDirectly = (ctx, circle, scaleFactor) => {
+  ctx.save()
+  ctx.beginPath()
 
-    const tempCanvas = new fabric.Canvas(canvasElement, {
-      width: mmToPx(cellWidth) * scaleFactor,
-      height: mmToPx(cellHeight) * scaleFactor
-    })
+  // Appliquer la transformation
+  ctx.translate(circle.left * scaleFactor, circle.top * scaleFactor)
+  ctx.rotate((circle.angle * Math.PI) / 180)
+  ctx.scale(circle.scaleX, circle.scaleY)
 
-    try {
-      cellContent.forEach((objectData) => {
-        let fabricObject
+  // Dessiner le cercle
+  ctx.arc(0, 0, (circle.radius || 25) * scaleFactor, 0, 2 * Math.PI)
 
-        // Exclure les propriétés interdites comme "type"
-        const { type, ...objectProps } = objectData
+  // Appliquer le style
+  ctx.fillStyle = circle.fill || 'rgba(0, 0, 0, 0.5)'
+  if (circle.stroke) {
+    ctx.strokeStyle = circle.stroke
+    ctx.lineWidth = (circle.strokeWidth || 1) * scaleFactor
+    ctx.stroke()
+  }
+  ctx.fill()
 
-        switch (type.toLowerCase()) {
-          case 'i-text':
-          case 'text':
-            fabricObject = new fabric.IText(objectProps.text || '', {
-              ...objectProps,
-              left: objectProps.left * scaleFactor,
-              top: objectProps.top * scaleFactor,
-              fontSize: (objectProps.fontSize || 12) * scaleFactor
-            })
-            break
-          case 'textbox':
-            fabricObject = new fabric.Textbox(objectProps.text || '', {
-              ...objectProps,
-              left: objectProps.left * scaleFactor,
-              top: objectProps.top * scaleFactor,
-              fontSize: (objectProps.fontSize || 12) * scaleFactor,
-              width: (objectProps.width || 100) * scaleFactor
-            })
-            break
-          case 'rect':
-            fabricObject = new fabric.Rect({
-              ...objectProps,
-              left: objectProps.left * scaleFactor,
-              top: objectProps.top * scaleFactor,
-              width: (objectProps.width || 50) * scaleFactor,
-              height: (objectProps.height || 50) * scaleFactor
-            })
-            break
-          case 'circle':
-            fabricObject = new fabric.Circle({
-              ...objectProps,
-              left: (objectProps.left + (objectProps.radius || 25)) * scaleFactor,
-              top: (objectProps.top + (objectProps.radius || 25)) * scaleFactor,
-              radius: (objectProps.radius || 25) * scaleFactor,
-              originX: 'center',
-              originY: 'center'
-            })
-            break
-          case 'triangle':
-            fabricObject = new fabric.Triangle({
-              ...objectProps,
-              left: objectProps.left * scaleFactor,
-              top: objectProps.top * scaleFactor,
-              width: (objectProps.width || 50) * scaleFactor,
-              height: (objectProps.height || 50) * scaleFactor
-            })
-            break
-          case 'image':
-            fabric.FabricImage.fromURL(objectProps.src, (img) => {
-              img.set({
-                ...objectProps,
-                left: objectProps.left * scaleFactor,
-                top: objectProps.top * scaleFactor,
-                scaleX: (objectProps.scaleX || 1) * scaleFactor,
-                scaleY: (objectProps.scaleY || 1) * scaleFactor
-              })
-              tempCanvas.add(img)
-            })
-            return // Ne pas ajouter deux fois pour les images
-          default:
-            console.warn(`Type d'objet inconnu lors du chargement : ${type}`)
-            return // Ignore les objets inconnus
-        }
-
-        tempCanvas.add(fabricObject)
-      })
-
-      tempCanvas.renderAll()
-
-      setTimeout(() => {
-        const imgData = tempCanvas.toDataURL('image/png')
-        resolve(imgData)
-      }, 300)
-    } catch (error) {
-      reject(
-        new Error(
-          `Erreur lors du chargement du contenu de la cellule ${cellIndex}: ${error.message}`
-        )
-      )
-    }
-  })
+  ctx.restore()
 }
 
-// Fonction pour calculer les positions des cellules sur une page PDF
+export const loadCanvasDesign = async (
+  cellIndex,
+  cellContent,
+  cellWidth,
+  cellHeight,
+  scaleFactor = 4
+) => {
+  const canvasElement = document.createElement('canvas')
+  const width = mmToPx(cellWidth) * scaleFactor
+  const height = mmToPx(cellHeight) * scaleFactor
+
+  canvasElement.width = width
+  canvasElement.height = height
+
+  const ctx = canvasElement.getContext('2d')
+  ctx.fillStyle = 'white'
+  ctx.fillRect(0, 0, width, height)
+
+  // Séparer les cercles des autres objets
+  const circles = cellContent.filter((obj) => obj.type.toLowerCase() === 'circle')
+  const otherObjects = cellContent.filter((obj) => obj.type.toLowerCase() !== 'circle')
+
+  // Créer un canvas Fabric.js pour les autres objets
+  const fabricCanvas = new fabric.Canvas(document.createElement('canvas'), {
+    width: width,
+    height: height
+  })
+
+  try {
+    // Charger d'abord les objets non-cercles avec Fabric.js
+    if (otherObjects.length > 0) {
+      await loadCanvasObjects(fabricCanvas, otherObjects, scaleFactor)
+      // Copier le contenu du canvas Fabric vers notre canvas principal
+      ctx.drawImage(fabricCanvas.getElement(), 0, 0)
+    }
+
+    // Dessiner les cercles directement avec Canvas API
+    circles.forEach((circle) => {
+      renderCircleDirectly(ctx, circle, scaleFactor)
+    })
+
+    return new Promise((resolve) => {
+      const imgData = canvasElement.toDataURL('image/png', 1.0)
+      fabricCanvas.dispose() // Nettoyage
+      resolve(imgData)
+    })
+  } catch (error) {
+    console.error('Erreur détaillée:', error)
+    throw new Error(
+      `Erreur lors du chargement du contenu de la cellule ${cellIndex}: ${error.message}`
+    )
+  }
+}
+
+// Reste du code d'export inchangé...
+
 const calculateGridPositions = (config, pageWidth, pageHeight) => {
   const { cellWidth, cellHeight, offsetTop, offsetLeft, spacingVertical, spacingHorizontal } =
     config
@@ -122,9 +102,7 @@ const calculateGridPositions = (config, pageWidth, pageHeight) => {
   }
 }
 
-// Fonction principale : Exporter la grille en PDF
 export const exportGridToPDF = async (grid, cellContents, config) => {
-  console.log('Export PDF appelé avec :', { grid, cellContents, config })
   const {
     labelsPerRow,
     labelsPerColumn,
@@ -134,7 +112,7 @@ export const exportGridToPDF = async (grid, cellContents, config) => {
     cellHeight,
     spacingVertical,
     spacingHorizontal
-  } = calculateGridPositions(config, config.pageWidth, config.pageHeight) // Dimensions A4 ou personnalisées
+  } = calculateGridPositions(config, config.pageWidth, config.pageHeight)
 
   const pdf = new jsPDF({
     orientation: 'portrait',
@@ -150,7 +128,7 @@ export const exportGridToPDF = async (grid, cellContents, config) => {
     let x = offsetLeft
     let y = offsetTop
 
-    const tasks = [] // Liste des promesses pour les images générées
+    const tasks = []
 
     for (let row = 0; row < labelsPerColumn; row++) {
       for (let col = 0; col < labelsPerRow; col++) {
@@ -158,12 +136,7 @@ export const exportGridToPDF = async (grid, cellContents, config) => {
         const cell = pageCells[cellIndex]
         const cellContent = cell && cellContents[cell?.id]
 
-        // Vérifier si la cellule est marquée comme initiale
-        const isInitialContent =
-          cellContent && cellContent.every((objectData) => objectData.isInitialContent)
-
-        if (cellContent && !isInitialContent) {
-          // Charger uniquement les cellules avec contenu réel
+        if (cellContent) {
           const currentX = x
           const currentY = y
 
@@ -178,25 +151,20 @@ export const exportGridToPDF = async (grid, cellContents, config) => {
           tasks.push(loadTask)
         }
 
-        // Avancer horizontalement
         x += cellWidth + spacingHorizontal
       }
 
-      // Retourner au début de la ligne et avancer verticalement
       x = offsetLeft
       y += cellHeight + spacingVertical
     }
 
-    // Attendre que toutes les promesses soient résolues
     await Promise.all(tasks)
 
-    // Ajouter une nouvelle page si ce n'est pas la dernière
     if (pageIndex < totalPages - 1) {
       pdf.addPage()
     }
   }
 
-  // Télécharger le fichier PDF généré
   pdf.save('grid_export.pdf')
 }
 
