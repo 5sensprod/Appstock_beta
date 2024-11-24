@@ -4,10 +4,10 @@ import ConfigForm from '../components/labels/ConfigForm'
 import FabricDesigner from '../components/labels/FabricDesigner'
 import GridManager from '../components/labelsgenerator/GridManager'
 import { GridProvider } from '../context/GridContext'
-
+import Grid from '../components/labels/Grid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
-
+import CSVImporter from '../components/labelsgenerator/CSVImporter'
 const LabelsPage = () => {
   const [isRightPanelVisible, setIsRightPanelVisible] = useState(true)
 
@@ -58,7 +58,9 @@ const LabelsPage = () => {
                   <div className="flex items-center justify-between">
                     <h2 className="mb-4 text-xl font-semibold">Disposition sur A4</h2>
                   </div>
+                  <CSVImporter />
                   <GridManager />
+                  {/* <Grid /> */}
                 </div>
               </>
             )}
