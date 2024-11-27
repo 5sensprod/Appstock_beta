@@ -4,7 +4,7 @@ import * as fabric from 'fabric'
 
 // Fonction pour créer un objet Fabric
 export const createFabricObject = (obj, scaleFactor = 1) => {
-  const { type, ...fabricOptions } = obj
+  const { type, isQRCode = false, ...fabricOptions } = obj // Ajout de `isQRCode`
 
   const scaledOptions = {
     ...fabricOptions,
@@ -21,7 +21,8 @@ export const createFabricObject = (obj, scaleFactor = 1) => {
     originY: fabricOptions.originY || 'top',
     fill: fabricOptions.fill || 'rgba(0, 0, 0, 0.5)',
     stroke: fabricOptions.stroke || null,
-    strokeWidth: fabricOptions.strokeWidth || 1
+    strokeWidth: fabricOptions.strokeWidth || 1,
+    isQRCode
   }
 
   switch (type.toLowerCase()) {
@@ -51,13 +52,24 @@ export const createFabricObject = (obj, scaleFactor = 1) => {
       img.src = obj.src
       return new Promise((resolve, reject) => {
         img.onload = () => {
-          resolve(
-            new fabric.Image(img, {
-              ...scaledOptions,
-              scaleX: (fabricOptions.scaleX || 1) * scaleFactor,
-              scaleY: (fabricOptions.scaleY || 1) * scaleFactor
-            })
-          )
+          const fabricImage = new fabric.Image(img, {
+            ...scaledOptions,
+            scaleX: (fabricOptions.scaleX || 1) * scaleFactor,
+            scaleY: (fabricOptions.scaleY || 1) * scaleFactor
+          })
+
+          // Étendre `toObject` pour inclure `isQRCode`
+          fabricImage.toObject = (function (toObject) {
+            return function () {
+              return {
+                ...toObject.call(this),
+                isQRCode: this.isQRCode // Ajouter `isQRCode`
+              }
+            }
+          })(fabricImage.toObject)
+
+          fabricImage.isQRCode = isQRCode // Ajouter la propriété à l'instance
+          resolve(fabricImage)
         }
         img.onerror = reject
       })
@@ -91,7 +103,12 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
         top: obj.top || 0
       }
     }
-    return obj
+
+    // S'assurer que `isQRCode` est présent dans tous les objets
+    return {
+      ...obj,
+      isQRCode: obj.isQRCode || false
+    }
   })
 
   const fabricObjects = await Promise.all(

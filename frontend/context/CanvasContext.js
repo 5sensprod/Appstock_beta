@@ -56,6 +56,8 @@ const CanvasProvider = ({ children }) => {
     const logObjectChanges = (eventName, obj) => {
       console.log(`Canvas Event: ${eventName}`, {
         id: obj?.id || 'N/A',
+        isQRCode: obj?.isQRCode || 'N/A',
+        qrText: obj?.qrText || 'N/A',
         type: obj?.type || 'unknown',
         left: obj?.left,
         top: obj?.top,

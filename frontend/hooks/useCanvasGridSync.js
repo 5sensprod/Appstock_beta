@@ -12,20 +12,24 @@ const useCanvasGridSync = (canvas) => {
 
   // Fonction pour créer des objets Fabric
   const createFabricObject = (obj, canvas) => {
-    const { type, ...fabricOptions } = obj
+    const { type, isQRCode = false, qrText = '', ...fabricOptions } = obj // Inclure `qrText`
 
     if (type === 'image' && obj.src) {
       const img = new Image()
       img.src = obj.src
       return new Promise((resolve, reject) => {
         img.onload = () => {
-          resolve(
-            new fabric.Image(img, {
-              ...fabricOptions,
-              width: obj.width,
-              height: obj.height
-            })
-          )
+          const fabricImage = new fabric.Image(img, {
+            ...fabricOptions,
+            width: obj.width,
+            height: obj.height
+          })
+
+          // Associer `isQRCode` et `qrText` à l'objet Fabric
+          fabricImage.isQRCode = isQRCode
+          fabricImage.qrText = qrText
+
+          resolve(fabricImage)
         }
         img.onerror = reject
       })
@@ -109,7 +113,9 @@ const useCanvasGridSync = (canvas) => {
               type: 'image',
               src: obj.getSrc ? obj.getSrc() : obj._element?.src || '',
               width: obj.width || 0,
-              height: obj.height || 0
+              height: obj.height || 0,
+              isQRCode: obj.isQRCode || false, // Inclure `isQRCode`
+              qrText: obj.qrText || '' // Inclure `qrText`
             }
           case 'i-text':
           case 'text':
