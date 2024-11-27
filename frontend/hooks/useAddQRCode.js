@@ -110,7 +110,12 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
     [canvas, selectedColor, generateQRCode]
   )
 
-  return { onAddQrCode, onUpdateQrCode }
+  return {
+    onAddQrCode,
+    onUpdateQrCode,
+    generateQRCode, // Exposer generateQRCode
+    createQRCodeFabricImage
+  }
 }
 
 export default useAddQRCode

@@ -29,13 +29,12 @@ const useCanvasObjectActions = (canvas, labelConfig, selectedColor, selectedFont
   const onAddImage = useAddImage(canvas, labelConfig, addObjectToCanvas)
 
   // Centralise l'ajout de QR Codes
-  const { onAddQrCode, onUpdateQrCode } = useAddQRCode(
+  const { onAddQrCode, onUpdateQrCode, generateQRCode, createQRCodeFabricImage } = useAddQRCode(
     canvas,
     labelConfig,
     selectedColor,
     addObjectToCanvas
   )
-
   return {
     addObjectToCanvas,
     onDeleteObject,
@@ -44,7 +43,9 @@ const useCanvasObjectActions = (canvas, labelConfig, selectedColor, selectedFont
     onAddText,
     onAddImage,
     onAddQrCode,
-    onUpdateQrCode
+    onUpdateQrCode,
+    generateQRCode,
+    createQRCodeFabricImage
   }
 }
 
