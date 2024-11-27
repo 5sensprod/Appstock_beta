@@ -1,24 +1,29 @@
-//frontend\context\GridContext.js
-import React, { createContext, useReducer, useEffect } from 'react'
+import React, { createContext, useReducer, useEffect, useMemo } from 'react'
 import { gridReducer, initialGridState } from '../reducers/gridReducer'
+import { generateGrid } from '../utils/gridUtils' // Nouveau fichier utilitaire
 
 export const GridContext = createContext()
 
 export const GridProvider = ({ children }) => {
   const [state, dispatch] = useReducer(gridReducer, initialGridState)
 
+  // Charger la grille une seule fois au montage
   useEffect(() => {
-    dispatch({ type: 'GENERATE_GRID' })
-  }, [])
+    const { grid, cellsPerPage } = generateGrid(state.config, state.totalPages)
+    dispatch({
+      type: 'INITIALIZE_GRID',
+      payload: { grid, cellsPerPage }
+    })
+  }, [state.config, state.totalPages])
 
-  // Trouver le groupe lié d'une cellule
-  const findLinkedGroup = (cellId) => {
-    return state.linkedGroups.find((group) => group.includes(cellId)) || []
-  }
-
-  return (
-    <GridContext.Provider value={{ state, dispatch, findLinkedGroup }}>
-      {children}
-    </GridContext.Provider>
+  const contextValue = useMemo(
+    () => ({
+      state,
+      dispatch,
+      findLinkedGroup: (cellId) => state.linkedGroups.find((group) => group.includes(cellId)) || []
+    }),
+    [state]
   )
+
+  return <GridContext.Provider value={contextValue}>{children}</GridContext.Provider>
 }

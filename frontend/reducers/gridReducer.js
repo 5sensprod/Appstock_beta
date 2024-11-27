@@ -1,4 +1,11 @@
 //frontend\reducers\gridReducer.js
+import {
+  validateConfig,
+  generateGrid,
+  calculateGridDimensions,
+  withUndoRedo
+} from '../utils/gridUtils'
+
 export const initialGridState = {
   config: {
     cellWidth: 48.5,
@@ -13,9 +20,7 @@ export const initialGridState = {
   },
   grid: [],
   selectedCellId: null,
-  cellContents: {
-    backgroundColor: 'white'
-  },
+  cellContents: {},
   clipboard: null,
   linkedGroups: [],
   currentPage: 0,
@@ -24,58 +29,29 @@ export const initialGridState = {
   redoStack: []
 }
 
-function withUndoRedo(state, newState) {
-  return {
-    ...newState,
-    undoStack: [...state.undoStack, state],
-    redoStack: []
-  }
-}
-
 export function gridReducer(state, action) {
   switch (action.type) {
+    case 'INITIALIZE_GRID':
+      return {
+        ...state,
+        grid: action.payload.grid,
+        cellsPerPage: action.payload.cellsPerPage,
+        selectedCellId: action.payload.grid.length > 0 ? action.payload.grid[0].id : null
+      }
     case 'UPDATE_CONFIG': {
-      const { pageWidth, pageHeight } = state.config
-      const updatedConfig = { ...state.config, ...action.payload }
+      const updatedConfig = validateConfig({ ...state.config, ...action.payload })
 
-      // Validation des offsets
-      if (updatedConfig.offsetTop >= pageHeight) {
-        updatedConfig.offsetTop = pageHeight - 1
-      }
-      if (updatedConfig.offsetLeft >= pageWidth) {
-        updatedConfig.offsetLeft = pageWidth - 1
-      }
-      // Validation des dimensions
-      if (updatedConfig.cellWidth <= 0) {
-        updatedConfig.cellWidth = 1
-      }
-      if (updatedConfig.cellHeight <= 0) {
-        updatedConfig.cellHeight = 1
-      }
-
-      // Calcul du nombre de cellules seulement si les dimensions changent
-      const dimensionsChanged =
-        action.payload.cellWidth !== undefined ||
-        action.payload.cellHeight !== undefined ||
-        action.payload.spacingHorizontal !== undefined ||
-        action.payload.spacingVertical !== undefined ||
-        action.payload.pageWidth !== undefined ||
-        action.payload.pageHeight !== undefined
+      const dimensionsChanged = [
+        'cellWidth',
+        'cellHeight',
+        'spacingHorizontal',
+        'spacingVertical',
+        'pageWidth',
+        'pageHeight'
+      ].some((prop) => action.payload[prop] !== undefined)
 
       if (dimensionsChanged) {
-        // Calculer le nombre de cellules par page avec la nouvelle configuration
-        const availableWidth = pageWidth - 2 * updatedConfig.offsetLeft
-        const availableHeight = pageHeight - 2 * updatedConfig.offsetTop
-        const columns = Math.floor(
-          (availableWidth + updatedConfig.spacingHorizontal) /
-            (updatedConfig.cellWidth + updatedConfig.spacingHorizontal)
-        )
-        const rows = Math.floor(
-          (availableHeight + updatedConfig.spacingVertical) /
-            (updatedConfig.cellHeight + updatedConfig.spacingVertical)
-        )
-        const cellsPerPage = columns * rows
-
+        const { cellsPerPage } = calculateGridDimensions(updatedConfig)
         return {
           ...state,
           config: updatedConfig,
@@ -88,146 +64,12 @@ export function gridReducer(state, action) {
         config: updatedConfig
       }
     }
-
-    case 'GENERATE_GRID': {
-      const {
-        cellWidth,
-        cellHeight,
-        offsetTop,
-        offsetLeft,
-        spacingHorizontal,
-        spacingVertical,
-        pageWidth,
-        pageHeight
-      } = state.config
-
-      const columns = Math.floor(
-        (pageWidth - 2 * offsetLeft + spacingHorizontal) / (cellWidth + spacingHorizontal)
-      )
-      const rowsPerPage = Math.floor(
-        (pageHeight - 2 * offsetTop + spacingVertical) / (cellHeight + spacingVertical)
-      )
-
-      const cellsPerPage = columns * rowsPerPage
-      const grid = []
-
-      for (let pageIndex = 0; pageIndex < state.totalPages; pageIndex++) {
-        for (let i = 0; i < cellsPerPage; i++) {
-          const row = Math.floor(i / columns)
-          const col = i % columns
-          const cellId = `${pageIndex}-${row}-${col}`
-
-          grid.push({
-            id: cellId,
-            pageIndex,
-            row,
-            col,
-            width: (cellWidth / pageWidth) * 100,
-            height: (cellHeight / pageHeight) * 100,
-            left: ((offsetLeft + col * (cellWidth + spacingHorizontal)) / pageWidth) * 100,
-            top: ((offsetTop + row * (cellHeight + spacingVertical)) / pageHeight) * 100
-          })
-        }
-      }
-
+    case 'SET_PAGE': {
+      const { page } = action.payload
       return {
         ...state,
-        grid,
-        cellsPerPage,
-        selectedCellId: grid.length > 0 ? grid[0].id : null
+        currentPage: Math.min(Math.max(0, page), state.totalPages - 1)
       }
-    }
-
-    case 'IMPORT_CSV': {
-      const rows = action.payload
-      const newCellContents = { ...state.cellContents }
-
-      const newLinkedGroup = []
-
-      // Calculer le nombre de pages nécessaires en fonction des cellules par page
-      const requiredPages = Math.ceil(rows.length / state.cellsPerPage)
-      const totalPages = Math.max(state.totalPages, requiredPages)
-
-      // Mettre à jour le totalPages et générer une nouvelle grille
-      const updatedState = gridReducer({ ...state, totalPages }, { type: 'GENERATE_GRID' })
-
-      // Associer les données du CSV aux cellules
-      rows.forEach((row, index) => {
-        const pageIndex = Math.floor(index / updatedState.cellsPerPage)
-        const cellIndexInPage = index % updatedState.cellsPerPage
-
-        const columns = Math.floor(
-          (state.config.pageWidth - 2 * state.config.offsetLeft + state.config.spacingHorizontal) /
-            (state.config.cellWidth + state.config.spacingHorizontal)
-        )
-        const col = cellIndexInPage % columns
-        const rowInPage = Math.floor(cellIndexInPage / columns)
-        const cellId = `${pageIndex}-${rowInPage}-${col}`
-
-        // Générer le contenu de la cellule à partir des données du CSV
-        const cellContent = Object.entries(row).map(([key, value], idx) => {
-          const type = key.includes('shape') ? 'rect' : 'i-text' // Exemple : différencier les types basés sur le header CSV
-
-          if (type === 'i-text') {
-            return {
-              id: `${key}-${idx}`,
-              type: 'i-text',
-              text: value,
-              left: 10 + idx * 50,
-              top: 10,
-              fontSize: 14,
-              fill: '#333',
-              linkedByCsv: true // Indiquer que cette cellule est liée au CSV
-            }
-          } else if (type === 'rect') {
-            return {
-              id: `${key}-${idx}`,
-              type: 'rect',
-              width: 50,
-              height: 30,
-              left: 10 + idx * 60,
-              top: 20,
-              fill: '#ccc',
-              linkedByCsv: true
-            }
-          }
-
-          // Ajouter d'autres types si nécessaire
-          return {
-            id: `${key}-${idx}`,
-            type: 'i-text', // Fallback
-            text: value,
-            left: 10 + idx * 50,
-            top: 10,
-            fontSize: 14,
-            fill: '#333',
-            linkedByCsv: true
-          }
-        })
-
-        // Ajouter le contenu au cellContents
-        newCellContents[cellId] = cellContent
-        newLinkedGroup.push(cellId)
-      })
-
-      console.log('cellContents après IMPORT_CSV :', newCellContents)
-
-      // Nettoyer les contenus des cellules pour correspondre aux cellules existantes dans la grille
-      const cleanedCellContents = Object.keys(newCellContents)
-        .filter((key) => updatedState.grid.some((cell) => cell.id === key))
-        .reduce((acc, key) => {
-          acc[key] = newCellContents[key]
-          return acc
-        }, {})
-
-      const newState = {
-        ...updatedState,
-        cellContents: cleanedCellContents,
-        linkedGroups: [...state.linkedGroups, newLinkedGroup]
-      }
-
-      // Appliquer la gestion d'undo/redo
-      return withUndoRedo(state, newState)
     }
 
     case 'SELECT_CELL':
@@ -236,43 +78,43 @@ export function gridReducer(state, action) {
         selectedCellId: action.payload
       }
 
+    case 'IMPORT_CSV': {
+      const importedData = importCsvData(state, action.payload)
+      return withUndoRedo(state, {
+        ...state,
+        ...importedData
+      })
+    }
+
     case 'UPDATE_CELL_CONTENT': {
-      console.log('State before update:', state)
-      console.log('Payload received:', action.payload)
       const { id, content } = action.payload
-      const newCellContents = { ...state.cellContents }
 
-      // Récupérer le contenu existant pour la cellule
-      const existingContent = state.cellContents[id] || []
-
-      // Mettre à jour les contenus
-      const updatedContent = content.map((item) => {
-        const existingItem = existingContent.find((oldItem) => oldItem.id === item.id)
-
-        // Assurez-vous de ne pas modifier les propriétés immuables comme `type`
-        const { type, ...otherProperties } = item
-
-        return {
-          ...otherProperties,
-          type, // Réinsérer le type explicitement
-          linkedByCsv: existingItem?.linkedByCsv || false // Conserver les liens CSV si existants
-        }
+      // Fonction utilitaire pour fusionner les propriétés
+      const mergeItemProperties = (existingItem, newItem) => ({
+        ...newItem,
+        type: newItem.type,
+        linkedByCsv: existingItem?.linkedByCsv || false
       })
 
-      // Vérifiez si le contenu est vide ou invalide pour supprimer la cellule
-      if (!content || updatedContent.every((obj) => obj.type === 'text' && !obj.text?.trim())) {
+      const newCellContents = { ...state.cellContents }
+      const existingContent = state.cellContents[id] || []
+
+      // Mise à jour simplifiée du contenu
+      const updatedContent = content.map((item) =>
+        mergeItemProperties(
+          existingContent.find((oldItem) => oldItem.id === item.id),
+          item
+        )
+      )
+
+      // Gestion de la suppression de cellule
+      if (!updatedContent.some((obj) => obj.type !== 'text' || obj.text?.trim())) {
         delete newCellContents[id]
       } else {
         newCellContents[id] = updatedContent
       }
 
-      // Créer un nouvel état avec undo/redo
-      const newState = {
-        ...state,
-        cellContents: newCellContents
-      }
-
-      return withUndoRedo(state, newState)
+      return withUndoRedo(state, { ...state, cellContents: newCellContents })
     }
 
     case 'SYNC_CELL_LAYOUT': {
@@ -282,66 +124,53 @@ export function gridReducer(state, action) {
       const linkedGroup = state.linkedGroups.find((group) => group.includes(sourceId))
       if (!linkedGroup) return state
 
+      // Tableau des propriétés partagées par plusieurs types
+      const commonProperties = [
+        'left',
+        'top',
+        'scaleX',
+        'scaleY',
+        'fill',
+        'fontFamily',
+        'fontSize',
+        'angle'
+      ]
+
+      // Fonction générique de mise à jour des propriétés
+      const updateItemProperties = (item, layoutItem) => {
+        const updatedItem = { ...item }
+
+        // Mise à jour des propriétés communes
+        commonProperties.forEach((prop) => {
+          if (layoutItem[prop] !== undefined) {
+            updatedItem[prop] = layoutItem[prop]
+          }
+        })
+
+        // Propriétés spécifiques par type
+        const typeSpecificProps = {
+          textbox: ['width'],
+          rect: ['width', 'height'],
+          circle: ['radius']
+        }
+
+        const specificProps = typeSpecificProps[item.type] || []
+        specificProps.forEach((prop) => {
+          if (layoutItem[prop] !== undefined) {
+            updatedItem[prop] = layoutItem[prop]
+          }
+        })
+
+        return updatedItem
+      }
+
       const updatedCellContents = { ...state.cellContents }
 
       linkedGroup.forEach((cellId) => {
         if (updatedCellContents[cellId]) {
           updatedCellContents[cellId] = updatedCellContents[cellId].map((item) => {
             const layoutItem = layout[item.id] || {}
-
-            // Gestion spécifique selon le type
-            if (item.type === 'text' || item.type === 'i-text') {
-              return {
-                ...item,
-                left: layoutItem.left ?? item.left,
-                top: layoutItem.top ?? item.top,
-                scaleX: layoutItem.scaleX ?? item.scaleX,
-                scaleY: layoutItem.scaleY ?? item.scaleY,
-                fill: layoutItem.fill ?? item.fill,
-                fontFamily: layoutItem.fontFamily ?? item.fontFamily,
-                fontSize: layoutItem.fontSize ?? item.fontSize,
-                angle: layoutItem.angle ?? item.angle
-              }
-            } else if (item.type === 'textbox') {
-              return {
-                ...item,
-                left: layoutItem.left ?? item.left,
-                top: layoutItem.top ?? item.top,
-                scaleX: layoutItem.scaleX ?? item.scaleX,
-                scaleY: layoutItem.scaleY ?? item.scaleY,
-                fill: layoutItem.fill ?? item.fill,
-                fontFamily: layoutItem.fontFamily ?? item.fontFamily,
-                fontSize: layoutItem.fontSize ?? item.fontSize,
-                width: layoutItem.width ?? item.width, // Spécifique à textbox
-                angle: layoutItem.angle ?? item.angle
-              }
-            } else if (item.type === 'rect') {
-              return {
-                ...item,
-                left: layoutItem.left ?? item.left,
-                top: layoutItem.top ?? item.top,
-                scaleX: layoutItem.scaleX ?? item.scaleX,
-                scaleY: layoutItem.scaleY ?? item.scaleY,
-                fill: layoutItem.fill ?? item.fill,
-                width: layoutItem.width ?? item.width, // Propriété spécifique à rect
-                height: layoutItem.height ?? item.height, // Propriété spécifique à rect
-                angle: layoutItem.angle ?? item.angle
-              }
-            } else if (item.type === 'circle') {
-              return {
-                ...item,
-                left: layoutItem.left ?? item.left,
-                top: layoutItem.top ?? item.top,
-                scaleX: layoutItem.scaleX ?? item.scaleX,
-                scaleY: layoutItem.scaleY ?? item.scaleY,
-                fill: layoutItem.fill ?? item.fill,
-                radius: layoutItem.radius ?? item.radius, // Propriété spécifique à circle
-                angle: layoutItem.angle ?? item.angle
-              }
-            }
-
-            // Retournez l'objet tel quel pour les types inconnus
-            return item
+            return updateItemProperties(item, layoutItem)
           })
         }
       })
@@ -349,14 +178,6 @@ export function gridReducer(state, action) {
       return {
         ...state,
         cellContents: updatedCellContents
-      }
-    }
-
-    case 'SET_PAGE': {
-      const { page } = action.payload
-      return {
-        ...state,
-        currentPage: Math.min(Math.max(0, page), state.totalPages - 1)
       }
     }
     case 'COPY_CELL': {
@@ -526,8 +347,75 @@ export function gridReducer(state, action) {
         redoStack: newRedoStack
       }
     }
-
     default:
       return state
+  }
+}
+
+// Fonction pour importer des données CSV
+const importCsvData = (state, rows) => {
+  const { config, cellsPerPage } = state
+  const { columns } = calculateGridDimensions(config)
+  const newCellContents = { ...state.cellContents }
+  const newLinkedGroup = []
+
+  // Calculer le nombre de pages nécessaires
+  const requiredPages = Math.ceil(rows.length / cellsPerPage)
+  const totalPages = Math.max(state.totalPages, requiredPages)
+
+  // Générer une nouvelle grille
+  const { grid } = generateGrid(config, totalPages)
+
+  // Associer les données du CSV aux cellules
+  rows.forEach((row, index) => {
+    const pageIndex = Math.floor(index / cellsPerPage)
+    const cellIndexInPage = index % cellsPerPage
+    const col = cellIndexInPage % columns
+    const rowInPage = Math.floor(cellIndexInPage / columns)
+    const cellId = `${pageIndex}-${rowInPage}-${col}`
+
+    // Générer le contenu de la cellule
+    const cellContent = Object.entries(row).map(([key, value], idx) => {
+      const type = key.includes('shape') ? 'rect' : 'i-text'
+
+      const baseItem = {
+        id: `${key}-${idx}`,
+        linkedByCsv: true,
+        left: 10 + idx * 50,
+        top: 10
+      }
+
+      return type === 'i-text'
+        ? {
+            ...baseItem,
+            type: 'i-text',
+            text: value,
+            fontSize: 14,
+            fill: '#333'
+          }
+        : {
+            ...baseItem,
+            type: 'rect',
+            width: 50,
+            height: 30,
+            fill: '#ccc'
+          }
+    })
+
+    newCellContents[cellId] = cellContent
+    newLinkedGroup.push(cellId)
+  })
+
+  // Nettoyer les contenus des cellules
+  const cleanedCellContents = Object.fromEntries(
+    Object.entries(newCellContents).filter(([key]) => grid.some((cell) => cell.id === key))
+  )
+
+  return {
+    cellContents: cleanedCellContents,
+    totalPages,
+    grid,
+    linkedGroups: [...state.linkedGroups, newLinkedGroup],
+    cellsPerPage
   }
 }

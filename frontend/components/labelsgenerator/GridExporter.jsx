@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf'
 import * as fabric from 'fabric'
 import { mmToPx } from '../../utils/conversionUtils'
-import { createFabricObject, loadCanvasObjects } from '../../utils/fabricUtils'
+import { loadCanvasObjects } from '../../utils/fabricUtils'
 
 // Fonction pour charger le design dans un canvas temporaire
 export const loadCanvasDesign = async (
@@ -32,39 +32,12 @@ export const loadCanvasDesign = async (
     )
   }
 }
-// Fonction pour calculer les positions des cellules sur une page PDF
-const calculateGridPositions = (config, pageWidth, pageHeight) => {
-  const { cellWidth, cellHeight, offsetTop, offsetLeft, spacingVertical, spacingHorizontal } =
-    config
-
-  const labelsPerRow = Math.floor((pageWidth - offsetLeft) / (cellWidth + spacingHorizontal))
-  const labelsPerColumn = Math.floor((pageHeight - offsetTop) / (cellHeight + spacingVertical))
-
-  return {
-    labelsPerRow,
-    labelsPerColumn,
-    offsetTop,
-    offsetLeft,
-    cellWidth,
-    cellHeight,
-    spacingVertical,
-    spacingHorizontal
-  }
-}
-
 // Fonction principale : Exporter la grille en PDF
 export const exportGridToPDF = async (grid, cellContents, config) => {
   console.log('Export PDF appelé avec :', { grid, cellContents, config })
-  const {
-    labelsPerRow,
-    labelsPerColumn,
-    offsetTop,
-    offsetLeft,
-    cellWidth,
-    cellHeight,
-    spacingVertical,
-    spacingHorizontal
-  } = calculateGridPositions(config, config.pageWidth, config.pageHeight) // Dimensions A4 ou personnalisées
+
+  // Utiliser la fonction existante pour calculer les dimensions
+  // const { columns: labelsPerRow } = calculateGridDimensions(config)
 
   const pdf = new jsPDF({
     orientation: 'portrait',
@@ -72,53 +45,38 @@ export const exportGridToPDF = async (grid, cellContents, config) => {
     format: [config.pageWidth, config.pageHeight]
   })
 
+  const { offsetTop, offsetLeft, cellWidth, cellHeight, spacingHorizontal, spacingVertical } =
+    config
+
   const totalPages = Math.max(...grid.map((cell) => cell.pageIndex)) + 1
 
   for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
     const pageCells = grid.filter((cell) => cell.pageIndex === pageIndex)
 
-    let x = offsetLeft
-    let y = offsetTop
+    const renderTasks = pageCells
+      .filter((cell) => {
+        const cellContent = cellContents[cell.id]
+        // Ignorer les cellules sans contenu ou avec contenu initial
+        return cellContent && !cellContent.every((objectData) => objectData.isInitialContent)
+      })
+      .map(async (cell) => {
+        const cellContent = cellContents[cell.id]
 
-    const tasks = [] // Liste des promesses pour les images générées
+        // Calculer les coordonnées de la cellule
+        const x = offsetLeft + cell.col * (cellWidth + spacingHorizontal)
+        const y = offsetTop + cell.row * (cellHeight + spacingVertical)
 
-    for (let row = 0; row < labelsPerColumn; row++) {
-      for (let col = 0; col < labelsPerRow; col++) {
-        const cellIndex = row * labelsPerRow + col
-        const cell = pageCells[cellIndex]
-        const cellContent = cell && cellContents[cell?.id]
+        try {
+          const imgData = await loadCanvasDesign(cell.id, cellContent, cellWidth, cellHeight, 4)
 
-        // Vérifier si la cellule est marquée comme initiale
-        const isInitialContent =
-          cellContent && cellContent.every((objectData) => objectData.isInitialContent)
-
-        if (cellContent && !isInitialContent) {
-          // Charger uniquement les cellules avec contenu réel
-          const currentX = x
-          const currentY = y
-
-          const loadTask = loadCanvasDesign(cellIndex, cellContent, cellWidth, cellHeight, 4)
-            .then((imgData) => {
-              pdf.addImage(imgData, 'PNG', currentX, currentY, cellWidth, cellHeight)
-            })
-            .catch((error) => {
-              console.error(`Erreur lors du rendu de la cellule ${cellIndex}:`, error)
-            })
-
-          tasks.push(loadTask)
+          pdf.addImage(imgData, 'PNG', x, y, cellWidth, cellHeight)
+        } catch (error) {
+          console.error(`Erreur lors du rendu de la cellule ${cell.id}:`, error)
         }
+      })
 
-        // Avancer horizontalement
-        x += cellWidth + spacingHorizontal
-      }
-
-      // Retourner au début de la ligne et avancer verticalement
-      x = offsetLeft
-      y += cellHeight + spacingVertical
-    }
-
-    // Attendre que toutes les promesses soient résolues
-    await Promise.all(tasks)
+    // Attendre le rendu de toutes les cellules de la page
+    await Promise.all(renderTasks)
 
     // Ajouter une nouvelle page si ce n'est pas la dernière
     if (pageIndex < totalPages - 1) {
@@ -128,6 +86,12 @@ export const exportGridToPDF = async (grid, cellContents, config) => {
 
   // Télécharger le fichier PDF généré
   pdf.save('grid_export.pdf')
+
+  // Retourner des informations sur l'export si nécessaire
+  return {
+    totalPages,
+    fileName: 'grid_export.pdf'
+  }
 }
 
 export default exportGridToPDF

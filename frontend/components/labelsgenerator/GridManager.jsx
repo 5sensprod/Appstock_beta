@@ -32,7 +32,7 @@ const GridManager = () => {
           Précédent
         </button>
         <span className="text-gray-700">
-          Page {currentPage + 1} / {totalPages}
+          Page {currentPage + 1} / {totalPages || 1}
         </span>
         <button
           onClick={() => navigatePage(1)}
