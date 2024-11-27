@@ -75,8 +75,15 @@ const GridConfigurator = () => {
     })
 
     if (!error) {
-      dispatch({ type: 'UPDATE_CONFIG', payload: { [id]: numericValue } })
-      dispatch({ type: 'GENERATE_GRID' })
+      // Utilisez directement le recalculatePages dans le dispatch
+      dispatch({
+        type: 'UPDATE_CONFIG',
+        payload: {
+          config: { [id]: numericValue },
+          // Ajoutez cette ligne pour forcer la mise à jour de la grille
+          regenerateGrid: true
+        }
+      })
     }
   }
 

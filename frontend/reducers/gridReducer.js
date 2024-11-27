@@ -1,9 +1,10 @@
 //frontend\reducers\gridReducer.js
 import {
   validateConfig,
-  generateGrid,
-  calculateGridDimensions,
-  withUndoRedo
+  recalculatePages,
+  importCsvData,
+  withUndoRedo,
+  redistributeCellContents
 } from '../utils/gridUtils'
 
 export const initialGridState = {
@@ -38,8 +39,12 @@ export function gridReducer(state, action) {
         cellsPerPage: action.payload.cellsPerPage,
         selectedCellId: action.payload.grid.length > 0 ? action.payload.grid[0].id : null
       }
+    // avant
     case 'UPDATE_CONFIG': {
-      const updatedConfig = validateConfig({ ...state.config, ...action.payload })
+      const updatedConfig = validateConfig({
+        ...state.config,
+        ...(action.payload.config || {})
+      })
 
       const dimensionsChanged = [
         'cellWidth',
@@ -48,15 +53,17 @@ export function gridReducer(state, action) {
         'spacingVertical',
         'pageWidth',
         'pageHeight'
-      ].some((prop) => action.payload[prop] !== undefined)
+      ].some((prop) => action.payload.config && action.payload.config[prop] !== undefined)
 
-      if (dimensionsChanged) {
-        const { cellsPerPage } = calculateGridDimensions(updatedConfig)
-        return {
+      // Si les dimensions changent ou si on force la régénération
+      if (dimensionsChanged || action.payload.regenerateGrid) {
+        const stateAfterRecalculation = recalculatePages({
           ...state,
-          config: updatedConfig,
-          cellsPerPage
-        }
+          config: updatedConfig
+        })
+
+        // Redistribuer le contenu des cellules
+        return redistributeCellContents(stateAfterRecalculation)
       }
 
       return {
@@ -64,6 +71,7 @@ export function gridReducer(state, action) {
         config: updatedConfig
       }
     }
+
     case 'SET_PAGE': {
       const { page } = action.payload
       return {
@@ -77,14 +85,6 @@ export function gridReducer(state, action) {
         ...state,
         selectedCellId: action.payload
       }
-
-    case 'IMPORT_CSV': {
-      const importedData = importCsvData(state, action.payload)
-      return withUndoRedo(state, {
-        ...state,
-        ...importedData
-      })
-    }
 
     case 'UPDATE_CELL_CONTENT': {
       const { id, content } = action.payload
@@ -115,6 +115,18 @@ export function gridReducer(state, action) {
       }
 
       return withUndoRedo(state, { ...state, cellContents: newCellContents })
+    }
+
+    case 'IMPORT_CSV': {
+      const importedData = importCsvData(state, action.payload)
+
+      // Utilisez recalculatePages pour garantir une pagination dynamique
+      const finalState = recalculatePages({
+        ...state,
+        ...importedData
+      })
+
+      return withUndoRedo(state, finalState)
     }
 
     case 'SYNC_CELL_LAYOUT': {
@@ -349,73 +361,5 @@ export function gridReducer(state, action) {
     }
     default:
       return state
-  }
-}
-
-// Fonction pour importer des données CSV
-const importCsvData = (state, rows) => {
-  const { config, cellsPerPage } = state
-  const { columns } = calculateGridDimensions(config)
-  const newCellContents = { ...state.cellContents }
-  const newLinkedGroup = []
-
-  // Calculer le nombre de pages nécessaires
-  const requiredPages = Math.ceil(rows.length / cellsPerPage)
-  const totalPages = Math.max(state.totalPages, requiredPages)
-
-  // Générer une nouvelle grille
-  const { grid } = generateGrid(config, totalPages)
-
-  // Associer les données du CSV aux cellules
-  rows.forEach((row, index) => {
-    const pageIndex = Math.floor(index / cellsPerPage)
-    const cellIndexInPage = index % cellsPerPage
-    const col = cellIndexInPage % columns
-    const rowInPage = Math.floor(cellIndexInPage / columns)
-    const cellId = `${pageIndex}-${rowInPage}-${col}`
-
-    // Générer le contenu de la cellule
-    const cellContent = Object.entries(row).map(([key, value], idx) => {
-      const type = key.includes('shape') ? 'rect' : 'i-text'
-
-      const baseItem = {
-        id: `${key}-${idx}`,
-        linkedByCsv: true,
-        left: 10 + idx * 50,
-        top: 10
-      }
-
-      return type === 'i-text'
-        ? {
-            ...baseItem,
-            type: 'i-text',
-            text: value,
-            fontSize: 14,
-            fill: '#333'
-          }
-        : {
-            ...baseItem,
-            type: 'rect',
-            width: 50,
-            height: 30,
-            fill: '#ccc'
-          }
-    })
-
-    newCellContents[cellId] = cellContent
-    newLinkedGroup.push(cellId)
-  })
-
-  // Nettoyer les contenus des cellules
-  const cleanedCellContents = Object.fromEntries(
-    Object.entries(newCellContents).filter(([key]) => grid.some((cell) => cell.id === key))
-  )
-
-  return {
-    cellContents: cleanedCellContents,
-    totalPages,
-    grid,
-    linkedGroups: [...state.linkedGroups, newLinkedGroup],
-    cellsPerPage
   }
 }

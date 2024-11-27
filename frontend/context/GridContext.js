@@ -12,7 +12,11 @@ export const GridProvider = ({ children }) => {
     const { grid, cellsPerPage } = generateGrid(state.config, state.totalPages)
     dispatch({
       type: 'INITIALIZE_GRID',
-      payload: { grid, cellsPerPage }
+      payload: {
+        grid,
+        cellsPerPage,
+        totalPages: state.totalPages // Conservez le nombre de pages actuel
+      }
     })
   }, [state.config, state.totalPages])
 
