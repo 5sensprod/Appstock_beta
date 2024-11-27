@@ -15,7 +15,14 @@ const useCanvasSerialization = (canvas, dispatchCanvasAction) => {
     if (!canvas) return
 
     safelyExecute(() => {
-      const serializedState = canvas.toJSON(['id', 'selectable', 'scaleX', 'scaleY'])
+      const serializedState = canvas.toJSON([
+        'id',
+        'selectable',
+        'scaleX',
+        'scaleY',
+        'isQRCode', // Inclusion explicite
+        'qrText' // Inclusion explicite
+      ])
       dispatchCanvasAction({
         type: 'SAVE_CANVAS_STATE',
         payload: serializedState
@@ -33,14 +40,20 @@ const useCanvasSerialization = (canvas, dispatchCanvasAction) => {
       console.log('Event triggered:', e.e?.type || 'non-native-event', {
         type: target.type,
         scaleX: target.scaleX,
-        scaleY: target.scaleY
+        scaleY: target.scaleY,
+        isQRCode: target.isQRCode, // Ajout pour débogage
+        qrText: target.qrText // Ajout pour débogage
       })
+
+      // Vérifier si les propriétés sont perdues après un événement particulier
+      if (target.isQRCode === undefined || target.qrText === undefined) {
+        console.warn('Propriétés manquantes après événement:', e.e?.type || 'non-native-event')
+      }
 
       saveAndUpdateState()
     },
     [saveAndUpdateState]
   )
-
   // Ajout d'écouteurs d'événements
   useEffect(() => {
     if (!canvas) return
