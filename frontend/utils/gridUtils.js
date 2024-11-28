@@ -1,5 +1,5 @@
 export const recalculatePages = (state) => {
-  const { grid, config, cellContents, totalContent } = state
+  const { config, cellContents } = state
   const { cellsPerPage } = calculateGridDimensions(config)
 
   // Compter le nombre de cellules effectivement remplies
@@ -104,7 +104,7 @@ export const validateConfig = (config) => {
 // Fonction pour importer des données CSV
 export const importCsvData = (state, rows) => {
   const { config, cellContents } = state
-  const { columns, cellsPerPage } = calculateGridDimensions(config)
+  const { cellsPerPage } = calculateGridDimensions(config)
 
   // Créer une copie profonde des contenus de cellules existants
   const newCellContents = { ...cellContents }
@@ -130,10 +130,10 @@ export const importCsvData = (state, rows) => {
     // Utiliser l'index global pour placement
     const globalCellIndex = existingFilledCells + index
     const pageIndex = Math.floor(globalCellIndex / cellsPerPage)
-    const cellIndexInPage = globalCellIndex % cellsPerPage
+    // const cellIndexInPage = globalCellIndex % cellsPerPage
 
-    const col = cellIndexInPage % columns
-    const rowInPage = Math.floor(cellIndexInPage / columns)
+    // const col = cellIndexInPage % columns
+    // const rowInPage = Math.floor(cellIndexInPage / columns)
 
     const cellId = `${pageIndex}-${globalCellIndex}`
 
@@ -206,7 +206,7 @@ export const redistributeCellContents = (state) => {
   filledCells.forEach(([originalCellId, content], index) => {
     // Calculer la nouvelle page et la position sur cette page
     const newPageIndex = Math.floor(index / cellsPerPage)
-    const cellIndexInPage = index % cellsPerPage
+    // const cellIndexInPage = index % cellsPerPage
 
     // Créer le nouvel ID de cellule basé sur la nouvelle configuration
     const newCellId = `${newPageIndex}-${index}`
