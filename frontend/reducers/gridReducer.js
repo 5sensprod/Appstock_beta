@@ -192,66 +192,6 @@ export function gridReducer(state, action) {
         cellContents: updatedCellContents
       }
     }
-    case 'COPY_CELL': {
-      const { cellId } = action.payload
-
-      // Récupérer le contenu actuel de la cellule ou considérer comme vide
-      const cellContent = state.cellContents[cellId] || []
-
-      // Si la cellule est vide, ne rien faire
-      if (cellContent.length === 0) return state
-
-      // Sauvegarde automatique avant de copier
-      const updatedCellContents = {
-        ...state.cellContents,
-        [cellId]: [...cellContent] // Cloner le contenu pour éviter les mutations
-      }
-
-      // Vérifier si la cellule appartient déjà à un groupe lié
-      const existingGroupIndex = state.linkedGroups.findIndex((group) => group.includes(cellId))
-
-      if (existingGroupIndex === -1) {
-        // Si la cellule copiée n'est pas encore dans un groupe lié, créer un nouveau groupe
-        return {
-          ...state,
-          clipboard: { cellId }, // Ajouter la cellule au presse-papiers
-          cellContents: updatedCellContents, // Mettre à jour les contenus après sauvegarde
-          linkedGroups: [...state.linkedGroups, [cellId]] // Ajouter un nouveau groupe lié
-        }
-      }
-
-      // Si la cellule appartient déjà à un groupe lié
-      return {
-        ...state,
-        clipboard: { cellId }, // Ajouter la cellule au presse-papiers
-        cellContents: updatedCellContents // Mettre à jour les contenus après sauvegarde
-      }
-    }
-
-    case 'PASTE_CELL': {
-      const { cellId } = action.payload // ID de la cellule où coller
-      const clipboardContent = state.cellContents[state.clipboard.cellId]
-
-      // Vérifier si le contenu du presse-papiers est valide
-      if (!clipboardContent) return state
-
-      // Créer une copie propre du contenu pour la cellule cible
-      const newCellContents = {
-        ...state.cellContents,
-        [cellId]: Array.isArray(clipboardContent)
-          ? clipboardContent.map((item) => ({ ...item })) // Cloner chaque objet du tableau
-          : [{ ...clipboardContent }] // Gérer le cas d'un objet ou d'une chaîne unique
-      }
-
-      // Construire le nouvel état
-      const newState = {
-        ...state,
-        cellContents: newCellContents
-      }
-
-      // Gérer Undo/Redo
-      return withUndoRedo(state, newState)
-    }
 
     case 'LINK_CELLS': {
       const { source, destination } = action.payload
@@ -306,6 +246,67 @@ export function gridReducer(state, action) {
       const newState = {
         ...state,
         linkedGroups: updatedGroups,
+        cellContents: newCellContents
+      }
+
+      // Gérer Undo/Redo
+      return withUndoRedo(state, newState)
+    }
+
+    case 'COPY_CELL': {
+      const { cellId } = action.payload
+
+      // Récupérer le contenu actuel de la cellule ou considérer comme vide
+      const cellContent = state.cellContents[cellId] || []
+
+      // Si la cellule est vide, ne rien faire
+      if (cellContent.length === 0) return state
+
+      // Sauvegarde automatique avant de copier
+      const updatedCellContents = {
+        ...state.cellContents,
+        [cellId]: [...cellContent] // Cloner le contenu pour éviter les mutations
+      }
+
+      // Vérifier si la cellule appartient déjà à un groupe lié
+      const existingGroupIndex = state.linkedGroups.findIndex((group) => group.includes(cellId))
+
+      if (existingGroupIndex === -1) {
+        // Si la cellule copiée n'est pas encore dans un groupe lié, créer un nouveau groupe
+        return {
+          ...state,
+          clipboard: { cellId }, // Ajouter la cellule au presse-papiers
+          cellContents: updatedCellContents, // Mettre à jour les contenus après sauvegarde
+          linkedGroups: [...state.linkedGroups, [cellId]] // Ajouter un nouveau groupe lié
+        }
+      }
+
+      // Si la cellule appartient déjà à un groupe lié
+      return {
+        ...state,
+        clipboard: { cellId }, // Ajouter la cellule au presse-papiers
+        cellContents: updatedCellContents // Mettre à jour les contenus après sauvegarde
+      }
+    }
+
+    case 'PASTE_CELL': {
+      const { cellId } = action.payload // ID de la cellule où coller
+      const clipboardContent = state.cellContents[state.clipboard.cellId]
+
+      // Vérifier si le contenu du presse-papiers est valide
+      if (!clipboardContent) return state
+
+      // Créer une copie propre du contenu pour la cellule cible
+      const newCellContents = {
+        ...state.cellContents,
+        [cellId]: Array.isArray(clipboardContent)
+          ? clipboardContent.map((item) => ({ ...item })) // Cloner chaque objet du tableau
+          : [{ ...clipboardContent }] // Gérer le cas d'un objet ou d'une chaîne unique
+      }
+
+      // Construire le nouvel état
+      const newState = {
+        ...state,
         cellContents: newCellContents
       }
 
