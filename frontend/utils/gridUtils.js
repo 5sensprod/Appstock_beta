@@ -102,75 +102,93 @@ export const validateConfig = (config) => {
 }
 
 // Fonction pour importer des données CSV
-export const importCsvData = (state, rows) => {
+export const importCsvData = (state, rows, onAddQrCode) => {
   const { config, cellContents } = state
   const { cellsPerPage } = calculateGridDimensions(config)
-
-  // Créer une copie profonde des contenus de cellules existants
   const newCellContents = { ...cellContents }
   const newLinkedGroup = []
 
-  // Compter le nombre total de cellules remplies
-  const existingFilledCells = Object.keys(newCellContents).filter(
+  // Initialisation de l'index global pour calculer les cellules
+  let globalCellIndex = Object.keys(newCellContents).filter(
     (cellId) => newCellContents[cellId] && newCellContents[cellId].length > 0
   ).length
 
-  // Calculer le nombre total de cellules après l'import
-  const filledCells = existingFilledCells + rows.length
+  // Tableau pour stocker toutes les lignes avec leurs colonnes
+  const processedRows = rows.flatMap((row) => {
+    const rowItems = []
 
-  // Calculer le nombre de pages nécessaires
-  const requiredPages = Math.ceil(filledCells / cellsPerPage)
-  const totalPages = Math.max(state.totalPages, requiredPages)
-
-  // Générer une nouvelle grille avec le nombre de pages requis
-  const { grid } = generateGrid(config, totalPages)
-
-  // Associer les données du CSV aux cellules
-  rows.forEach((row, index) => {
-    // Utiliser l'index global pour placement
-    const globalCellIndex = existingFilledCells + index
-    const pageIndex = Math.floor(globalCellIndex / cellsPerPage)
-    // const cellIndexInPage = globalCellIndex % cellsPerPage
-
-    // const col = cellIndexInPage % columns
-    // const rowInPage = Math.floor(cellIndexInPage / columns)
-
-    const cellId = `${pageIndex}-${globalCellIndex}`
-
-    // Générer le contenu de la cellule
-    const cellContent = Object.entries(row).map(([key, value], idx) => {
-      const type = key.includes('shape') ? 'rect' : 'i-text'
+    // Parcourir toutes les colonnes
+    Object.entries(row).forEach(([key, value]) => {
+      // Créer un élément pour chaque colonne
       const baseItem = {
-        id: `${key}-${idx}`,
+        id: `${key}-${Math.random().toString(36).substring(2, 11)}`,
         linkedByCsv: true,
-        left: 10 + idx * 50,
+        left: 10,
         top: 10
       }
 
-      // Différencier le traitement des textes et des formes
-      return type === 'i-text'
-        ? {
-            ...baseItem,
-            type: 'i-text',
-            text: value,
-            fontSize: 14,
-            fill: '#333'
-          }
-        : {
-            ...baseItem,
-            type: 'rect',
-            width: 50,
-            height: 30,
-            fill: '#FFD700' // Jaune d'or pour les formes
-          }
+      // Traitement des colonnes qui ne sont pas Gencode
+      if (key.toLowerCase() !== 'gencode') {
+        rowItems.push({
+          ...baseItem,
+          type: 'i-text',
+          text: `${key}: ${value}`,
+          fontSize: 14,
+          fill: '#333'
+        })
+      }
+
+      // Traitement de la colonne Gencode
+      if (key.toLowerCase() === 'gencode' && value) {
+        rowItems.push({
+          ...baseItem,
+          type: 'qr-code',
+          qrText: value
+        })
+      }
     })
 
-    // Ajouter le contenu à la nouvelle carte des contenus
-    newCellContents[cellId] = cellContent
-    newLinkedGroup.push(cellId)
+    return rowItems
   })
 
-  // Nettoyer les contenus des cellules pour correspondre à la nouvelle grille
+  // Répartition des éléments dans différentes cellules
+  processedRows.forEach((item) => {
+    const pageIndex = Math.floor(globalCellIndex / cellsPerPage)
+    const cellIndexInPage = globalCellIndex % cellsPerPage
+    const cellId = `${pageIndex}-${cellIndexInPage}`
+
+    // Créer la cellule si elle n'existe pas
+    if (!newCellContents[cellId]) {
+      newCellContents[cellId] = []
+    }
+
+    // Ajouter l'élément à la cellule
+    newCellContents[cellId].push({
+      ...item,
+      top: 10 + newCellContents[cellId].length * 30
+    })
+
+    // Si c'est un QR code, le générer
+    if (item.type === 'qr-code' && onAddQrCode) {
+      onAddQrCode(item.qrText)
+    }
+
+    // Groupe de cellules liées
+    if (newCellContents[cellId].length === 1) {
+      newLinkedGroup.push(cellId)
+    }
+
+    // Incrémenter si la cellule est pleine
+    if (newCellContents[cellId].length >= 3) {
+      globalCellIndex++
+    }
+  })
+
+  // Générer une nouvelle grille en fonction du nombre total de cellules
+  const totalPages = Math.ceil(globalCellIndex / cellsPerPage)
+  const { grid } = generateGrid(config, totalPages)
+
+  // Nettoyer les cellules pour correspondre à la grille
   const cleanedCellContents = Object.fromEntries(
     Object.entries(newCellContents).filter(([key]) => grid.some((cell) => cell.id === key))
   )
@@ -183,7 +201,6 @@ export const importCsvData = (state, rows) => {
     cellsPerPage
   }
 }
-
 export const redistributeCellContents = (state) => {
   const { config, cellContents } = state
   const { cellsPerPage } = calculateGridDimensions(config)

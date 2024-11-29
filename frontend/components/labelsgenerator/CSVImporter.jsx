@@ -5,10 +5,7 @@ import { CanvasContext } from '../../context/CanvasContext'
 
 const CSVImporter = () => {
   const { state, dispatch } = useContext(GridContext)
-  const {
-    onAddQrCode,
-    importQRCodesFromCSV // Utilisez cette méthode si elle existe
-  } = useContext(CanvasContext)
+  const { onAddQrCode } = useContext(CanvasContext)
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0]
@@ -22,25 +19,11 @@ const CSVImporter = () => {
           // Dispatch de l'import CSV
           dispatch({
             type: 'IMPORT_CSV',
-            payload: rows
+            payload: {
+              rows,
+              onAddQrCode: onAddQrCode
+            }
           })
-
-          // Génération des QR codes
-          if (importQRCodesFromCSV) {
-            // Utiliser la méthode spécifique si elle existe
-            importQRCodesFromCSV(rows)
-          } else if (onAddQrCode) {
-            // Sinon, fallback sur la méthode standard
-            rows.forEach((row) => {
-              const gencodeValue = Object.entries(row).find(
-                ([key]) => key.toLowerCase() === 'gencode'
-              )?.[1]
-
-              if (gencodeValue) {
-                onAddQrCode(gencodeValue)
-              }
-            })
-          }
         },
         error: (error) => {
           console.error("Erreur lors de l'importation CSV :", error)

@@ -118,9 +118,10 @@ export function gridReducer(state, action) {
     }
 
     case 'IMPORT_CSV': {
-      const importedData = importCsvData(state, action.payload)
+      const { rows, onAddQrCode } = action.payload
+      const importedData = importCsvData(state, rows, onAddQrCode)
 
-      // Utilisez recalculatePages pour garantir une pagination dynamique
+      // Recalcul des pages pour s'assurer que la pagination est cohérente
       const finalState = recalculatePages({
         ...state,
         ...importedData
