@@ -1,100 +1,70 @@
 import { useEffect, useCallback, useContext, useRef } from 'react'
-import * as fabric from 'fabric'
 import { GridContext } from '../context/GridContext'
-import _ from 'lodash' // Pour simplifier les comparaisons
+import * as fabric from 'fabric'
+import _ from 'lodash'
 
-const useCanvasGridSync = (canvas) => {
+const useCanvasSync = (canvas) => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
   const { selectedCellId, cellContents } = state
-  const isLoadingRef = useRef(false)
-  const ignoreNextUpdateRef = useRef(false)
-  const lastContentRef = useRef(null)
+  const syncStateRef = useRef({
+    isLoading: false,
+    ignoreNextUpdate: false,
+    lastContent: null,
+    selectedCellId: null
+  })
 
-  // Fonction pour créer des objets Fabric
-  const createFabricObject = (obj, canvas) => {
-    const { type, isQRCode = false, qrText = '', ...fabricOptions } = obj // Inclure `qrText`
-
-    if (type === 'image' && obj.src) {
-      const img = new Image()
-      img.src = obj.src
-      return new Promise((resolve, reject) => {
+  const createFabricObject = async (obj) => {
+    if (obj.type === 'image' && obj.src) {
+      return new Promise((resolve) => {
+        const img = new Image()
         img.onload = () => {
-          const fabricImage = new fabric.Image(img, {
-            ...fabricOptions,
-            width: obj.width,
-            height: obj.height
-          })
-
-          // Associer `isQRCode` et `qrText` à l'objet Fabric
-          fabricImage.isQRCode = isQRCode
-          fabricImage.qrText = qrText
-
+          const fabricImage = new fabric.Image(img, { ...obj })
+          fabricImage.isQRCode = obj.isQRCode
+          fabricImage.qrText = obj.qrText
           resolve(fabricImage)
         }
-        img.onerror = reject
+        img.src = obj.src
       })
     }
 
-    switch (type) {
+    const fabricOptions = _.omit(obj, ['type', 'text'])
+    switch (obj.type) {
       case 'i-text':
-      case 'text':
-        return Promise.resolve(new fabric.IText(obj.text || '', fabricOptions))
-      case 'textbox':
-        return Promise.resolve(new fabric.Textbox(obj.text || '', fabricOptions))
+        return new fabric.IText(obj.text || '', fabricOptions)
       case 'rect':
-        return Promise.resolve(new fabric.Rect(fabricOptions))
+        return new fabric.Rect(fabricOptions)
       case 'circle':
-        return Promise.resolve(new fabric.Circle(fabricOptions))
+        return new fabric.Circle(fabricOptions)
       default:
-        return Promise.resolve(null)
+        return null
     }
   }
 
-  // Fonction pour charger les objets sur le canvas
-  const loadCanvasObjects = useCallback(async () => {
-    if (!canvas || isLoadingRef.current) return
+  useEffect(() => {
+    if (!canvas) return
 
-    const currentContent = cellContents[selectedCellId]
-    if (_.isEqual(lastContentRef.current, currentContent)) {
-      console.log('Contenu identique, skip du rechargement')
-      return
-    }
+    // Si selectedCellId change ou si cellContents est mis à jour (par ex: import CSV)
+    const content = selectedCellId ? cellContents[selectedCellId] || [] : []
 
-    lastContentRef.current = currentContent
-    isLoadingRef.current = true
-    ignoreNextUpdateRef.current = true
-
-    const currentBackgroundColor = canvas.backgroundColor
-    const previousActiveObject = canvas.getActiveObject()
-
+    syncStateRef.current.isLoading = true
     canvas.clear()
-    canvas.backgroundColor = currentBackgroundColor
+    canvas.backgroundColor = 'white'
+    canvas.renderAll()
 
-    const newObjects = currentContent || []
-    const fabricObjects = await Promise.all(
-      newObjects.map((obj) => createFabricObject(obj, canvas))
-    )
-
-    fabricObjects.forEach((fabricObject) => {
-      if (fabricObject) canvas.add(fabricObject)
+    Promise.all(content.map(createFabricObject)).then((objects) => {
+      objects.filter(Boolean).forEach((obj) => canvas.add(obj))
+      canvas.renderAll()
+      syncStateRef.current.isLoading = false
     })
 
-    if (previousActiveObject) {
-      const restoredObject = canvas.getObjects().find((o) => o.id === previousActiveObject.id)
-      if (restoredObject) canvas.setActiveObject(restoredObject)
-    }
-
-    canvas.renderAll()
-    isLoadingRef.current = false
-    ignoreNextUpdateRef.current = false
+    syncStateRef.current.selectedCellId = selectedCellId
   }, [canvas, selectedCellId, cellContents])
 
-  // Fonction pour synchroniser les modifications du canvas
   const handleCanvasModification = useCallback(() => {
-    if (!canvas || !selectedCellId || isLoadingRef.current || ignoreNextUpdateRef.current) return
+    if (!canvas || !selectedCellId || syncStateRef.current.isLoading) return
 
-    const objects = canvas.getObjects()
-    const updatedObjects = objects
+    const serializedObjects = canvas
+      .getObjects()
       .map((obj) => {
         const baseProperties = {
           id: obj.id || Date.now().toString(),
@@ -106,80 +76,71 @@ const useCanvasGridSync = (canvas) => {
           scaleY: obj.scaleY || 1
         }
 
-        switch (obj.type) {
-          case 'image':
-            return {
-              ...baseProperties,
-              type: 'image',
-              src: obj.getSrc ? obj.getSrc() : obj._element?.src || '',
-              width: obj.width || 0,
-              height: obj.height || 0,
-              isQRCode: obj.isQRCode || false, // Inclure `isQRCode`
-              qrText: obj.qrText || '' // Inclure `qrText`
-            }
-          case 'i-text':
-          case 'text':
-            return {
-              ...baseProperties,
-              type: 'i-text',
-              text: obj.text || '',
-              fontSize: obj.fontSize,
-              fontFamily: obj.fontFamily
-            }
-          case 'textbox':
-            return {
-              ...baseProperties,
-              type: 'textbox',
-              text: obj.text || '',
-              fontSize: obj.fontSize,
-              fontFamily: obj.fontFamily,
-              width: obj.width
-            }
-          case 'rect':
-            return {
-              ...baseProperties,
-              type: 'rect',
-              width: obj.width || 0,
-              height: obj.height || 0
-            }
-          case 'circle':
-            return {
-              ...baseProperties,
-              type: 'circle',
-              radius: obj.radius || 0
-            }
-          default:
-            return null
+        if (obj.type === 'image') {
+          return {
+            ...baseProperties,
+            type: 'image',
+            src: obj.getSrc?.() || obj._element?.src || '',
+            width: obj.width || 0,
+            height: obj.height || 0,
+            isQRCode: obj.isQRCode || false,
+            qrText: obj.qrText || ''
+          }
         }
+
+        const typeSpecificProps = {
+          'i-text': {
+            type: 'i-text',
+            text: obj.text || '',
+            fontSize: obj.fontSize,
+            fontFamily: obj.fontFamily
+          },
+          rect: {
+            type: 'rect',
+            width: obj.width || 0,
+            height: obj.height || 0
+          },
+          circle: {
+            type: 'circle',
+            radius: obj.radius || 0
+          }
+        }
+
+        return obj.type in typeSpecificProps
+          ? { ...baseProperties, ...typeSpecificProps[obj.type] }
+          : null
       })
       .filter(Boolean)
 
-    lastContentRef.current = updatedObjects
+    if (_.isEqual(syncStateRef.current.lastContent, serializedObjects)) return
+    syncStateRef.current.lastContent = serializedObjects
 
     dispatch({
       type: 'UPDATE_CELL_CONTENT',
-      payload: { id: selectedCellId, content: updatedObjects }
+      payload: { id: selectedCellId, content: serializedObjects }
     })
 
-    // Synchronisation des groupes liés
     const linkedGroup = findLinkedGroup(selectedCellId)
-    if (linkedGroup && linkedGroup.length > 1) {
-      const layout = updatedObjects.reduce((acc, item) => {
-        acc[item.id] = {
-          left: item.left,
-          top: item.top,
-          fill: item.fill,
-          scaleX: item.scaleX,
-          scaleY: item.scaleY,
-          fontFamily: item.fontFamily,
-          angle: item.angle || 0
-        }
-        return acc
-      }, {})
+    if (linkedGroup?.length > 1) {
+      const layout = serializedObjects.reduce(
+        (acc, item) => ({
+          ...acc,
+          [item.id]: _.pick(item, [
+            'left',
+            'top',
+            'fill',
+            'scaleX',
+            'scaleY',
+            'fontFamily',
+            'angle'
+          ])
+        }),
+        {}
+      )
 
       dispatch({
         type: 'SYNC_CELL_LAYOUT',
-        payload: { sourceId: selectedCellId, layout, linkedGroup }
+        payload: { sourceId: selectedCellId, layout }
       })
     }
   }, [canvas, selectedCellId, dispatch, findLinkedGroup])
@@ -187,22 +148,15 @@ const useCanvasGridSync = (canvas) => {
   useEffect(() => {
     if (!canvas) return
 
-    loadCanvasObjects()
-
     const events = ['object:modified', 'object:added', 'object:removed']
     events.forEach((event) => canvas.on(event, handleCanvasModification))
 
     return () => {
       events.forEach((event) => canvas.off(event, handleCanvasModification))
-      lastContentRef.current = null
-      isLoadingRef.current = false
-      ignoreNextUpdateRef.current = false
     }
-  }, [canvas, loadCanvasObjects, handleCanvasModification])
+  }, [canvas, handleCanvasModification])
 
-  return {
-    handleCanvasModification
-  }
+  return { handleCanvasModification }
 }
 
-export default useCanvasGridSync
+export default useCanvasSync
