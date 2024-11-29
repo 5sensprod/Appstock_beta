@@ -108,13 +108,21 @@ export function gridReducer(state, action) {
       linkedGroup.forEach((cellId) => {
         if (updatedCellContents[cellId]) {
           updatedCellContents[cellId] = updatedCellContents[cellId].map((item) => {
+            // Pour les QR codes, utiliser le layout commun "Gencode"
+            if (item.id.startsWith('Gencode-') && layout.Gencode) {
+              return {
+                ...item,
+                ...layout.Gencode
+              }
+            }
+
+            // Pour les autres éléments
             const layoutItem = layout[item.id]
             if (!layoutItem) return item
 
             return {
               ...item,
-              ...layoutItem,
-              linkedByCsv: item.linkedByCsv // Préserve le flag CSV
+              ...layoutItem
             }
           })
         }
