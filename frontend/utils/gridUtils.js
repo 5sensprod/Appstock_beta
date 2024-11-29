@@ -90,21 +90,12 @@ export const recalculatePages = (state) => {
 
 export const importCsvData = (state, rows) => {
   const { cellsPerPage } = calculateDimensions(state.config)
-  const existingFilledCount = Object.values(state.cellContents).filter(
-    (content) => content?.length > 0
-  ).length
-  const totalCells = existingFilledCount + rows.length
-  const totalPages = Math.max(state.totalPages, Math.ceil(totalCells / cellsPerPage))
+  const cellCount = Object.values(state.cellContents).filter((content) => content?.length).length
+  const totalPages = Math.max(state.totalPages, Math.ceil((cellCount + rows.length) / cellsPerPage))
 
-  const { grid } = generateGrid(state.config, totalPages)
-  const newLinkedGroup = []
-  const newCellContents = { ...state.cellContents }
-
-  rows.forEach((row, index) => {
-    const globalIndex = existingFilledCount + index
-    const cellId = `${Math.floor(globalIndex / cellsPerPage)}-${globalIndex}`
-
-    newCellContents[cellId] = Object.entries(row).map(([key, value], idx) => ({
+  const newCells = rows.reduce((acc, row, index) => {
+    const cellId = `${Math.floor((cellCount + index) / cellsPerPage)}-${cellCount + index}`
+    acc[cellId] = Object.entries(row).map(([key, value], idx) => ({
       id: `${key}-${idx}`,
       linkedByCsv: true,
       left: 10 + idx * 50,
@@ -113,18 +104,18 @@ export const importCsvData = (state, rows) => {
         ? { type: 'rect', width: 50, height: 30, fill: '#FFD700' }
         : { type: 'i-text', text: value, fontSize: 14, fill: '#333' })
     }))
-    newLinkedGroup.push(cellId)
-  })
+    return acc
+  }, {})
+
+  const { grid } = generateGrid(state.config, totalPages)
 
   return {
     ...state,
-    cellContents: Object.fromEntries(
-      Object.entries(newCellContents).filter(([key]) => grid.some((cell) => cell.id === key))
-    ),
     grid,
     totalPages,
-    linkedGroups: [...state.linkedGroups, newLinkedGroup],
-    cellsPerPage
+    cellsPerPage,
+    cellContents: { ...state.cellContents, ...newCells },
+    linkedGroups: [...state.linkedGroups, Object.keys(newCells)]
   }
 }
 

@@ -96,15 +96,7 @@ export function gridReducer(state, action) {
       })
     }
     case 'IMPORT_CSV': {
-      const importedData = importCsvData(state, action.payload)
-
-      // Utilisez recalculatePages pour garantir une pagination dynamique
-      const finalState = recalculatePages({
-        ...state,
-        ...importedData
-      })
-
-      return withUndoRedo(state, finalState)
+      return withUndoRedo(state, importCsvData(state, action.payload))
     }
 
     case 'SYNC_CELL_LAYOUT': {
