@@ -1,36 +1,38 @@
-//I:\Appstock_beta\frontend\components\labelsgenerator\CSVImporter.jsx
 import React, { useContext } from 'react'
-import Papa from 'papaparse'
+import Papa from 'papaparse' // Utilisation de PapaParse pour lire les CSV
 import { GridContext } from '../../context/GridContext'
-import { CanvasContext } from '../../context/CanvasContext'
+
+const parseCSVFile = (file, onSuccess, onError) => {
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: onSuccess,
+    error: onError
+  })
+}
 
 const CSVImporter = () => {
-  const { state, dispatch } = useContext(GridContext)
-  const { onAddQrCode } = useContext(CanvasContext)
+  const { state, dispatch } = useContext(GridContext) // Récupération de state et dispatch
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0]
     if (file) {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
+      parseCSVFile(
+        file,
+        (results) => {
           const rows = results.data
-
-          // Dispatch de l'import CSV
-          dispatch({
-            type: 'IMPORT_CSV',
-            payload: {
-              rows,
-              onAddQrCode: onAddQrCode
-            }
-          })
+          if (rows.length > state.grid.length) {
+            alert(
+              `Attention : Votre fichier CSV contient ${rows.length} lignes, mais la grille actuelle ne peut afficher que ${state.grid.length} cellules.`
+            )
+          }
+          dispatch({ type: 'IMPORT_CSV', payload: rows })
         },
-        error: (error) => {
-          console.error("Erreur lors de l'importation CSV :", error)
-          alert("Une erreur est survenue lors de l'importation du fichier CSV.")
+        (error) => {
+          console.error('Erreur lors de l’importation CSV :', error)
+          alert('Une erreur est survenue lors de l’importation du fichier CSV.')
         }
-      })
+      )
     }
   }
 
