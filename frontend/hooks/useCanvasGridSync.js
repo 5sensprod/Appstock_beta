@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useContext, useRef } from 'react'
 import { GridContext } from '../context/GridContext'
 import * as fabric from 'fabric'
+import QRCode from 'qrcode'
 import _ from 'lodash'
 
 const useCanvasSync = (canvas) => {
@@ -14,6 +15,49 @@ const useCanvasSync = (canvas) => {
   })
 
   const createFabricObject = async (obj) => {
+    if (obj.id?.startsWith('Gencode-')) {
+      return new Promise((resolve) => {
+        QRCode.toDataURL(
+          obj.text,
+          {
+            width: 50,
+            margin: 2,
+            color: { dark: '#000000', light: '#ffffff' }
+          },
+          (err, url) => {
+            if (err) {
+              console.error('QR Code error:', err)
+              return resolve(null)
+            }
+
+            const img = new Image()
+            img.onload = () => {
+              const fabricImage = new fabric.Image(img, {
+                ..._.omit(obj, ['type', 'text']),
+                width: 50,
+                height: 50,
+                isQRCode: true,
+                qrText: obj.text
+              })
+
+              fabricImage.toObject = (function (toObject) {
+                return function () {
+                  return Object.assign(toObject.call(this), {
+                    isQRCode: true,
+                    qrText: this.qrText,
+                    id: this.id
+                  })
+                }
+              })(fabricImage.toObject)
+
+              resolve(fabricImage)
+            }
+            img.src = url
+          }
+        )
+      })
+    }
+
     if (obj.type === 'image' && obj.src) {
       return new Promise((resolve) => {
         const img = new Image()
@@ -43,7 +87,6 @@ const useCanvasSync = (canvas) => {
   useEffect(() => {
     if (!canvas) return
 
-    // Si selectedCellId change ou si cellContents est mis à jour (par ex: import CSV)
     const content = selectedCellId ? cellContents[selectedCellId] || [] : []
 
     syncStateRef.current.isLoading = true
@@ -74,6 +117,15 @@ const useCanvasSync = (canvas) => {
           angle: obj.angle || 0,
           scaleX: obj.scaleX || 1,
           scaleY: obj.scaleY || 1
+        }
+
+        if (obj.isQRCode) {
+          return {
+            ...baseProperties,
+            type: 'i-text',
+            text: obj.qrText,
+            id: `Gencode-${Date.now()}`
+          }
         }
 
         if (obj.type === 'image') {
@@ -125,7 +177,7 @@ const useCanvasSync = (canvas) => {
       const layout = serializedObjects.reduce(
         (acc, item) => ({
           ...acc,
-          [item.id]: _.pick(item, [
+          [item.id.startsWith('Gencode-') ? 'Gencode' : item.id]: _.pick(item, [
             'left',
             'top',
             'fill',
