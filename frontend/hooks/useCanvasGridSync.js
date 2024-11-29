@@ -16,7 +16,12 @@ const useCanvasSync = (canvas) => {
 
   const createFabricObject = async (obj) => {
     if (obj.id?.startsWith('Gencode-')) {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
+        if (!obj.text) {
+          console.error('Texte manquant pour le QR Code')
+          return resolve(null)
+        }
+
         QRCode.toDataURL(
           obj.text,
           {
@@ -37,20 +42,26 @@ const useCanvasSync = (canvas) => {
                 width: 50,
                 height: 50,
                 isQRCode: true,
-                qrText: obj.text
+                qrText: obj.text,
+                src: url // Ajout de `src` pour l'export PDF
               })
 
+              // Sérialisation étendue pour inclure `isQRCode` et `src`
               fabricImage.toObject = (function (toObject) {
                 return function () {
                   return Object.assign(toObject.call(this), {
                     isQRCode: true,
                     qrText: this.qrText,
-                    id: this.id
+                    src: this._element?.src || this.src
                   })
                 }
               })(fabricImage.toObject)
 
               resolve(fabricImage)
+            }
+            img.onerror = (loadError) => {
+              console.error('Erreur lors du chargement de l’image QR:', loadError)
+              resolve(null)
             }
             img.src = url
           }
@@ -66,6 +77,10 @@ const useCanvasSync = (canvas) => {
           fabricImage.isQRCode = obj.isQRCode
           fabricImage.qrText = obj.qrText
           resolve(fabricImage)
+        }
+        img.onerror = (error) => {
+          console.error('Erreur lors du chargement de l’image:', error)
+          resolve(null)
         }
         img.src = obj.src
       })
@@ -89,7 +104,9 @@ const useCanvasSync = (canvas) => {
 
     const content = selectedCellId ? cellContents[selectedCellId] || [] : []
 
+    const activeObject = canvas.getActiveObject() // Sauvegarde de l'objet actif
     syncStateRef.current.isLoading = true
+
     canvas.clear()
     canvas.backgroundColor = 'white'
     canvas.renderAll()
@@ -97,6 +114,15 @@ const useCanvasSync = (canvas) => {
     Promise.all(content.map(createFabricObject)).then((objects) => {
       objects.filter(Boolean).forEach((obj) => canvas.add(obj))
       canvas.renderAll()
+
+      // Restauration de l'objet actif
+      if (activeObject) {
+        const restoredObject = canvas.getObjects().find((obj) => obj.id === activeObject.id)
+        if (restoredObject) {
+          canvas.setActiveObject(restoredObject)
+        }
+      }
+
       syncStateRef.current.isLoading = false
     })
 
@@ -105,6 +131,8 @@ const useCanvasSync = (canvas) => {
 
   const handleCanvasModification = useCallback(() => {
     if (!canvas || !selectedCellId || syncStateRef.current.isLoading) return
+
+    const activeObject = canvas.getActiveObject() // Sauvegarde de l'objet actif
 
     const serializedObjects = canvas
       .getObjects()
@@ -194,6 +222,14 @@ const useCanvasSync = (canvas) => {
         type: 'SYNC_CELL_LAYOUT',
         payload: { sourceId: selectedCellId, layout }
       })
+    }
+
+    // Restauration de l'objet actif
+    if (activeObject) {
+      const restoredObject = canvas.getObjects().find((obj) => obj.id === activeObject.id)
+      if (restoredObject) {
+        canvas.setActiveObject(restoredObject)
+      }
     }
   }, [canvas, selectedCellId, dispatch, findLinkedGroup])
 
