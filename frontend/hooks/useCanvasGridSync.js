@@ -1,29 +1,63 @@
 import { useEffect, useCallback, useContext, useRef } from 'react'
-import { GridContext } from '../context/GridContext'
 import * as fabric from 'fabric'
 import QRCode from 'qrcode'
+import { GridContext } from '../context/GridContext'
 import _ from 'lodash'
 
-const useCanvasSync = (canvas) => {
+const useCanvasGridSync = (canvas) => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
   const { selectedCellId, cellContents } = state
-  const syncStateRef = useRef({
-    isLoading: false,
-    ignoreNextUpdate: false,
-    lastContent: null,
-    selectedCellId: null
-  })
+  const isLoadingRef = useRef(false)
+  const ignoreNextUpdateRef = useRef(false)
+  const lastContentRef = useRef(null)
 
-  const createFabricObject = async (obj) => {
-    if (obj.id?.startsWith('Gencode-')) {
-      return new Promise((resolve, reject) => {
-        if (!obj.text) {
+  const createFabricObject = useCallback(async (obj) => {
+    const { type, isQRCode = false, qrText = '', ...fabricOptions } = obj
+
+    // Gestion des QR codes existants ou nouveaux
+    if (isQRCode || obj.id?.startsWith('Gencode-')) {
+      // Réutilisation d'un QR code existant
+      if (obj.src) {
+        return new Promise((resolve) => {
+          const img = new Image()
+          img.onload = () => {
+            const fabricImage = new fabric.Image(img, {
+              ...fabricOptions,
+              width: obj.width || 50,
+              height: obj.height || 50,
+              isQRCode: true,
+              qrText: obj.qrText || qrText,
+              src: obj.src
+            })
+
+            // Extension de la sérialisation pour QR codes
+            fabricImage.toObject = (function (toObject) {
+              return function () {
+                return Object.assign(toObject.call(this), {
+                  isQRCode: true,
+                  qrText: this.qrText,
+                  src: this._element?.src || this.src
+                })
+              }
+            })(fabricImage.toObject)
+
+            resolve(fabricImage)
+          }
+          img.onerror = () => resolve(null)
+          img.src = obj.src
+        })
+      }
+
+      // Génération d'un nouveau QR code
+      return new Promise((resolve) => {
+        const textToEncode = obj.text || obj.qrText || qrText
+        if (!textToEncode) {
           console.error('Texte manquant pour le QR Code')
           return resolve(null)
         }
 
         QRCode.toDataURL(
-          obj.text,
+          textToEncode,
           {
             width: 50,
             margin: 2,
@@ -38,15 +72,14 @@ const useCanvasSync = (canvas) => {
             const img = new Image()
             img.onload = () => {
               const fabricImage = new fabric.Image(img, {
-                ..._.omit(obj, ['type', 'text']),
+                ...fabricOptions,
                 width: 50,
                 height: 50,
                 isQRCode: true,
-                qrText: obj.text,
-                src: url // Ajout de `src` pour l'export PDF
+                qrText: textToEncode,
+                src: url
               })
 
-              // Sérialisation étendue pour inclure `isQRCode` et `src`
               fabricImage.toObject = (function (toObject) {
                 return function () {
                   return Object.assign(toObject.call(this), {
@@ -59,83 +92,150 @@ const useCanvasSync = (canvas) => {
 
               resolve(fabricImage)
             }
-            img.onerror = (loadError) => {
-              console.error('Erreur lors du chargement de l’image QR:', loadError)
-              resolve(null)
-            }
+            img.onerror = () => resolve(null)
             img.src = url
           }
         )
       })
     }
 
-    if (obj.type === 'image' && obj.src) {
+    // Gestion des images standard
+    if (type === 'image' && obj.src) {
       return new Promise((resolve) => {
         const img = new Image()
         img.onload = () => {
-          const fabricImage = new fabric.Image(img, { ...obj })
-          fabricImage.isQRCode = obj.isQRCode
-          fabricImage.qrText = obj.qrText
+          const fabricImage = new fabric.Image(img, {
+            ...fabricOptions,
+            width: obj.width,
+            height: obj.height
+          })
           resolve(fabricImage)
         }
-        img.onerror = (error) => {
-          console.error('Erreur lors du chargement de l’image:', error)
-          resolve(null)
-        }
+        img.onerror = () => resolve(null)
         img.src = obj.src
       })
     }
 
-    const fabricOptions = _.omit(obj, ['type', 'text'])
-    switch (obj.type) {
+    // Autres types d'objets
+    switch (type) {
       case 'i-text':
-        return new fabric.IText(obj.text || '', fabricOptions)
+      case 'text':
+        return Promise.resolve(new fabric.IText(obj.text || '', fabricOptions))
+      case 'textbox':
+        return Promise.resolve(new fabric.Textbox(obj.text || '', fabricOptions))
       case 'rect':
-        return new fabric.Rect(fabricOptions)
+        return Promise.resolve(new fabric.Rect(fabricOptions))
       case 'circle':
-        return new fabric.Circle(fabricOptions)
+        return Promise.resolve(new fabric.Circle(fabricOptions))
       default:
-        return null
+        return Promise.resolve(null)
+    }
+  }, [])
+
+  const loadCanvasObjects = useCallback(async () => {
+    if (!canvas || isLoadingRef.current) return
+
+    const currentContent = cellContents[selectedCellId]
+    if (_.isEqual(lastContentRef.current, currentContent)) {
+      return
+    }
+
+    lastContentRef.current = currentContent
+    isLoadingRef.current = true
+    ignoreNextUpdateRef.current = true
+
+    const currentBackgroundColor = canvas.backgroundColor
+    const previousActiveObject = canvas.getActiveObject()
+
+    canvas.clear()
+    canvas.backgroundColor = currentBackgroundColor || 'white'
+
+    const newObjects = currentContent || []
+    const fabricObjects = await Promise.all(newObjects.map((obj) => createFabricObject(obj)))
+
+    fabricObjects.forEach((fabricObject) => {
+      if (fabricObject) canvas.add(fabricObject)
+    })
+
+    if (previousActiveObject) {
+      const restoredObject = canvas.getObjects().find((o) => o.id === previousActiveObject.id)
+      if (restoredObject) canvas.setActiveObject(restoredObject)
+    }
+
+    canvas.renderAll()
+    isLoadingRef.current = false
+    ignoreNextUpdateRef.current = false
+  }, [canvas, selectedCellId, cellContents, createFabricObject])
+
+  // Nouvelle fonction pour générer le QR code et retourner son URL
+  const generateQRCodeURL = async (text) => {
+    try {
+      return await QRCode.toDataURL(text, {
+        width: 50,
+        margin: 2,
+        color: { dark: '#000000', light: '#ffffff' }
+      })
+    } catch (error) {
+      console.error('Erreur génération QR code:', error)
+      return null
     }
   }
 
+  // Effet pour initialiser les QR codes avec leurs URLs
   useEffect(() => {
-    if (!canvas) return
+    const initializeQRCodes = async () => {
+      if (!cellContents) return
 
-    const content = selectedCellId ? cellContents[selectedCellId] || [] : []
+      for (const [cellId, content] of Object.entries(cellContents)) {
+        if (!content || !Array.isArray(content)) continue
 
-    const activeObject = canvas.getActiveObject() // Sauvegarde de l'objet actif
-    syncStateRef.current.isLoading = true
+        const hasQRCode = content.some((obj) => obj.id?.startsWith('Gencode-'))
+        if (!hasQRCode) continue
 
-    canvas.clear()
-    canvas.backgroundColor = 'white'
-    canvas.renderAll()
+        const updatedContent = await Promise.all(
+          content.map(async (obj) => {
+            if (!obj.id?.startsWith('Gencode-')) return obj
 
-    Promise.all(content.map(createFabricObject)).then((objects) => {
-      objects.filter(Boolean).forEach((obj) => canvas.add(obj))
-      canvas.renderAll()
+            // Générer l'URL du QR code si elle n'existe pas
+            if (!obj.src) {
+              const url = await generateQRCodeURL(obj.text || obj.qrText)
+              if (url) {
+                return {
+                  ...obj,
+                  type: 'image',
+                  src: url,
+                  isQRCode: true,
+                  qrText: obj.text || obj.qrText,
+                  width: obj.width || 50,
+                  height: obj.height || 50,
+                  left: obj.left || 0,
+                  top: obj.top || 0,
+                  scaleX: obj.scaleX || 1,
+                  scaleY: obj.scaleY || 1
+                }
+              }
+            }
+            return obj
+          })
+        )
 
-      // Restauration de l'objet actif
-      if (activeObject) {
-        const restoredObject = canvas.getObjects().find((obj) => obj.id === activeObject.id)
-        if (restoredObject) {
-          canvas.setActiveObject(restoredObject)
+        if (!_.isEqual(content, updatedContent)) {
+          dispatch({
+            type: 'UPDATE_CELL_CONTENT',
+            payload: { id: cellId, content: updatedContent }
+          })
         }
       }
+    }
 
-      syncStateRef.current.isLoading = false
-    })
-
-    syncStateRef.current.selectedCellId = selectedCellId
-  }, [canvas, selectedCellId, cellContents])
+    initializeQRCodes()
+  }, [cellContents])
 
   const handleCanvasModification = useCallback(() => {
-    if (!canvas || !selectedCellId || syncStateRef.current.isLoading) return
+    if (!canvas || !selectedCellId || isLoadingRef.current || ignoreNextUpdateRef.current) return
 
-    const activeObject = canvas.getActiveObject() // Sauvegarde de l'objet actif
-
-    const serializedObjects = canvas
-      .getObjects()
+    const objects = canvas.getObjects()
+    const updatedObjects = objects
       .map((obj) => {
         const baseProperties = {
           id: obj.id || Date.now().toString(),
@@ -147,104 +247,118 @@ const useCanvasSync = (canvas) => {
           scaleY: obj.scaleY || 1
         }
 
+        // Préservation du format image pour les QR codes
         if (obj.isQRCode) {
           return {
             ...baseProperties,
-            type: 'i-text',
-            text: obj.qrText,
-            id: `Gencode-${Date.now()}`
-          }
-        }
-
-        if (obj.type === 'image') {
-          return {
-            ...baseProperties,
             type: 'image',
-            src: obj.getSrc?.() || obj._element?.src || '',
-            width: obj.width || 0,
-            height: obj.height || 0,
-            isQRCode: obj.isQRCode || false,
-            qrText: obj.qrText || ''
+            src: obj._element?.src || obj.src,
+            width: obj.width || 50,
+            height: obj.height || 50,
+            isQRCode: true,
+            qrText: obj.qrText,
+            id: obj.id.startsWith('Gencode-') ? obj.id : `Gencode-${Date.now()}`
           }
         }
 
-        const typeSpecificProps = {
-          'i-text': {
-            type: 'i-text',
-            text: obj.text || '',
-            fontSize: obj.fontSize,
-            fontFamily: obj.fontFamily
-          },
-          rect: {
-            type: 'rect',
-            width: obj.width || 0,
-            height: obj.height || 0
-          },
-          circle: {
-            type: 'circle',
-            radius: obj.radius || 0
-          }
+        switch (obj.type) {
+          case 'image':
+            return {
+              ...baseProperties,
+              type: 'image',
+              src: obj.getSrc?.() || obj._element?.src || '',
+              width: obj.width || 0,
+              height: obj.height || 0,
+              isQRCode: obj.isQRCode || false,
+              qrText: obj.qrText || ''
+            }
+          case 'i-text':
+          case 'text':
+            return {
+              ...baseProperties,
+              type: 'i-text',
+              text: obj.text || '',
+              fontSize: obj.fontSize,
+              fontFamily: obj.fontFamily
+            }
+          case 'textbox':
+            return {
+              ...baseProperties,
+              type: 'textbox',
+              text: obj.text || '',
+              fontSize: obj.fontSize,
+              fontFamily: obj.fontFamily,
+              width: obj.width
+            }
+          case 'rect':
+            return {
+              ...baseProperties,
+              type: 'rect',
+              width: obj.width || 0,
+              height: obj.height || 0
+            }
+          case 'circle':
+            return {
+              ...baseProperties,
+              type: 'circle',
+              radius: obj.radius || 0
+            }
+          default:
+            return null
         }
-
-        return obj.type in typeSpecificProps
-          ? { ...baseProperties, ...typeSpecificProps[obj.type] }
-          : null
       })
       .filter(Boolean)
 
-    if (_.isEqual(syncStateRef.current.lastContent, serializedObjects)) return
-    syncStateRef.current.lastContent = serializedObjects
+    if (_.isEqual(lastContentRef.current, updatedObjects)) return
+    lastContentRef.current = updatedObjects
 
     dispatch({
       type: 'UPDATE_CELL_CONTENT',
-      payload: { id: selectedCellId, content: serializedObjects }
+      payload: { id: selectedCellId, content: updatedObjects }
     })
 
+    // Synchronisation des groupes liés
     const linkedGroup = findLinkedGroup(selectedCellId)
-    if (linkedGroup?.length > 1) {
-      const layout = serializedObjects.reduce(
-        (acc, item) => ({
-          ...acc,
-          [item.id.startsWith('Gencode-') ? 'Gencode' : item.id]: _.pick(item, [
-            'left',
-            'top',
-            'fill',
-            'scaleX',
-            'scaleY',
-            'fontFamily',
-            'angle'
-          ])
-        }),
-        {}
-      )
+    if (linkedGroup && linkedGroup.length > 1) {
+      const layout = updatedObjects.reduce((acc, item) => {
+        acc[item.id] = {
+          left: item.left,
+          top: item.top,
+          fill: item.fill,
+          scaleX: item.scaleX,
+          scaleY: item.scaleY,
+          fontFamily: item.fontFamily,
+          angle: item.angle || 0
+        }
+        return acc
+      }, {})
 
       dispatch({
         type: 'SYNC_CELL_LAYOUT',
-        payload: { sourceId: selectedCellId, layout }
+        payload: { sourceId: selectedCellId, layout, linkedGroup }
       })
-    }
-
-    // Restauration de l'objet actif
-    if (activeObject) {
-      const restoredObject = canvas.getObjects().find((obj) => obj.id === activeObject.id)
-      if (restoredObject) {
-        canvas.setActiveObject(restoredObject)
-      }
     }
   }, [canvas, selectedCellId, dispatch, findLinkedGroup])
 
   useEffect(() => {
     if (!canvas) return
 
+    loadCanvasObjects()
+
     const events = ['object:modified', 'object:added', 'object:removed']
     events.forEach((event) => canvas.on(event, handleCanvasModification))
 
     return () => {
       events.forEach((event) => canvas.off(event, handleCanvasModification))
+      lastContentRef.current = null
+      isLoadingRef.current = false
+      ignoreNextUpdateRef.current = false
     }
-  }, [canvas, handleCanvasModification])
+  }, [canvas, loadCanvasObjects, handleCanvasModification])
 
-  return { handleCanvasModification }
+  return {
+    handleCanvasModification
+  }
 }
 
-export default useCanvasSync
+export default useCanvasGridSync
