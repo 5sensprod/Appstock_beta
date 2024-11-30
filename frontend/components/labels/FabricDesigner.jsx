@@ -1,6 +1,6 @@
 import React from 'react'
 import styles from './FabricDesigner.module.css'
-import CanvasControl from './CanvasControl copy'
+import CanvasControl from './CanvasControl'
 // import CanvasControl from './CanvasControl'
 import Menu from './Menu'
 import ZoomControl from './ZoomControl'

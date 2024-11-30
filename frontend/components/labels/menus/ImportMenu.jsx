@@ -1,7 +1,6 @@
 // frontend/components/labels/menus/ImportMenu.jsx
 
 import React, { useState } from 'react'
-import { useInstance } from '../../../context/InstanceContext'
 import IconButton from '../../ui/IconButton'
 import { faFileCsv } from '@fortawesome/free-solid-svg-icons'
 
