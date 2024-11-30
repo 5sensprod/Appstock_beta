@@ -30,9 +30,6 @@ const CanvasProvider = ({ children }) => {
   // Initialisation du canevas
   useInitializeCanvas(canvas, labelConfig, dispatchCanvasAction, canvasRef)
 
-  // Synchronisation entre Canvas et Grid
-  // const { handleCanvasModification } = useCanvasGridSync(canvas)
-
   // Gestion des transformations et des contraintes
   const { handleZoomChange } = useCanvasTransformAndConstraints(
     canvas,
