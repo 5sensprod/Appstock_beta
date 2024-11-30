@@ -1,10 +1,9 @@
 import React from 'react'
 import styles from './FabricDesigner.module.css'
 import CanvasControl from './CanvasControl'
-// import CanvasControl from './CanvasControl'
 import Menu from './Menu'
 import ZoomControl from './ZoomControl'
-import MenuCell from '../labelsgenerator/MenuCell'
+import MenuCell from './MenuCell'
 
 export default function FabricDesigner() {
   return (
