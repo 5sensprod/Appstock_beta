@@ -85,7 +85,7 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
         canvas.renderAll()
       })
     },
-    [canvas, selectedColor, centerObject, generateQRCode, createQRCodeFabricImage]
+    [canvas, selectedColor, centerObject]
   )
 
   const onUpdateQrCode = useCallback(
@@ -112,9 +112,7 @@ const useAddQRCode = (canvas, labelConfig, selectedColor) => {
 
   return {
     onAddQrCode,
-    onUpdateQrCode,
-    generateQRCode, // Exposer generateQRCode
-    createQRCodeFabricImage
+    onUpdateQrCode
   }
 }
 

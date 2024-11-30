@@ -46,16 +46,8 @@ const CanvasProvider = ({ children }) => {
     useCanvasObjectHandler(canvas, selectedObject, dispatchCanvasAction)
 
   // Actions pour les objets
-  const {
-    onAddCircle,
-    onAddRectangle,
-    onAddText,
-    onAddImage,
-    onAddQrCode,
-    onUpdateQrCode,
-    generateQRCode,
-    createQRCodeFabricImage
-  } = useCanvasObjectActions(canvas, labelConfig, selectedColor, selectedFont)
+  const { onAddCircle, onAddRectangle, onAddText, onAddImage, onAddQrCode, onUpdateQrCode } =
+    useCanvasObjectActions(canvas, labelConfig, selectedColor, selectedFont)
 
   // Ajout des logs pour surveiller les objets du canevas
   useEffect(() => {
@@ -123,8 +115,6 @@ const CanvasProvider = ({ children }) => {
     // Dispatcher pour des actions personnalisées
     dispatchCanvasAction,
     handleCanvasModification,
-    generateQRCode, // Fournir au contexte
-    createQRCodeFabricImage,
     canvasState
   }
 
