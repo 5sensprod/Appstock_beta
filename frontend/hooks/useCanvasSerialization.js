@@ -1,82 +1,66 @@
 import { useCallback, useEffect } from 'react'
 
 const useCanvasSerialization = (canvas, dispatchCanvasAction) => {
-  // Fonction utilitaire pour gérer les erreurs
-  const safelyExecute = useCallback((fn, context) => {
-    try {
-      fn()
-    } catch (error) {
-      console.error('Error in:', context, error)
-    }
-  }, [])
-
-  // Sauvegarder l'état du canvas
-  const saveAndUpdateState = useCallback(() => {
+  const saveCanvasState = useCallback(() => {
     if (!canvas) return
 
-    safelyExecute(() => {
+    try {
       const serializedState = canvas.toJSON([
         'id',
         'selectable',
         'scaleX',
         'scaleY',
-        'isQRCode', // Inclusion explicite
-        'qrText' // Inclusion explicite
+        'isQRCode',
+        'qrText'
       ])
+
       dispatchCanvasAction({
         type: 'SAVE_CANVAS_STATE',
         payload: serializedState
       })
-      console.log('Canvas state saved:', serializedState)
-    }, 'saveAndUpdateState')
-  }, [canvas, dispatchCanvasAction, safelyExecute])
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error)
+    }
+  }, [canvas, dispatchCanvasAction])
 
-  // Gestionnaire d'événements pour le canvas
   const handleCanvasEvent = useCallback(
-    (e) => {
-      if (!e?.target) return
+    (event) => {
+      const target = event?.target
+      if (!target) return
 
-      const target = e.target
-      console.log('Event triggered:', e.e?.type || 'non-native-event', {
-        type: target.type,
-        scaleX: target.scaleX,
-        scaleY: target.scaleY,
-        isQRCode: target.isQRCode, // Ajout pour débogage
-        qrText: target.qrText // Ajout pour débogage
-      })
-
-      // Vérifier si les propriétés sont perdues après un événement particulier
-      if (target.isQRCode === undefined || target.qrText === undefined) {
-        console.warn('Propriétés manquantes après événement:', e.e?.type || 'non-native-event')
+      // Log uniquement en développement
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Événement canvas:', {
+          type: event.e?.type || 'événement-custom',
+          properties: {
+            type: target.type,
+            scaleX: target.scaleX,
+            scaleY: target.scaleY,
+            isQRCode: target.isQRCode,
+            qrText: target.qrText
+          }
+        })
       }
 
-      saveAndUpdateState()
+      saveCanvasState()
     },
-    [saveAndUpdateState]
+    [saveCanvasState]
   )
-  // Ajout d'écouteurs d'événements
+
   useEffect(() => {
     if (!canvas) return
 
-    console.log('Canvas initialized in serialization hook:', canvas)
-
-    const events = ['object:added', 'object:modified', 'object:scaled', '']
-
-    // Enregistrement des événements
+    const events = ['object:added', 'object:modified', 'object:scaled']
     events.forEach((event) => canvas.on(event, handleCanvasEvent))
 
-    // Nettoyage des événements
-    return () => {
-      events.forEach((event) => canvas.off(event, handleCanvasEvent))
-    }
+    return () => events.forEach((event) => canvas.off(event, handleCanvasEvent))
   }, [canvas, handleCanvasEvent])
 
-  // Mise à jour des propriétés d'un objet
   const updateObjectProperties = useCallback(
     (object, properties) => {
       if (!object || !properties || !canvas) return
 
-      safelyExecute(() => {
+      try {
         const updates = {
           ...(properties.color && { fill: properties.color }),
           ...(properties.font &&
@@ -85,7 +69,6 @@ const useCanvasSerialization = (canvas, dispatchCanvasAction) => {
             })
         }
 
-        console.log('Updating object properties:', { object, properties, updates })
         object.set(updates)
         object.setCoords()
         canvas.renderAll()
@@ -95,10 +78,12 @@ const useCanvasSerialization = (canvas, dispatchCanvasAction) => {
           payload: properties
         })
 
-        saveAndUpdateState()
-      }, 'updateObjectProperties')
+        saveCanvasState()
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour:', error)
+      }
     },
-    [canvas, dispatchCanvasAction, saveAndUpdateState, safelyExecute]
+    [canvas, dispatchCanvasAction, saveCanvasState]
   )
 
   return { updateObjectProperties }
