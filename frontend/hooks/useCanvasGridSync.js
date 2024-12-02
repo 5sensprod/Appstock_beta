@@ -147,14 +147,15 @@ const useCanvasGridSync = (canvas) => {
 
     const activeObject = canvas.getActiveObject()
     canvas.clear()
-    canvas.backgroundColor ||= 'white'
+
+    // Rétablir le fond blanc du canvas
+    canvas.backgroundColor = 'white'
 
     if (currentContent?.length) {
       const objects = await Promise.all(currentContent.map(createFabricObject))
       objects.filter(Boolean).forEach((obj) => canvas.add(obj))
 
-      const reselectedObject =
-        activeObject && canvas.getObjects().find((o) => o.id === activeObject.id)
+      const reselectedObject = canvas.getObjects().find((o) => o.id === activeObject?.id)
       if (reselectedObject) canvas.setActiveObject(reselectedObject)
     }
 

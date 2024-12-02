@@ -37,8 +37,14 @@ export function gridReducer(state, action) {
         ...state,
         grid: action.payload.grid,
         cellsPerPage: action.payload.cellsPerPage,
-        selectedCellId: action.payload.grid.length > 0 ? action.payload.grid[0].id : null
+        selectedCellId:
+          action.payload.selectedCellId !== undefined
+            ? action.payload.selectedCellId
+            : action.payload.grid.length > 0
+              ? action.payload.grid[0].id
+              : null
       }
+
     // avant
     case 'UPDATE_CONFIG': {
       const updatedConfig = validateConfig({
@@ -57,9 +63,19 @@ export function gridReducer(state, action) {
           'pageHeight'
         ].some((prop) => action.payload.config?.[prop] !== undefined)
 
-      return needsRecalculation
+      const updatedState = needsRecalculation
         ? redistributeCellContents(recalculatePages({ ...state, config: updatedConfig }))
         : { ...state, config: updatedConfig }
+
+      // Si les dimensions changent, réinitialiser `selectedCellId`
+      if (needsRecalculation) {
+        return {
+          ...updatedState,
+          selectedCellId: null // Option : Réinitialisation propre
+        }
+      }
+
+      return updatedState
     }
 
     case 'SET_PAGE': {
@@ -84,15 +100,12 @@ export function gridReducer(state, action) {
         linkedByCsv: existingContent.find((old) => old.id === item.id)?.linkedByCsv || false
       }))
 
-      const hasContent = updatedContent.some((obj) => obj.type !== 'text' || obj.text?.trim())
-      const newCellContents = {
-        ...state.cellContents,
-        [id]: hasContent ? updatedContent : undefined
-      }
-
       return withUndoRedo(state, {
         ...state,
-        cellContents: Object.fromEntries(Object.entries(newCellContents).filter(([_, v]) => v))
+        cellContents: {
+          ...state.cellContents,
+          [id]: updatedContent
+        }
       })
     }
     case 'IMPORT_CSV': {
