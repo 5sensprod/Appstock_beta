@@ -20,11 +20,16 @@ export const useTextManager = () => {
   }
 
   const handleFontChange = async (fontFamily) => {
-    if (selectedObject?.type === 'i-text' || selectedObject?.type === 'textbox') {
-      updateObjectProperties(selectedObject, { font: fontFamily })
-      canvas?.fire('object:modified')
-    } else {
-      dispatchCanvasAction({ type: 'SET_FONT', payload: fontFamily })
+    try {
+      await new FontFaceObserver(fontFamily).load()
+      if (selectedObject?.type === 'i-text' || selectedObject?.type === 'textbox') {
+        updateObjectProperties(selectedObject, { font: fontFamily })
+        canvas?.fire('object:modified')
+      } else {
+        dispatchCanvasAction({ type: 'SET_FONT', payload: fontFamily })
+      }
+    } catch (error) {
+      console.error(`Erreur chargement police ${fontFamily}:`, error)
     }
   }
 
