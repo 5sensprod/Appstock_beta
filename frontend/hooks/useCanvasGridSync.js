@@ -136,33 +136,30 @@ const useCanvasGridSync = (canvas) => {
     if (!canvas || isLoadingRef.current) return
 
     const currentContent = cellContents[selectedCellId]
-    if (_.isEqual(lastContentRef.current, currentContent)) {
-      return
-    }
+    const currentObjects = canvas
+      .getObjects()
+      .map((obj) => obj.toObject(['id', 'type', 'left', 'top', 'fill']))
 
-    lastContentRef.current = currentContent
+    if (_.isEqual(currentObjects, currentContent)) return
+
     isLoadingRef.current = true
     ignoreNextUpdateRef.current = true
 
-    const currentBackgroundColor = canvas.backgroundColor
-    const previousActiveObject = canvas.getActiveObject()
-
+    const activeObject = canvas.getActiveObject()
     canvas.clear()
-    canvas.backgroundColor = currentBackgroundColor || 'white'
+    canvas.backgroundColor ||= 'white'
 
-    const newObjects = currentContent || []
-    const fabricObjects = await Promise.all(newObjects.map((obj) => createFabricObject(obj)))
+    if (currentContent?.length) {
+      const objects = await Promise.all(currentContent.map(createFabricObject))
+      objects.filter(Boolean).forEach((obj) => canvas.add(obj))
 
-    fabricObjects.forEach((fabricObject) => {
-      if (fabricObject) canvas.add(fabricObject)
-    })
-
-    if (previousActiveObject) {
-      const restoredObject = canvas.getObjects().find((o) => o.id === previousActiveObject.id)
-      if (restoredObject) canvas.setActiveObject(restoredObject)
+      const reselectedObject =
+        activeObject && canvas.getObjects().find((o) => o.id === activeObject.id)
+      if (reselectedObject) canvas.setActiveObject(reselectedObject)
     }
 
     canvas.renderAll()
+    lastContentRef.current = currentContent
     isLoadingRef.current = false
     ignoreNextUpdateRef.current = false
   }, [canvas, selectedCellId, cellContents, createFabricObject])

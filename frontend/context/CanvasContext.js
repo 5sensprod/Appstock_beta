@@ -7,7 +7,8 @@ import { canvasReducer, initialCanvasState } from '../reducers/canvasReducer'
 import { syncGridConfigToLabelConfig } from '../utils/configSync'
 import { GridContext } from './GridContext'
 import useCanvasGridSync from '../hooks/useCanvasGridSync'
-import useCanvasSerialization from '../hooks/useCanvasSerialization'
+import useCanvasObjectUpdater from '../hooks/useCanvasObjectUpdater'
+
 const CanvasContext = createContext()
 
 const useCanvas = () => {
@@ -45,41 +46,37 @@ const CanvasProvider = ({ children }) => {
   // Actions pour les objets
   const { onAddCircle, onAddRectangle, onAddText, onAddImage, onAddQrCode, onUpdateQrCode } =
     useCanvasObjectActions(canvas, labelConfig, selectedColor, selectedFont)
+  const updateObjectProperties = useCanvasObjectUpdater(canvas, dispatchCanvasAction)
 
   // Ajout des logs pour surveiller les objets du canevas
   useEffect(() => {
-    if (!canvas) return
+    if (!canvas || process.env.NODE_ENV !== 'development') return
 
+    let isInitialRender = true
     const logObjectChanges = (eventName, obj) => {
+      if (isInitialRender) {
+        isInitialRender = false
+        return
+      }
       console.log(`Canvas Event: ${eventName}`, {
         id: obj?.id || 'N/A',
-        isQRCode: obj?.isQRCode || 'N/A',
-        qrText: obj?.qrText || 'N/A',
         type: obj?.type || 'unknown',
         left: obj?.left,
-        top: obj?.top,
-        fill: obj?.fill || 'N/A',
-        fontFamily: obj?.fontFamily || 'N/A'
+        top: obj?.top
       })
     }
 
-    const handleObjectAdded = (e) => logObjectChanges('object:added', e.target)
-    const handleObjectModified = (e) => logObjectChanges('object:modified', e.target)
-    const handleObjectRemoved = (e) => logObjectChanges('object:removed', e.target)
+    const events = ['object:added', 'object:modified', 'object:removed']
+    const handlers = events.reduce((acc, event) => {
+      acc[event] = (e) => logObjectChanges(event, e.target)
+      return acc
+    }, {})
 
-    canvas.on('object:added', handleObjectAdded)
-    canvas.on('object:modified', handleObjectModified)
-    canvas.on('object:removed', handleObjectRemoved)
-
-    return () => {
-      canvas.off('object:added', handleObjectAdded)
-      canvas.off('object:modified', handleObjectModified)
-      canvas.off('object:removed', handleObjectRemoved)
-    }
+    events.forEach((event) => canvas.on(event, handlers[event]))
+    return () => events.forEach((event) => canvas.off(event, handlers[event]))
   }, [canvas])
 
   const { handleCanvasModification } = useCanvasGridSync(canvas)
-  const { saveCanvasState, loadCanvasState } = useCanvasSerialization(canvas, dispatchCanvasAction)
 
   // Valeurs et actions exposées par le contexte
   const value = {
@@ -98,8 +95,6 @@ const CanvasProvider = ({ children }) => {
     // Actions pour les objets
     onAddCircle,
     onAddRectangle,
-    saveCanvasState, // Expose les fonctions du hook
-    loadCanvasState,
     onAddText,
     onAddImage,
     onAddQrCode,
@@ -112,6 +107,7 @@ const CanvasProvider = ({ children }) => {
     // Dispatcher pour des actions personnalisées
     dispatchCanvasAction,
     handleCanvasModification,
+    updateObjectProperties,
     canvasState
   }
 
