@@ -2,15 +2,6 @@ import React, { useContext } from 'react'
 import Papa from 'papaparse' // Utilisation de PapaParse pour lire les CSV
 import { GridContext } from '../../context/GridContext'
 
-const parseCSVFile = (file, onSuccess, onError) => {
-  Papa.parse(file, {
-    header: true,
-    skipEmptyLines: true,
-    complete: onSuccess,
-    error: onError
-  })
-}
-
 const CSVImporter = () => {
   const { state, dispatch } = useContext(GridContext)
 
