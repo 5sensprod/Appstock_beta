@@ -1,24 +1,30 @@
-// ShapeMenu.jsx
 import React, { useState, useEffect, useRef } from 'react'
 import { faCircle, faSquare, faPalette } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../../ui/IconButton'
 import ColorPicker from '../texttool/ColorPicker'
 import { useShapeManager } from '../../../hooks/useShapeManager'
+import { useCanvas } from '../../../context/CanvasContext'
 
 export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
   const pickerRef = useRef(null)
   const { currentColor, handleColorChange } = useShapeManager()
+  const { canvas } = useCanvas()
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
         setIsColorPickerOpen(false)
+        setTimeout(() => {
+          handleColorChange(currentColor, true)
+          canvas?.fire('object:modified')
+          canvas?.renderAll()
+        }, 0)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [handleColorChange, currentColor, canvas])
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">

@@ -6,7 +6,7 @@ import { useCanvas } from '../../../context/CanvasContext'
 import { useQrCodeManager } from '../../../hooks/useQrCodeManager'
 
 export default function QrMenu({ onAddQrCode, onUpdateQrCode }) {
-  const { selectedColor, selectedObject } = useCanvas()
+  const { selectedColor, selectedObject, canvas } = useCanvas()
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
   const pickerRef = useRef(null)
 
@@ -39,12 +39,16 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode }) {
     const handleClickOutside = (event) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
         setIsColorPickerOpen(false)
+        setTimeout(() => {
+          handleColorChange(selectedObject?.fill || selectedColor, true)
+          canvas?.fire('object:modified')
+          canvas?.renderAll()
+        }, 0)
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [handleColorChange, selectedColor, canvas, selectedObject])
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">

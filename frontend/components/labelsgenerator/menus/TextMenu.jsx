@@ -4,6 +4,7 @@ import { faTextHeight, faPalette } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../../ui/IconButton'
 import ColorPicker from '../texttool/ColorPicker'
 import { useTextManager } from '../../../hooks/useTextManager'
+import { useCanvas } from '../../../context/CanvasContext'
 
 export default function TextMenu({ onAddText }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
@@ -11,15 +12,22 @@ export default function TextMenu({ onAddText }) {
   const { isTextSelected, currentColor, currentFont, handleColorChange, handleFontChange } =
     useTextManager()
 
+  const { canvas } = useCanvas()
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
         setIsColorPickerOpen(false)
+        setTimeout(() => {
+          handleColorChange(currentColor, true)
+          canvas?.fire('object:modified')
+          canvas?.renderAll()
+        }, 0)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [handleColorChange, currentColor, canvas])
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
