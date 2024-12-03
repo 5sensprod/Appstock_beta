@@ -1,4 +1,5 @@
-// utils/fabricUtils.js
+import QRCode from 'qrcode'
+import { rgbToHex, mmToPx } from './conversionUtils'
 
 import * as fabric from 'fabric'
 
@@ -123,4 +124,58 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
 
   canvas.renderAll()
   return canvas
+}
+
+export const generateQRCodeImage = async (text, color = '#000000', width = 50) => {
+  const validColor = rgbToHex(color)
+  return new Promise((resolve, reject) => {
+    QRCode.toDataURL(
+      text,
+      {
+        width,
+        margin: 2,
+        color: { dark: validColor, light: '#ffffff' }
+      },
+      (err, url) => {
+        if (err) reject(err)
+        else resolve(url)
+      }
+    )
+  })
+}
+
+export const createQRCodeFabricImage = async (text, options = {}) => {
+  const { color = '#000000', width = 50, height = 50 } = options
+  try {
+    const url = await generateQRCodeImage(text, color, width)
+    const img = new Image()
+    img.src = url
+    return new Promise((resolve, reject) => {
+      img.onload = () => {
+        const fabricImage = new fabric.Image(img, {
+          width,
+          height,
+          isQRCode: true,
+          qrText: text,
+          ...options
+        })
+
+        fabricImage.toObject = (function (toObject) {
+          return function () {
+            return Object.assign(toObject.call(this), {
+              isQRCode: true,
+              qrText: text,
+              src: url
+            })
+          }
+        })(fabricImage.toObject)
+
+        resolve(fabricImage)
+      }
+      img.onerror = reject
+    })
+  } catch (err) {
+    console.error('Error creating QR code fabric image:', err)
+    throw err
+  }
 }

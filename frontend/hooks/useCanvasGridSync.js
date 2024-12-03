@@ -1,8 +1,8 @@
 import { useEffect, useCallback, useContext, useRef } from 'react'
 import * as fabric from 'fabric'
-import QRCode from 'qrcode'
 import { GridContext } from '../context/GridContext'
 import _ from 'lodash'
+import { createQRCodeFabricImage, generateQRCodeImage } from '../utils/fabricUtils'
 
 const useCanvasGridSync = (canvas) => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
@@ -14,10 +14,10 @@ const useCanvasGridSync = (canvas) => {
   const createFabricObject = useCallback(async (obj) => {
     const { type, isQRCode = false, qrText = '', ...fabricOptions } = obj
 
-    // Gestion des QR codes existants ou nouveaux
+    // Gestion des QR codes
     if (isQRCode || obj.id?.startsWith('Gencode-')) {
-      // Réutilisation d'un QR code existant
       if (obj.src) {
+        // Réutiliser un QR code existant avec sa source
         return new Promise((resolve) => {
           const img = new Image()
           img.onload = () => {
@@ -30,7 +30,7 @@ const useCanvasGridSync = (canvas) => {
               src: obj.src
             })
 
-            // Extension de la sérialisation pour QR codes
+            // Ajout de propriétés supplémentaires pour la sérialisation
             fabricImage.toObject = (function (toObject) {
               return function () {
                 return Object.assign(toObject.call(this), {
@@ -46,57 +46,15 @@ const useCanvasGridSync = (canvas) => {
           img.onerror = () => resolve(null)
           img.src = obj.src
         })
+      } else {
+        // Générer un nouveau QR code
+        return createQRCodeFabricImage(qrText || obj.text, {
+          color: '#000000',
+          width: obj.width || 50,
+          height: obj.height || 50,
+          ...fabricOptions
+        })
       }
-
-      // Génération d'un nouveau QR code
-      return new Promise((resolve) => {
-        const textToEncode = obj.text || obj.qrText || qrText
-        if (!textToEncode) {
-          console.error('Texte manquant pour le QR Code')
-          return resolve(null)
-        }
-
-        QRCode.toDataURL(
-          textToEncode,
-          {
-            width: 50,
-            margin: 2,
-            color: { dark: '#000000', light: '#ffffff' }
-          },
-          (err, url) => {
-            if (err) {
-              console.error('QR Code error:', err)
-              return resolve(null)
-            }
-
-            const img = new Image()
-            img.onload = () => {
-              const fabricImage = new fabric.Image(img, {
-                ...fabricOptions,
-                width: 50,
-                height: 50,
-                isQRCode: true,
-                qrText: textToEncode,
-                src: url
-              })
-
-              fabricImage.toObject = (function (toObject) {
-                return function () {
-                  return Object.assign(toObject.call(this), {
-                    isQRCode: true,
-                    qrText: this.qrText,
-                    src: this._element?.src || this.src
-                  })
-                }
-              })(fabricImage.toObject)
-
-              resolve(fabricImage)
-            }
-            img.onerror = () => resolve(null)
-            img.src = url
-          }
-        )
-      })
     }
 
     // Gestion des images standard
@@ -116,7 +74,7 @@ const useCanvasGridSync = (canvas) => {
       })
     }
 
-    // Autres types d'objets
+    // Gestion des autres types d'objets Fabric
     switch (type) {
       case 'i-text':
       case 'text':
@@ -165,20 +123,6 @@ const useCanvasGridSync = (canvas) => {
     ignoreNextUpdateRef.current = false
   }, [canvas, selectedCellId, cellContents, createFabricObject])
 
-  // Nouvelle fonction pour générer le QR code et retourner son URL
-  const generateQRCodeURL = async (text) => {
-    try {
-      return await QRCode.toDataURL(text, {
-        width: 50,
-        margin: 2,
-        color: { dark: '#000000', light: '#ffffff' }
-      })
-    } catch (error) {
-      console.error('Erreur génération QR code:', error)
-      return null
-    }
-  }
-
   // Effet pour initialiser les QR codes avec leurs URLs
   useEffect(() => {
     const initializeQRCodes = async () => {
@@ -196,21 +140,25 @@ const useCanvasGridSync = (canvas) => {
 
             // Générer l'URL du QR code si elle n'existe pas
             if (!obj.src) {
-              const url = await generateQRCodeURL(obj.text || obj.qrText)
-              if (url) {
-                return {
-                  ...obj,
-                  type: 'image',
-                  src: url,
-                  isQRCode: true,
-                  qrText: obj.text || obj.qrText,
-                  width: obj.width || 50,
-                  height: obj.height || 50,
-                  left: obj.left || 0,
-                  top: obj.top || 0,
-                  scaleX: obj.scaleX || 1,
-                  scaleY: obj.scaleY || 1
+              try {
+                const url = await generateQRCodeImage(obj.text || obj.qrText, '#000000', 50)
+                if (url) {
+                  return {
+                    ...obj,
+                    type: 'image',
+                    src: url,
+                    isQRCode: true,
+                    qrText: obj.text || obj.qrText,
+                    width: obj.width || 50,
+                    height: obj.height || 50,
+                    left: obj.left || 0,
+                    top: obj.top || 0,
+                    scaleX: obj.scaleX || 1,
+                    scaleY: obj.scaleY || 1
+                  }
                 }
+              } catch (error) {
+                console.error('Erreur lors de la génération de l’URL QR Code :', error)
               }
             }
             return obj
@@ -255,7 +203,10 @@ const useCanvasGridSync = (canvas) => {
             height: obj.height || 50,
             isQRCode: true,
             qrText: obj.qrText,
-            id: obj.id.startsWith('Gencode-') ? obj.id : `Gencode-${Date.now()}`
+            id:
+              typeof obj.id === 'string' && obj.id.startsWith('Gencode-')
+                ? obj.id
+                : `Gencode-${Date.now()}`
           }
         }
 
