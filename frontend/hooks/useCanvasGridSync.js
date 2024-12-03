@@ -123,7 +123,7 @@ const useCanvasGridSync = (canvas) => {
     ignoreNextUpdateRef.current = false
   }, [canvas, selectedCellId, cellContents, createFabricObject])
 
-  // Effet pour initialiser les QR codes avec leurs URLs V1
+  // Effet pour initialiser les QR codes avec leurs URLs
   useEffect(() => {
     const initializeQRCodes = async () => {
       if (!cellContents) return
@@ -177,12 +177,12 @@ const useCanvasGridSync = (canvas) => {
     initializeQRCodes()
   }, [cellContents])
 
-  const handleCanvasModification = useCallback(async () => {
+  const handleCanvasModification = useCallback(() => {
     if (!canvas || !selectedCellId || isLoadingRef.current || ignoreNextUpdateRef.current) return
 
     const objects = canvas.getObjects()
-    const updatedObjects = await Promise.all(
-      objects.map(async (obj) => {
+    const updatedObjects = objects
+      .map((obj) => {
         const baseProperties = {
           id: obj.id || Date.now().toString(),
           left: obj.left || 0,
@@ -193,31 +193,20 @@ const useCanvasGridSync = (canvas) => {
           scaleY: obj.scaleY || 1
         }
 
+        // Préservation du format image pour les QR codes
         if (obj.isQRCode) {
-          // Régénérer le QR code avec la nouvelle couleur, si nécessaire
-          const qrText = obj.qrText
-          const color = obj.fill || '#000000'
-
-          try {
-            const newQRCodeSrc = await generateQRCodeImage(qrText, color, obj.width || 50)
-            return {
-              ...baseProperties,
-              type: 'image',
-              src: newQRCodeSrc,
-              width: obj.width || 50,
-              height: obj.height || 50,
-              isQRCode: true,
-              qrText
-            }
-          } catch (error) {
-            console.error('Erreur lors de la régénération du QR code :', error)
-            return {
-              ...baseProperties,
-              type: 'image',
-              src: obj.src, // Utiliser l'ancien QR code en cas d'erreur
-              isQRCode: true,
-              qrText
-            }
+          return {
+            ...baseProperties,
+            type: 'image',
+            src: obj._element?.src || obj.src,
+            width: obj.width || 50,
+            height: obj.height || 50,
+            isQRCode: true,
+            qrText: obj.qrText,
+            id:
+              typeof obj.id === 'string' && obj.id.startsWith('Gencode-')
+                ? obj.id
+                : `Gencode-${Date.now()}`
           }
         }
 
@@ -267,7 +256,7 @@ const useCanvasGridSync = (canvas) => {
             return null
         }
       })
-    )
+      .filter(Boolean)
 
     if (_.isEqual(lastContentRef.current, updatedObjects)) return
     lastContentRef.current = updatedObjects
@@ -282,13 +271,13 @@ const useCanvasGridSync = (canvas) => {
     if (linkedGroup && linkedGroup.length > 1) {
       const layout = updatedObjects.reduce((acc, item) => {
         acc[item.id] = {
-          left: item.left, // Position
-          top: item.top, // Position
-          angle: item.angle, // Angle
-          scaleX: item.scaleX, // Échelle horizontale
-          scaleY: item.scaleY, // Échelle verticale
-          fill: item.fill, // Couleur
-          ...(item.isQRCode && { src: item.src, qrText: item.qrText }) // QR code spécifique
+          left: item.left,
+          top: item.top,
+          fill: item.fill,
+          scaleX: item.scaleX,
+          scaleY: item.scaleY,
+          fontFamily: item.fontFamily,
+          angle: item.angle || 0
         }
         return acc
       }, {})
