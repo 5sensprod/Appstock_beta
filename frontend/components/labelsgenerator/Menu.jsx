@@ -14,6 +14,7 @@ import TextMenu from './menus/TextMenu'
 import ImageMenu from './menus/ImageMenu'
 import QrMenu from './menus/QrMenu'
 import ImportMenu from './menus/ImportMenu'
+import CSVImporter from './CSVImporter'
 import { useCanvas } from '../../context/CanvasContext'
 
 const Menu = () => {
@@ -180,7 +181,7 @@ const Menu = () => {
         />
         {activeMenu === 'import' && (
           <div className="absolute left-full top-0 ml-2" style={{ width: `${importMenuWidth}px` }}>
-            <ImportMenu />
+            <CSVImporter />
           </div>
         )}
       </div>

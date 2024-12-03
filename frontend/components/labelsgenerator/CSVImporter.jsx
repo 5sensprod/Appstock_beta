@@ -20,12 +20,12 @@ const CSVImporter = () => {
   }
 
   return (
-    <div className="rounded bg-white p-4 shadow">
+    <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
       <input
         type="file"
         accept=".csv"
         onChange={handleFileUpload}
-        className="w-full file:mr-4 file:rounded file:border file:px-4 file:py-2"
+        className="w-64 rounded border p-2"
       />
     </div>
   )

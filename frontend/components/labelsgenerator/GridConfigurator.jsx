@@ -112,7 +112,6 @@ const GridConfigurator = () => {
           />
         ))}
       </form>
-      <CSVImporter />
     </div>
   )
 }
