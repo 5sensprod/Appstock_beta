@@ -313,6 +313,28 @@ const useCanvasGridSync = (canvas) => {
       })
     )
 
+    // Vérifiez si un nouvel objet a été ajouté
+    const newObjects = updatedObjects.filter(
+      (obj) => !lastContentRef.current?.some((o) => o.id === obj.id)
+    )
+
+    if (newObjects.length > 0) {
+      const linkedGroup = findLinkedGroup(selectedCellId)
+      if (linkedGroup && linkedGroup.length > 1) {
+        linkedGroup.forEach((cellId) => {
+          if (cellId === selectedCellId) return // Ne pas réajouter à la cellule courante
+          const currentContent = cellContents[cellId] || []
+          dispatch({
+            type: 'UPDATE_CELL_CONTENT',
+            payload: {
+              id: cellId,
+              content: [...currentContent, ...newObjects]
+            }
+          })
+        })
+      }
+    }
+
     if (_.isEqual(lastContentRef.current, updatedObjects)) return
     lastContentRef.current = updatedObjects
 
@@ -346,7 +368,7 @@ const useCanvasGridSync = (canvas) => {
         payload: { sourceId: selectedCellId, layout, linkedGroup }
       })
     }
-  }, [canvas, selectedCellId, dispatch, findLinkedGroup])
+  }, [canvas, selectedCellId, cellContents, dispatch, findLinkedGroup])
 
   useEffect(() => {
     if (!canvas) return

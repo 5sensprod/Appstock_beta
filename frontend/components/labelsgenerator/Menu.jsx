@@ -23,8 +23,8 @@ const Menu = () => {
   // Largeurs fixes pour chaque sous-menu
   const shapeMenuWidth = 135
   const textMenuWidth = 250
-  const imageMenuWidth = 300
-  const qrMenuWidth = 300
+  const imageMenuWidth = 305
+  const qrMenuWidth = 320
   const importMenuWidth = 300
 
   const {
