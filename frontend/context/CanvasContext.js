@@ -76,6 +76,27 @@ const CanvasProvider = ({ children }) => {
     return () => events.forEach((event) => canvas.off(event, handlers[event]))
   }, [canvas])
 
+  useEffect(() => {
+    if (!canvas) return
+
+    const handleObjectRemoved = (e) => {
+      const obj = e.target
+      if (obj?.id) {
+        // Dispatch pour supprimer l'objet dans toutes les cellules
+        dispatchCanvasAction({
+          type: 'DELETE_CLEARED_OBJECT',
+          payload: { id: obj.id }
+        })
+      }
+    }
+
+    canvas.on('object:removed', handleObjectRemoved)
+
+    return () => {
+      canvas.off('object:removed', handleObjectRemoved)
+    }
+  }, [canvas, dispatchCanvasAction])
+
   const { handleCanvasModification } = useCanvasGridSync(canvas)
 
   // Valeurs et actions exposées par le contexte

@@ -222,6 +222,8 @@ const useCanvasGridSync = (canvas) => {
     if (!canvas || !selectedCellId || isLoadingRef.current || ignoreNextUpdateRef.current) return
 
     const objects = canvas.getObjects()
+
+    // Créer une version sérialisée des objets actuels sur le canevas
     const updatedObjects = await Promise.all(
       objects.map(async (obj) => {
         const baseProperties = {
@@ -313,38 +315,57 @@ const useCanvasGridSync = (canvas) => {
       })
     )
 
-    // Vérifiez si un nouvel objet a été ajouté
+    // Détecter les objets ajoutés
     const newObjects = updatedObjects.filter(
-      (obj) => !lastContentRef.current?.some((o) => o.id === obj.id)
+      (obj) => !lastContentRef.current?.some((prevObj) => prevObj.id === obj.id)
     )
 
-    if (newObjects.length > 0) {
-      const linkedGroup = findLinkedGroup(selectedCellId)
-      if (linkedGroup && linkedGroup.length > 1) {
-        linkedGroup.forEach((cellId) => {
-          if (cellId === selectedCellId) return // Ne pas réajouter à la cellule courante
-          const currentContent = cellContents[cellId] || []
-          dispatch({
-            type: 'UPDATE_CELL_CONTENT',
-            payload: {
-              id: cellId,
-              content: [...currentContent, ...newObjects]
-            }
-          })
-        })
-      }
-    }
+    // Détecter les objets supprimés
+    const removedObjects = lastContentRef.current
+      ? lastContentRef.current.filter(
+          (prevObj) => !updatedObjects.some((obj) => obj.id === prevObj.id)
+        )
+      : []
 
-    if (_.isEqual(lastContentRef.current, updatedObjects)) return
+    // Mettre à jour la référence du dernier contenu
     lastContentRef.current = updatedObjects
 
+    const linkedGroup = findLinkedGroup(selectedCellId)
+    if (linkedGroup && linkedGroup.length > 1) {
+      linkedGroup.forEach((cellId) => {
+        if (cellId === selectedCellId) return
+
+        const currentContent = cellContents[cellId] || []
+
+        // Supprimer les objets manquants
+        let synchronizedContent = currentContent.filter(
+          (obj) => !removedObjects.some((removedObj) => removedObj.id === obj.id)
+        )
+
+        // Ajouter les nouveaux objets
+        newObjects.forEach((newObj) => {
+          if (!synchronizedContent.some((obj) => obj.id === newObj.id)) {
+            synchronizedContent.push(newObj)
+          }
+        })
+
+        // Comparer et mettre à jour uniquement si le contenu a changé
+        if (!_.isEqual(currentContent, synchronizedContent)) {
+          dispatch({
+            type: 'UPDATE_CELL_CONTENT',
+            payload: { id: cellId, content: synchronizedContent }
+          })
+        }
+      })
+    }
+
+    // Toujours mettre à jour la cellule courante
     dispatch({
       type: 'UPDATE_CELL_CONTENT',
       payload: { id: selectedCellId, content: updatedObjects }
     })
 
-    // Synchronisation des groupes liés
-    const linkedGroup = findLinkedGroup(selectedCellId)
+    // Synchronisation des groupes liés (ajouts et mises à jour de disposition)
     if (linkedGroup && linkedGroup.length > 1) {
       const layout = updatedObjects.reduce((acc, item) => {
         acc[item.id] = {

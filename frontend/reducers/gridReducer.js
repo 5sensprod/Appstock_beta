@@ -156,6 +156,23 @@ export function gridReducer(state, action) {
 
       return { ...state, cellContents: updatedCellContents }
     }
+    case 'DELETE_CLEARED_OBJECT': {
+      const { id } = action.payload
+
+      // Supprime l'objet de toutes les cellules
+      const updatedCellContents = Object.entries(state.cellContents).reduce(
+        (acc, [cellId, contents]) => {
+          acc[cellId] = contents.filter((obj) => obj.id !== id)
+          return acc
+        },
+        {}
+      )
+
+      return {
+        ...state,
+        cellContents: updatedCellContents
+      }
+    }
 
     case 'LINK_CELLS': {
       const { source, destination } = action.payload
