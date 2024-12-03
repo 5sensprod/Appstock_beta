@@ -279,7 +279,9 @@ const useCanvasGridSync = (canvas) => {
               type: 'i-text',
               text: obj.text || '',
               fontSize: obj.fontSize,
-              fontFamily: obj.fontFamily
+              fontFamily: obj.fontFamily,
+              fontStyle: obj.fontStyle || 'normal',
+              fontWeight: obj.fontWeight || 'normal'
             }
           case 'textbox':
             return {
@@ -288,6 +290,8 @@ const useCanvasGridSync = (canvas) => {
               text: obj.text || '',
               fontSize: obj.fontSize,
               fontFamily: obj.fontFamily,
+              fontStyle: obj.fontStyle || 'normal',
+              fontWeight: obj.fontWeight || 'normal',
               width: obj.width
             }
           case 'rect':
@@ -324,10 +328,14 @@ const useCanvasGridSync = (canvas) => {
         acc[item.id] = {
           left: item.left,
           top: item.top,
-          angle: item.angle,
+          fill: item.fill,
           scaleX: item.scaleX,
           scaleY: item.scaleY,
-          fill: item.fill,
+          angle: item.angle || 0,
+          fontFamily: item.fontFamily || 'Arial',
+          fontSize: item.fontSize || 16,
+          fontStyle: item.fontStyle || 'normal',
+          fontWeight: item.fontWeight || 'normal',
           ...(item.isQRCode && { src: item.src, qrText: item.qrText })
         }
         return acc
