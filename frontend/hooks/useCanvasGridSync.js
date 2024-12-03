@@ -194,7 +194,6 @@ const useCanvasGridSync = (canvas) => {
         }
 
         if (obj.isQRCode) {
-          // Régénérer le QR code avec la nouvelle couleur, si nécessaire
           const qrText = obj.qrText
           const color = obj.fill || '#000000'
 
@@ -282,13 +281,13 @@ const useCanvasGridSync = (canvas) => {
     if (linkedGroup && linkedGroup.length > 1) {
       const layout = updatedObjects.reduce((acc, item) => {
         acc[item.id] = {
-          left: item.left, // Position
-          top: item.top, // Position
-          angle: item.angle, // Angle
-          scaleX: item.scaleX, // Échelle horizontale
-          scaleY: item.scaleY, // Échelle verticale
-          fill: item.fill, // Couleur
-          ...(item.isQRCode && { src: item.src, qrText: item.qrText }) // QR code spécifique
+          left: item.left,
+          top: item.top,
+          angle: item.angle,
+          scaleX: item.scaleX,
+          scaleY: item.scaleY,
+          fill: item.fill,
+          ...(item.isQRCode && { src: item.src, qrText: item.qrText })
         }
         return acc
       }, {})

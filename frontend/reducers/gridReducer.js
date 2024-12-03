@@ -111,13 +111,13 @@ export function gridReducer(state, action) {
     case 'IMPORT_CSV': {
       return withUndoRedo(state, importCsvData(state, action.payload))
     }
-    //1
     case 'SYNC_CELL_LAYOUT': {
       const { sourceId, layout } = action.payload
       const linkedGroup = state.linkedGroups.find((group) => group.includes(sourceId))
       if (!linkedGroup) return state
 
       const updatedCellContents = { ...state.cellContents }
+
       linkedGroup.forEach((cellId) => {
         if (updatedCellContents[cellId]) {
           updatedCellContents[cellId] = updatedCellContents[cellId].map((item) => {
@@ -125,8 +125,8 @@ export function gridReducer(state, action) {
             if (!layoutItem) return item
 
             if (item.id.startsWith('Gencode-')) {
-              // Pour les QR codes, on ne synchronise que certaines propriétés
-              return {
+              // Gestion spécifique des QR codes
+              const newItem = {
                 ...item,
                 left: layoutItem.left,
                 top: layoutItem.top,
@@ -134,8 +134,15 @@ export function gridReducer(state, action) {
                 scaleX: layoutItem.scaleX,
                 scaleY: layoutItem.scaleY,
                 fill: layoutItem.fill
-                // On ne copie PAS src ni qrText pour préserver les valeurs uniques
               }
+
+              // Préserver qrText et src pour les QR codes liés via CSV
+              if (item.linkedByCsv) {
+                newItem.qrText = item.qrText
+                newItem.src = item.src
+              }
+
+              return newItem
             }
 
             // Pour les autres éléments, synchronisation normale
