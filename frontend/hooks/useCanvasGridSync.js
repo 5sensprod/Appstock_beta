@@ -122,6 +122,47 @@ const useCanvasGridSync = (canvas) => {
     isLoadingRef.current = false
     ignoreNextUpdateRef.current = false
   }, [canvas, selectedCellId, cellContents, createFabricObject])
+  useEffect(() => {
+    const synchronizeQRCodes = async () => {
+      if (!selectedCellId || !cellContents[selectedCellId]) return
+
+      const linkedGroup = findLinkedGroup(selectedCellId)
+      if (!linkedGroup || linkedGroup.length <= 1) return
+
+      const currentObjects = cellContents[selectedCellId]
+      for (const cellId of linkedGroup) {
+        if (cellId === selectedCellId) continue
+
+        const cellContent = cellContents[cellId]
+        const updatedContent = await Promise.all(
+          cellContent.map(async (obj) => {
+            if (obj.isQRCode) {
+              try {
+                const newSrc = await generateQRCodeImage(
+                  obj.qrText,
+                  obj.fill || '#000000',
+                  obj.width || 50
+                )
+                return { ...obj, src: newSrc }
+              } catch (err) {
+                console.error('Erreur lors de la régénération des QR codes liés :', err)
+              }
+            }
+            return obj
+          })
+        )
+
+        if (!_.isEqual(cellContent, updatedContent)) {
+          dispatch({
+            type: 'UPDATE_CELL_CONTENT',
+            payload: { id: cellId, content: updatedContent }
+          })
+        }
+      }
+    }
+
+    synchronizeQRCodes()
+  }, [selectedCellId, cellContents, dispatch, findLinkedGroup])
 
   // Effet pour initialiser les QR codes avec leurs URLs V1
   useEffect(() => {
