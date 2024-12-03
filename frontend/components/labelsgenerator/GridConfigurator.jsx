@@ -89,7 +89,6 @@ const GridConfigurator = () => {
 
   return (
     <div className="rounded bg-white p-4 shadow dark:bg-gray-800">
-      <h4 className="mb-4 text-lg font-semibold text-gray-800 dark:text-gray-100">Configuration</h4>
       {Object.keys(errors).length > 0 && (
         <p className="mb-4 font-medium text-red-500">Veuillez corriger les erreurs.</p>
       )}

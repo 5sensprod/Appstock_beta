@@ -1,14 +1,13 @@
 import React, { useState } from 'react'
 import { CanvasProvider } from '../context/CanvasContext'
-// import ConfigForm from '../components/labels/ConfigForm'
 import GridConfigurator from '../components/labelsgenerator/GridConfigurator'
 import FabricDesigner from '../components/labelsgenerator/FabricDesigner'
 import GridManager from '../components/labelsgenerator/GridManager'
 import { GridProvider } from '../context/GridContext'
-// import Grid from '../components/labels/Grid'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
-// import CSVImporter from '../components/labelsgenerator/CSVImporter'
+import MenuCell from '../components/labelsgenerator/MenuCell'
+
 const LabelsPage = () => {
   const [isRightPanelVisible, setIsRightPanelVisible] = useState(true)
 
@@ -25,7 +24,7 @@ const LabelsPage = () => {
               isRightPanelVisible ? 'lg:w-3/5' : 'lg:w-full'
             }`}
           >
-            <h2 className="mb-4 text-xl font-semibold">Aperçu de l'Étiquette</h2>
+            <h2 className="mb-2 text-2xl font-semibold">Aperçu de l'Étiquette</h2>
             <FabricDesigner />
           </div>
 
@@ -50,19 +49,19 @@ const LabelsPage = () => {
             {isRightPanelVisible && (
               <>
                 <div className="rounded-lg border border-gray-300 bg-light-background p-4 dark:bg-dark-background">
-                  <h2 className="mb-4 text-xl font-semibold">Configuration</h2>
-                  {/* <ConfigForm /> */}
+                  <h2 className="text-2xl font-semibold">Configuration</h2>
                   <GridConfigurator />
                 </div>
 
                 {/* Section Disposition sur A4 */}
                 <div className="mt-6 rounded-lg border border-gray-300 bg-light-background p-4 dark:bg-dark-background">
                   <div className="flex items-center justify-between">
-                    <h2 className="mb-4 text-xl font-semibold">Disposition sur A4</h2>
+                    <h2 className="mb-6 text-2xl font-semibold">Disposition sur A4</h2>
                   </div>
-                  {/* <CSVImporter /> */}
+                  <div className="mb-4">
+                    <MenuCell />
+                  </div>
                   <GridManager />
-                  {/* <Grid /> */}
                 </div>
               </>
             )}
