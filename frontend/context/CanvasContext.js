@@ -8,6 +8,7 @@ import { syncGridConfigToLabelConfig } from '../utils/configSync'
 import { GridContext } from './GridContext'
 import useCanvasGridSync from '../hooks/useCanvasGridSync'
 import useCanvasObjectUpdater from '../hooks/useCanvasObjectUpdater'
+import useCanvasContextMenu from '../hooks/useCanvasContextMenu'
 
 const CanvasContext = createContext()
 
@@ -38,6 +39,8 @@ const CanvasProvider = ({ children }) => {
     canvasState,
     dispatchCanvasAction
   )
+
+  useCanvasContextMenu(canvas)
 
   // Gestion des objets sur le canevas
   const { isShapeSelected, isTextSelected, isImageSelected, isQRCodeSelected } =

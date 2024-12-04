@@ -9,3 +9,17 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
+
+.fabric-context-menu {
+  min-width: 150px;
+  background: white;
+  border-radius: 4px;
+}
+
+.fabric-context-menu div {
+  transition: background-color 0.2s ease;
+}
+
+.fabric-context-menu div:hover {
+  background-color: #f0f0f0;
+}
