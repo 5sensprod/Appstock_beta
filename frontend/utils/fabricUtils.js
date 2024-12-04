@@ -1,5 +1,5 @@
 import QRCode from 'qrcode'
-import { rgbToHex, mmToPx } from './conversionUtils'
+import { rgbToHex } from './conversionUtils'
 
 import * as fabric from 'fabric'
 
@@ -141,22 +141,33 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
   return canvas
 }
 
+export const QRCodeCache = new Map()
 export const generateQRCodeImage = async (text, color = '#000000', width = 50) => {
-  const validColor = rgbToHex(color)
-  return new Promise((resolve, reject) => {
-    QRCode.toDataURL(
-      text,
-      {
-        width,
-        margin: 2,
-        color: { dark: validColor, light: '#ffffff' }
-      },
-      (err, url) => {
-        if (err) reject(err)
-        else resolve(url)
-      }
-    )
-  })
+  const cacheKey = `${text}-${color}-${width}`
+
+  if (QRCodeCache.has(cacheKey)) {
+    return QRCodeCache.get(cacheKey)
+  }
+
+  try {
+    const url = await new Promise((resolve, reject) => {
+      QRCode.toDataURL(
+        text,
+        {
+          width,
+          margin: 2,
+          color: { dark: rgbToHex(color), light: '#ffffff' }
+        },
+        (err, url) => (err ? reject(err) : resolve(url))
+      )
+    })
+
+    QRCodeCache.set(cacheKey, url)
+    return url
+  } catch (err) {
+    console.error('QR Code generation failed:', err)
+    throw err
+  }
 }
 
 export const createQRCodeFabricImage = async (text, options = {}) => {
