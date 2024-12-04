@@ -95,16 +95,26 @@ export function gridReducer(state, action) {
     case 'UPDATE_CELL_CONTENT': {
       const { id, content } = action.payload
       const existingContent = state.cellContents[id] || []
-      const updatedContent = content.map((item) => ({
-        ...item,
-        linkedByCsv: existingContent.find((old) => old.id === item.id)?.linkedByCsv || false
-      }))
+
+      // Mettez à jour le contenu avec les drapeaux existants
+      const updatedContent = content.map((item) => {
+        const existingItem = existingContent.find((old) => old.id === item.id)
+
+        return {
+          ...item,
+          linkedByCsv: existingItem?.linkedByCsv || false,
+          linkedGroup: existingItem?.linkedGroup || false // Conserver le drapeau linkedGroup si nécessaire
+        }
+      })
+
+      // Supprimez les doublons tout en conservant les propriétés fusionnées
+      const deduplicatedContent = _.uniqBy(updatedContent, 'id')
 
       return withUndoRedo(state, {
         ...state,
         cellContents: {
           ...state.cellContents,
-          [id]: updatedContent
+          [id]: deduplicatedContent
         }
       })
     }
