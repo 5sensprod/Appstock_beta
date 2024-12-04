@@ -1,8 +1,8 @@
 /* frontend/components/labels/FabricDesigner.module.css */
 
-.app {
+/* .app {
   text-align: center;
-}
+} */
 
 .button {
   margin-right: 10px;
@@ -26,7 +26,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  /* width: 500px; */
   height: 500px;
   background-color: #e0e0e0;
   border-radius: 5px;
@@ -35,6 +34,17 @@
   overflow: hidden;
   padding-top: 10px;
   padding-bottom: 10px;
+  border: 2px solid #dadada;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Ajout d'un style spécifique pour le curseur */
+.canvasContainer:hover {
+  cursor: grab;
+}
+
+.canvasContainer:active {
+  cursor: grabbing;
 }
 
 .sampleCanvas {
