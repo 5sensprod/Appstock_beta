@@ -11,22 +11,65 @@ export const loadCanvasDesign = async (
   cellHeight,
   scaleFactor = 4
 ) => {
+  // Créer un canvas natif au lieu d'un canvas Fabric.js
   const canvasElement = document.createElement('canvas')
-  const tempCanvas = new fabric.Canvas(canvasElement, {
-    width: mmToPx(cellWidth) * scaleFactor,
-    height: mmToPx(cellHeight) * scaleFactor
+  const ctx = canvasElement.getContext('2d')
+
+  // Définir les dimensions
+  const width = mmToPx(cellWidth) * scaleFactor
+  const height = mmToPx(cellHeight) * scaleFactor
+  canvasElement.width = width
+  canvasElement.height = height
+
+  // Créer un canvas Fabric.js temporaire pour le rendu initial
+  const tempFabricCanvas = new fabric.Canvas(document.createElement('canvas'), {
+    width: width,
+    height: height,
+    backgroundColor: 'white'
   })
 
   try {
-    await loadCanvasObjects(tempCanvas, cellContent, scaleFactor)
+    // Charger les objets sur le canvas Fabric
+    await loadCanvasObjects(tempFabricCanvas, cellContent, scaleFactor)
 
+    // Désactiver la sélection et les bordures
+    tempFabricCanvas.discardActiveObject()
+    tempFabricCanvas.getObjects().forEach((obj) => {
+      obj.set({
+        selectable: false,
+        hasControls: false,
+        hasBorders: false,
+        active: false
+      })
+    })
+
+    tempFabricCanvas.renderAll()
+
+    // Convertir le canvas Fabric en image
     return new Promise((resolve) => {
       setTimeout(() => {
-        const imgData = tempCanvas.toDataURL('image/png')
-        resolve(imgData)
-      }, 300)
+        // Dessiner sur le canvas natif
+        ctx.fillStyle = 'white'
+        ctx.fillRect(0, 0, width, height)
+
+        // Convertir le canvas Fabric en image et la dessiner sur le canvas natif
+        const fabricDataUrl = tempFabricCanvas.toDataURL({
+          format: 'png',
+          quality: 1
+        })
+
+        const img = new Image()
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0)
+          const finalDataUrl = canvasElement.toDataURL('image/png', 1.0)
+          tempFabricCanvas.dispose()
+          resolve(finalDataUrl)
+        }
+        img.src = fabricDataUrl
+      }, 100)
     })
   } catch (error) {
+    tempFabricCanvas.dispose()
     throw new Error(
       `Erreur lors du chargement du contenu de la cellule ${cellIndex}: ${error.message}`
     )

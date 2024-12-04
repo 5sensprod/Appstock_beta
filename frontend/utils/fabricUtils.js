@@ -83,31 +83,44 @@ export const createFabricObject = (obj, scaleFactor = 1) => {
 // Fonction pour charger des objets sur un canvas
 export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
   if (!canvas) throw new Error('Canvas non disponible')
-
   canvas.clear()
 
+  const baseObjectProps = {
+    strokeWidth: 0,
+    stroke: null,
+    borderColor: 'transparent',
+    cornerColor: 'transparent',
+    cornerSize: 0,
+    padding: 0,
+    transparentCorners: true,
+    hasBorders: false
+  }
+
   const validatedObjects = objects.map((obj) => {
+    let validatedObj = {
+      ...obj,
+      ...baseObjectProps
+    }
+
     // Appliquer des valeurs par défaut pour les formes
     if (obj.type === 'rect' || obj.type === 'triangle') {
       return {
-        ...obj,
+        ...validatedObj,
         width: obj.width || 50,
         height: obj.height || 50
       }
     }
-
     if (obj.type === 'circle') {
       return {
-        ...obj,
-        radius: obj.radius || 25, // Ajouter un rayon par défaut
+        ...validatedObj,
+        radius: obj.radius || 25,
         left: obj.left || 0,
         top: obj.top || 0
       }
     }
-
     // S'assurer que `isQRCode` est présent dans tous les objets
     return {
-      ...obj,
+      ...validatedObj,
       isQRCode: obj.isQRCode || false
     }
   })
@@ -118,6 +131,8 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
 
   fabricObjects.forEach((fabricObject) => {
     if (fabricObject) {
+      // Appliquer les propriétés une fois de plus après la création
+      fabricObject.set(baseObjectProps)
       canvas.add(fabricObject)
     }
   })
