@@ -176,6 +176,7 @@ const useCanvasGridSync = (canvas) => {
 
     initializeQRCodes()
   }, [cellContents])
+
   const handleCanvasModification = useCallback(async () => {
     if (!canvas || !selectedCellId || isLoadingRef.current || ignoreNextUpdateRef.current) return
 
@@ -207,8 +208,7 @@ const useCanvasGridSync = (canvas) => {
               width: obj.width || 50,
               height: obj.height || 50,
               isQRCode: true,
-              qrText,
-              linkedByCsv: obj.linkedByCsv || false
+              qrText
             }
           } catch (error) {
             console.error('Erreur lors de la régénération du QR code :', error)
@@ -217,8 +217,7 @@ const useCanvasGridSync = (canvas) => {
               type: 'image',
               src: obj.src,
               isQRCode: true,
-              qrText,
-              linkedByCsv: obj.linkedByCsv || false
+              qrText
             }
           }
         }
@@ -232,8 +231,7 @@ const useCanvasGridSync = (canvas) => {
               width: obj.width || 0,
               height: obj.height || 0,
               isQRCode: obj.isQRCode || false,
-              qrText: obj.qrText || '',
-              linkedByCsv: obj.linkedByCsv || false
+              qrText: obj.qrText || ''
             }
           case 'i-text':
           case 'text':
@@ -244,8 +242,7 @@ const useCanvasGridSync = (canvas) => {
               fontSize: obj.fontSize,
               fontFamily: obj.fontFamily,
               fontStyle: obj.fontStyle || 'normal',
-              fontWeight: obj.fontWeight || 'normal',
-              linkedByCsv: obj.linkedByCsv || false
+              fontWeight: obj.fontWeight || 'normal'
             }
           case 'textbox':
             return {
@@ -256,23 +253,20 @@ const useCanvasGridSync = (canvas) => {
               fontFamily: obj.fontFamily,
               fontStyle: obj.fontStyle || 'normal',
               fontWeight: obj.fontWeight || 'normal',
-              width: obj.width,
-              linkedByCsv: obj.linkedByCsv || false
+              width: obj.width
             }
           case 'rect':
             return {
               ...baseProperties,
               type: 'rect',
               width: obj.width || 0,
-              height: obj.height || 0,
-              linkedByCsv: obj.linkedByCsv || false
+              height: obj.height || 0
             }
           case 'circle':
             return {
               ...baseProperties,
               type: 'circle',
-              radius: obj.radius || 0,
-              linkedByCsv: obj.linkedByCsv || false
+              radius: obj.radius || 0
             }
           default:
             return null
@@ -280,92 +274,14 @@ const useCanvasGridSync = (canvas) => {
       })
     )
 
-    // Détecter les objets ajoutés
-    const newObjects = updatedObjects.filter(
-      (obj) => !lastContentRef.current?.some((prevObj) => prevObj.id === obj.id)
-    )
-
-    // Détecter les objets supprimés
-    const removedObjects = lastContentRef.current
-      ? lastContentRef.current.filter(
-          (prevObj) => !updatedObjects.some((obj) => obj.id === prevObj.id)
-        )
-      : []
-
-    // Mettre à jour la référence du dernier contenu
-    lastContentRef.current = updatedObjects
-
-    const linkedGroup = findLinkedGroup(selectedCellId)
-    if (linkedGroup && linkedGroup.length > 1) {
-      linkedGroup.forEach((cellId) => {
-        if (cellId === selectedCellId) return
-
-        const currentContent = cellContents[cellId] || []
-
-        // Créer une map des objets existants par ID
-        const existingObjectsMap = new Map(currentContent.map((obj) => [obj.id, obj]))
-
-        // Mettre à jour les objets existants
-        let synchronizedContent = currentContent.map((obj) => {
-          const updatedObj = updatedObjects.find((updated) => updated.id === obj.id)
-          if (!updatedObj) return obj
-
-          // Pour les QR codes liés par CSV
-          if (obj.isQRCode && obj.linkedByCsv) {
-            return {
-              ...obj,
-              fill: updatedObj.fill,
-              src: updatedObj.src
-            }
-          }
-
-          // Pour les autres objets, conserver les propriétés linkedByCsv
-          return {
-            ...updatedObj,
-            linkedByCsv: obj.linkedByCsv || false
-          }
-        })
-
-        // Supprimer les objets qui ont été retirés
-        synchronizedContent = synchronizedContent.filter(
-          (obj) => !removedObjects.some((removedObj) => removedObj.id === obj.id)
-        )
-
-        // Ajouter les nouveaux objets
-        newObjects.forEach((newObj) => {
-          if (!synchronizedContent.some((obj) => obj.id === newObj.id)) {
-            synchronizedContent.push({
-              ...newObj,
-              linkedByCsv: false
-            })
-          }
-        })
-
-        // Ne mettre à jour que si le contenu a réellement changé
-        if (!_.isEqual(currentContent, synchronizedContent)) {
-          dispatch({
-            type: 'UPDATE_CELL_CONTENT',
-            payload: { id: cellId, content: synchronizedContent }
-          })
-        }
-      })
-    }
-
     // Mettre à jour la cellule courante
     dispatch({
       type: 'UPDATE_CELL_CONTENT',
-      payload: {
-        id: selectedCellId,
-        content: updatedObjects.map((obj) => ({
-          ...obj,
-          linkedByCsv:
-            cellContents[selectedCellId]?.find((existing) => existing.id === obj.id)?.linkedByCsv ||
-            false
-        }))
-      }
+      payload: { id: selectedCellId, content: updatedObjects }
     })
 
-    // Synchroniser la disposition pour les groupes liés
+    // Pour les cellules liées, ne synchroniser QUE la disposition
+    const linkedGroup = findLinkedGroup(selectedCellId)
     if (linkedGroup && linkedGroup.length > 1) {
       const layout = updatedObjects.reduce((acc, item) => {
         acc[item.id] = {
@@ -378,18 +294,58 @@ const useCanvasGridSync = (canvas) => {
           fontFamily: item.fontFamily || 'Arial',
           fontSize: item.fontSize || 16,
           fontStyle: item.fontStyle || 'normal',
-          fontWeight: item.fontWeight || 'normal',
-          ...(item.isQRCode && { src: item.src, qrText: item.qrText })
+          fontWeight: item.fontWeight || 'normal'
         }
         return acc
       }, {})
 
       dispatch({
         type: 'SYNC_CELL_LAYOUT',
-        payload: { sourceId: selectedCellId, layout, linkedGroup }
+        payload: { sourceId: selectedCellId, layout }
       })
     }
+
+    lastContentRef.current = updatedObjects
   }, [canvas, selectedCellId, cellContents, dispatch, findLinkedGroup])
+
+  useEffect(() => {
+    const synchronizeQRCodes = async () => {
+      if (!selectedCellId || !cellContents[selectedCellId]) return
+
+      const linkedGroup = findLinkedGroup(selectedCellId)
+      if (!linkedGroup || linkedGroup.length <= 1) return
+
+      const uniqueCellIds = _.uniq(linkedGroup) // Éviter les duplications
+      for (const cellId of uniqueCellIds) {
+        if (cellId === selectedCellId) continue
+
+        const cellContent = cellContents[cellId]
+        const updatedContent = await Promise.all(
+          cellContent.map(async (obj) => {
+            if (obj.isQRCode) {
+              const newSrc = await generateQRCodeImage(
+                obj.qrText,
+                obj.fill || '#000000',
+                obj.width || 50
+              )
+              return { ...obj, src: newSrc }
+            }
+            return obj
+          })
+        )
+
+        // Comparer avant mise à jour
+        if (!_.isEqual(cellContent, updatedContent)) {
+          dispatch({
+            type: 'UPDATE_CELL_CONTENT',
+            payload: { id: cellId, content: updatedContent }
+          })
+        }
+      }
+    }
+
+    synchronizeQRCodes()
+  }, [selectedCellId, cellContents, dispatch, findLinkedGroup])
 
   useEffect(() => {
     if (!canvas) return
