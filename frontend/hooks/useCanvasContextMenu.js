@@ -2,7 +2,6 @@
 import { useCallback, useEffect } from 'react'
 
 const useCanvasContextMenu = (canvas) => {
-  // Fonction utilitaire pour créer un élément de menu
   const createMenuItem = (label, action, menu, removeMenu) => {
     const option = document.createElement('div')
     option.innerText = label
@@ -19,38 +18,42 @@ const useCanvasContextMenu = (canvas) => {
     menu.appendChild(option)
   }
 
-  // Fonctions de manipulation des objets
   const objectActions = (activeObject) => {
     const objects = canvas._objects
     const currentIndex = objects.indexOf(activeObject)
+
+    const updateAndNotify = () => {
+      canvas.requestRenderAll()
+      canvas.fire('object:modified', { target: activeObject })
+    }
 
     return {
       bringToFront: () => {
         if (currentIndex < objects.length - 1) {
           objects.splice(currentIndex, 1)
           objects.push(activeObject)
-          canvas.requestRenderAll()
+          updateAndNotify()
         }
       },
       sendToBack: () => {
         if (currentIndex > 0) {
           objects.splice(currentIndex, 1)
           objects.unshift(activeObject)
-          canvas.requestRenderAll()
+          updateAndNotify()
         }
       },
       bringForward: () => {
         if (currentIndex < objects.length - 1) {
           objects.splice(currentIndex, 1)
           objects.splice(currentIndex + 1, 0, activeObject)
-          canvas.requestRenderAll()
+          updateAndNotify()
         }
       },
       sendBackward: () => {
         if (currentIndex > 0) {
           objects.splice(currentIndex, 1)
           objects.splice(currentIndex - 1, 0, activeObject)
-          canvas.requestRenderAll()
+          updateAndNotify()
         }
       }
     }
@@ -61,15 +64,12 @@ const useCanvasContextMenu = (canvas) => {
       if (!canvas?.getObjects) return
       event.preventDefault()
 
-      // Nettoyer le menu existant
       const existingMenu = document.querySelector('.fabric-context-menu')
       existingMenu?.parentNode?.removeChild(existingMenu)
 
-      // Obtenir l'objet actif
       const activeObject = canvas.findTarget(event)
       if (!activeObject) return
 
-      // Créer le menu
       const contextMenu = document.createElement('div')
       contextMenu.className = 'fabric-context-menu'
       contextMenu.style.cssText = `
