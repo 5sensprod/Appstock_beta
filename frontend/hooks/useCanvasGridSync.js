@@ -122,6 +122,47 @@ const useCanvasGridSync = (canvas) => {
     isLoadingRef.current = false
     ignoreNextUpdateRef.current = false
   }, [canvas, selectedCellId, cellContents, createFabricObject])
+  useEffect(() => {
+    const synchronizeQRCodes = async () => {
+      if (!selectedCellId || !cellContents[selectedCellId]) return
+
+      const linkedGroup = findLinkedGroup(selectedCellId)
+      if (!linkedGroup || linkedGroup.length <= 1) return
+
+      const currentObjects = cellContents[selectedCellId]
+      for (const cellId of linkedGroup) {
+        if (cellId === selectedCellId) continue
+
+        const cellContent = cellContents[cellId]
+        const updatedContent = await Promise.all(
+          cellContent.map(async (obj) => {
+            if (obj.isQRCode) {
+              try {
+                const newSrc = await generateQRCodeImage(
+                  obj.qrText,
+                  obj.fill || '#000000',
+                  obj.width || 50
+                )
+                return { ...obj, src: newSrc }
+              } catch (err) {
+                console.error('Erreur lors de la régénération des QR codes liés :', err)
+              }
+            }
+            return obj
+          })
+        )
+
+        if (!_.isEqual(cellContent, updatedContent)) {
+          dispatch({
+            type: 'UPDATE_CELL_CONTENT',
+            payload: { id: cellId, content: updatedContent }
+          })
+        }
+      }
+    }
+
+    synchronizeQRCodes()
+  }, [selectedCellId, cellContents, dispatch, findLinkedGroup])
 
   // Effet pour initialiser les QR codes avec leurs URLs V1
   useEffect(() => {
@@ -211,11 +252,11 @@ const useCanvasGridSync = (canvas) => {
               qrText
             }
           } catch (error) {
-            console.error('Erreur lors de la régénération du QR code :', error)
+            console.error('Erreur lors de la régénération du QR code :', error)
             return {
               ...baseProperties,
               type: 'image',
-              src: obj.src,
+              src: obj.src, // Utiliser l'ancien QR code en cas d'erreur
               isQRCode: true,
               qrText
             }
@@ -274,14 +315,57 @@ const useCanvasGridSync = (canvas) => {
       })
     )
 
-    // Mettre à jour la cellule courante
+    // Détecter les objets ajoutés
+    const newObjects = updatedObjects.filter(
+      (obj) => !lastContentRef.current?.some((prevObj) => prevObj.id === obj.id)
+    )
+
+    // Détecter les objets supprimés
+    const removedObjects = lastContentRef.current
+      ? lastContentRef.current.filter(
+          (prevObj) => !updatedObjects.some((obj) => obj.id === prevObj.id)
+        )
+      : []
+
+    // Mettre à jour la référence du dernier contenu
+    lastContentRef.current = updatedObjects
+
+    const linkedGroup = findLinkedGroup(selectedCellId)
+    if (linkedGroup && linkedGroup.length > 1) {
+      linkedGroup.forEach((cellId) => {
+        if (cellId === selectedCellId) return
+
+        const currentContent = cellContents[cellId] || []
+
+        // Supprimer les objets manquants
+        let synchronizedContent = currentContent.filter(
+          (obj) => !removedObjects.some((removedObj) => removedObj.id === obj.id)
+        )
+
+        // Ajouter les nouveaux objets
+        newObjects.forEach((newObj) => {
+          if (!synchronizedContent.some((obj) => obj.id === newObj.id)) {
+            synchronizedContent.push(newObj)
+          }
+        })
+
+        // Comparer et mettre à jour uniquement si le contenu a changé
+        if (!_.isEqual(currentContent, synchronizedContent)) {
+          dispatch({
+            type: 'UPDATE_CELL_CONTENT',
+            payload: { id: cellId, content: synchronizedContent }
+          })
+        }
+      })
+    }
+
+    // Toujours mettre à jour la cellule courante
     dispatch({
       type: 'UPDATE_CELL_CONTENT',
       payload: { id: selectedCellId, content: updatedObjects }
     })
 
-    // Pour les cellules liées, ne synchroniser QUE la disposition
-    const linkedGroup = findLinkedGroup(selectedCellId)
+    // Synchronisation des groupes liés (ajouts et mises à jour de disposition)
     if (linkedGroup && linkedGroup.length > 1) {
       const layout = updatedObjects.reduce((acc, item) => {
         acc[item.id] = {
@@ -294,58 +378,18 @@ const useCanvasGridSync = (canvas) => {
           fontFamily: item.fontFamily || 'Arial',
           fontSize: item.fontSize || 16,
           fontStyle: item.fontStyle || 'normal',
-          fontWeight: item.fontWeight || 'normal'
+          fontWeight: item.fontWeight || 'normal',
+          ...(item.isQRCode && { src: item.src, qrText: item.qrText })
         }
         return acc
       }, {})
 
       dispatch({
         type: 'SYNC_CELL_LAYOUT',
-        payload: { sourceId: selectedCellId, layout }
+        payload: { sourceId: selectedCellId, layout, linkedGroup }
       })
     }
-
-    lastContentRef.current = updatedObjects
   }, [canvas, selectedCellId, cellContents, dispatch, findLinkedGroup])
-
-  useEffect(() => {
-    const synchronizeQRCodes = async () => {
-      if (!selectedCellId || !cellContents[selectedCellId]) return
-
-      const linkedGroup = findLinkedGroup(selectedCellId)
-      if (!linkedGroup || linkedGroup.length <= 1) return
-
-      const uniqueCellIds = _.uniq(linkedGroup) // Éviter les duplications
-      for (const cellId of uniqueCellIds) {
-        if (cellId === selectedCellId) continue
-
-        const cellContent = cellContents[cellId]
-        const updatedContent = await Promise.all(
-          cellContent.map(async (obj) => {
-            if (obj.isQRCode) {
-              const newSrc = await generateQRCodeImage(
-                obj.qrText,
-                obj.fill || '#000000',
-                obj.width || 50
-              )
-              return { ...obj, src: newSrc }
-            }
-            return obj
-          })
-        )
-
-        // Comparer avant mise à jour
-        if (!_.isEqual(cellContent, updatedContent)) {
-          dispatch({
-            type: 'UPDATE_CELL_CONTENT',
-            payload: { id: cellId, content: updatedContent }
-          })
-        }
-      }
-    }
-
-    synchronizeQRCodes()
-  }, [selectedCellId, cellContents, dispatch, findLinkedGroup])
 
   useEffect(() => {
     if (!canvas) return
