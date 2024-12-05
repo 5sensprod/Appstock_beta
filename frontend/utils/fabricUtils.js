@@ -85,7 +85,6 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
   if (!canvas) throw new Error('Canvas non disponible')
   canvas.clear()
 
-  // Propriétés de base sans inclure les strokes
   const baseObjectProps = {
     borderColor: 'transparent',
     cornerColor: 'transparent',
@@ -96,18 +95,24 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
   }
 
   const validatedObjects = objects.map((obj) => {
-    // Extraire les propriétés de stroke de l'objet original
+    // Gérer spécifiquement le strokeDashArray
+    let adjustedDashArray = null
+    if (obj.strokeDashArray && Array.isArray(obj.strokeDashArray)) {
+      // Pour un motif dashed, on ajuste chaque valeur avec le scaleFactor
+      adjustedDashArray = obj.strokeDashArray.map((value) => value * scaleFactor)
+    }
+
     const strokeProps = {
       stroke: obj.stroke || null,
       strokeWidth: obj.strokeWidth !== undefined ? obj.strokeWidth * scaleFactor : 0,
-      strokeDashArray: obj.strokeDashArray || null,
+      strokeDashArray: adjustedDashArray,
       strokeUniform: obj.strokeUniform || true
     }
 
     let validatedObj = {
       ...obj,
       ...baseObjectProps,
-      ...strokeProps // Appliquer les propriétés de stroke après baseObjectProps
+      ...strokeProps
     }
 
     if (obj.type === 'rect' || obj.type === 'triangle') {
@@ -139,8 +144,11 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
 
   fabricObjects.forEach((fabricObject) => {
     if (fabricObject) {
-      // Appliquer uniquement les propriétés de base, pas les strokes
-      fabricObject.set(baseObjectProps)
+      // Appliquer les propriétés de base en préservant les strokes
+      fabricObject.set({
+        ...baseObjectProps,
+        strokeDashArray: fabricObject.strokeDashArray // Préserver le motif après l'ajout
+      })
       canvas.add(fabricObject)
     }
   })
