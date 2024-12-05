@@ -93,6 +93,13 @@ export const importCsvData = (state, rows) => {
   const cellCount = Object.values(state.cellContents).filter((content) => content?.length).length
   const totalPages = Math.max(state.totalPages, Math.ceil((cellCount + rows.length) / cellsPerPage))
 
+  const defaultStrokeProps = {
+    stroke: '#000000',
+    strokeWidth: 0,
+    strokeDashArray: [],
+    strokeUniform: true
+  }
+
   const newCells = rows.reduce((acc, row, index) => {
     const cellId = `${Math.floor((cellCount + index) / cellsPerPage)}-${cellCount + index}`
     acc[cellId] = Object.entries(row).map(([key, value], idx) => ({
@@ -100,6 +107,7 @@ export const importCsvData = (state, rows) => {
       linkedByCsv: true,
       left: 10 + idx * 50,
       top: 10,
+      ...defaultStrokeProps,
       ...(key.includes('shape')
         ? { type: 'rect', width: 50, height: 30, fill: '#FFD700' }
         : { type: 'i-text', text: value, fontSize: 14, fill: '#333' })
@@ -108,7 +116,6 @@ export const importCsvData = (state, rows) => {
   }, {})
 
   const { grid } = generateGrid(state.config, totalPages)
-
   return {
     ...state,
     grid,

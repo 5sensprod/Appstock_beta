@@ -234,7 +234,12 @@ const useCanvasGridSync = (canvas) => {
           angle: obj.angle || 0,
           scaleX: obj.scaleX || 1,
           scaleY: obj.scaleY || 1,
-          // Ajouter l'index normalisé pour la position dans la pile
+          // Propriétés de stroke
+          stroke: obj.stroke || '#000000',
+          strokeWidth: obj.strokeWidth ?? 0,
+          strokeDashArray: obj.strokeDashArray || [],
+          strokeUniform: true,
+          // Position dans la pile
           zIndex: objects.indexOf(obj) / Math.max(1, objects.length - 1)
         }
 
@@ -395,6 +400,11 @@ const useCanvasGridSync = (canvas) => {
           fontSize: item.fontSize || 16,
           fontStyle: item.fontStyle || 'normal',
           fontWeight: item.fontWeight || 'normal',
+          // Ajout des propriétés de stroke dans le layout
+          stroke: item.stroke || '#000000',
+          strokeWidth: item.strokeWidth ?? 0,
+          strokeDashArray: item.strokeDashArray || [],
+          strokeUniform: true,
           ...(item.isQRCode && { src: item.src, qrText: item.qrText })
         }
         return acc

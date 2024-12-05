@@ -8,7 +8,7 @@ const useAddShape = (canvas, labelConfig, selectedColor) => {
   // Propriétés de bordure par défaut
   const defaultStrokeProps = {
     stroke: '#000000',
-    strokeWidth: 1,
+    strokeWidth: 0,
     strokeUniform: true
   }
 

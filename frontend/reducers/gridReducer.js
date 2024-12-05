@@ -143,7 +143,12 @@ export function gridReducer(state, action) {
                 angle: layoutItem.angle,
                 scaleX: layoutItem.scaleX,
                 scaleY: layoutItem.scaleY,
-                fill: layoutItem.fill
+                fill: layoutItem.fill,
+                // Ajout des propriétés de stroke pour les QR codes
+                stroke: layoutItem.stroke || item.stroke || '#000000',
+                strokeWidth: layoutItem.strokeWidth ?? item.strokeWidth ?? 0,
+                strokeDashArray: layoutItem.strokeDashArray || item.strokeDashArray || [],
+                strokeUniform: true
               }
 
               // Préserver qrText et src pour les QR codes liés via CSV
@@ -155,10 +160,15 @@ export function gridReducer(state, action) {
               return newItem
             }
 
-            // Pour les autres éléments, synchronisation normale
+            // Pour les autres éléments, fusion des propriétés existantes avec le layout
             return {
               ...item,
-              ...layoutItem
+              ...layoutItem,
+              // S'assurer que les propriétés de stroke sont correctement synchronisées
+              stroke: layoutItem.stroke || item.stroke || '#000000',
+              strokeWidth: layoutItem.strokeWidth ?? item.strokeWidth ?? 0,
+              strokeDashArray: layoutItem.strokeDashArray || item.strokeDashArray || [],
+              strokeUniform: true
             }
           })
         }
