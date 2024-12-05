@@ -223,16 +223,6 @@ const useCanvasGridSync = (canvas) => {
 
     const objects = canvas.getObjects()
 
-    // Fonction auxiliaire pour réorganiser les objets dans une cellule
-    const reorderObjects = (cellObjects, normalizedIndex) => {
-      const newIndex = Math.round(normalizedIndex * (cellObjects.length - 1))
-      return cellObjects.sort((a, b) => {
-        if (a.id === objects[0].id) return -1
-        if (b.id === objects[0].id) return 1
-        return 0
-      })
-    }
-
     // Créer une version sérialisée des objets actuels sur le canevas
     const updatedObjects = await Promise.all(
       objects.map(async (obj) => {
