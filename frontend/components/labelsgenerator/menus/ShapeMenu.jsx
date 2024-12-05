@@ -6,12 +6,16 @@ import { useShapeManager } from '../../../hooks/useShapeManager'
 import { useStrokeManager } from '../../../hooks/useStrokeManager'
 import { useCanvas } from '../../../context/CanvasContext'
 import { StrokeControls } from '../StrokeControls'
+import { AppearanceControls } from '../AppearanceControls'
 
 export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
   const [isStrokeControlOpen, setIsStrokeControlOpen] = useState(false)
+  const [isAppearanceOpen, setIsAppearanceOpen] = useState(false)
+
   const pickerRef = useRef(null)
   const strokePickerRef = useRef(null)
+  const appearancePickerRef = useRef(null)
 
   const { currentColor, handleColorChange } = useShapeManager()
   const { currentStroke, currentStrokeWidth, currentStrokeDashArray, handleStrokeChange } =
@@ -45,6 +49,9 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
           canvas?.fire('object:modified')
           canvas?.renderAll()
         }, 0)
+      }
+      if (appearancePickerRef.current && !appearancePickerRef.current.contains(event.target)) {
+        setIsAppearanceOpen(false)
       }
     }
 
@@ -95,6 +102,12 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
         strokePattern={currentStrokeDashArray}
         onStrokeChange={handleStrokeChange}
         pickerRef={strokePickerRef}
+      />
+
+      <AppearanceControls
+        isOpen={isAppearanceOpen}
+        onToggle={() => setIsAppearanceOpen((prev) => !prev)}
+        pickerRef={appearancePickerRef}
       />
 
       {isColorPickerOpen && (
