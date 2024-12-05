@@ -85,9 +85,8 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
   if (!canvas) throw new Error('Canvas non disponible')
   canvas.clear()
 
+  // Propriétés de base sans inclure les strokes
   const baseObjectProps = {
-    strokeWidth: 0,
-    stroke: null,
     borderColor: 'transparent',
     cornerColor: 'transparent',
     cornerSize: 0,
@@ -97,12 +96,20 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
   }
 
   const validatedObjects = objects.map((obj) => {
-    let validatedObj = {
-      ...obj,
-      ...baseObjectProps
+    // Extraire les propriétés de stroke de l'objet original
+    const strokeProps = {
+      stroke: obj.stroke || null,
+      strokeWidth: obj.strokeWidth !== undefined ? obj.strokeWidth * scaleFactor : 0,
+      strokeDashArray: obj.strokeDashArray || null,
+      strokeUniform: obj.strokeUniform || true
     }
 
-    // Appliquer des valeurs par défaut pour les formes
+    let validatedObj = {
+      ...obj,
+      ...baseObjectProps,
+      ...strokeProps // Appliquer les propriétés de stroke après baseObjectProps
+    }
+
     if (obj.type === 'rect' || obj.type === 'triangle') {
       return {
         ...validatedObj,
@@ -110,6 +117,7 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
         height: obj.height || 50
       }
     }
+
     if (obj.type === 'circle') {
       return {
         ...validatedObj,
@@ -118,7 +126,7 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
         top: obj.top || 0
       }
     }
-    // S'assurer que `isQRCode` est présent dans tous les objets
+
     return {
       ...validatedObj,
       isQRCode: obj.isQRCode || false
@@ -131,7 +139,7 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
 
   fabricObjects.forEach((fabricObject) => {
     if (fabricObject) {
-      // Appliquer les propriétés une fois de plus après la création
+      // Appliquer uniquement les propriétés de base, pas les strokes
       fabricObject.set(baseObjectProps)
       canvas.add(fabricObject)
     }
