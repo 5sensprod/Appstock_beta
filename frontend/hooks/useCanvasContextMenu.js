@@ -1,4 +1,3 @@
-// hooks/useCanvasContextMenu.js
 import { useCallback, useEffect } from 'react'
 
 const useCanvasContextMenu = (canvas) => {
@@ -24,7 +23,16 @@ const useCanvasContextMenu = (canvas) => {
 
     const updateAndNotify = () => {
       canvas.requestRenderAll()
-      canvas.fire('object:modified', { target: activeObject })
+
+      // Calculer l'index normalisé (0 à 1) pour la position relative
+      const normalizedIndex = objects.indexOf(activeObject) / Math.max(1, objects.length - 1)
+
+      // Déclencher l'événement de modification avec les informations de position relative
+      canvas.fire('object:modified', {
+        target: activeObject,
+        normalizedIndex,
+        action: 'reorder'
+      })
     }
 
     return {
@@ -73,15 +81,15 @@ const useCanvasContextMenu = (canvas) => {
       const contextMenu = document.createElement('div')
       contextMenu.className = 'fabric-context-menu'
       contextMenu.style.cssText = `
-      position: fixed;
-      left: ${event.clientX}px;
-      top: ${event.clientY}px;
-      background-color: white;
-      border: 1px solid #ccc;
-      padding: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      z-index: 1000;
-    `
+        position: fixed;
+        left: ${event.clientX}px;
+        top: ${event.clientY}px;
+        background-color: white;
+        border: 1px solid #ccc;
+        padding: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        z-index: 1000;
+      `
 
       const removeMenu = () => {
         contextMenu?.parentNode?.removeChild(contextMenu)

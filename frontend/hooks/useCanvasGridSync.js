@@ -223,6 +223,16 @@ const useCanvasGridSync = (canvas) => {
 
     const objects = canvas.getObjects()
 
+    // Fonction auxiliaire pour réorganiser les objets dans une cellule
+    const reorderObjects = (cellObjects, normalizedIndex) => {
+      const newIndex = Math.round(normalizedIndex * (cellObjects.length - 1))
+      return cellObjects.sort((a, b) => {
+        if (a.id === objects[0].id) return -1
+        if (b.id === objects[0].id) return 1
+        return 0
+      })
+    }
+
     // Créer une version sérialisée des objets actuels sur le canevas
     const updatedObjects = await Promise.all(
       objects.map(async (obj) => {
@@ -233,7 +243,9 @@ const useCanvasGridSync = (canvas) => {
           fill: obj.fill,
           angle: obj.angle || 0,
           scaleX: obj.scaleX || 1,
-          scaleY: obj.scaleY || 1
+          scaleY: obj.scaleY || 1,
+          // Ajouter l'index normalisé pour la position dans la pile
+          zIndex: objects.indexOf(obj) / Math.max(1, objects.length - 1)
         }
 
         if (obj.isQRCode) {
@@ -349,11 +361,25 @@ const useCanvasGridSync = (canvas) => {
           }
         })
 
+        // Réorganiser les objets dans la cellule liée selon les mêmes positions relatives
+        const reorderedContent = currentContent
+          .map((obj) => {
+            const sourceObj = updatedObjects.find((updated) => updated.id === obj.id)
+            if (sourceObj) {
+              return {
+                ...obj,
+                zIndex: sourceObj.zIndex
+              }
+            }
+            return obj
+          })
+          .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
+
         // Comparer et mettre à jour uniquement si le contenu a changé
-        if (!_.isEqual(currentContent, synchronizedContent)) {
+        if (!_.isEqual(currentContent, reorderedContent)) {
           dispatch({
             type: 'UPDATE_CELL_CONTENT',
-            payload: { id: cellId, content: synchronizedContent }
+            payload: { id: cellId, content: reorderedContent }
           })
         }
       })
