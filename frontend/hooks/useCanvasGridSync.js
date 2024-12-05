@@ -234,7 +234,7 @@ const useCanvasGridSync = (canvas) => {
           angle: obj.angle || 0,
           scaleX: obj.scaleX || 1,
           scaleY: obj.scaleY || 1,
-          // Propriétés de stroke étendues
+          // Propriétés de stroke
           stroke: obj.stroke || '#000000',
           strokeWidth: obj.strokeWidth ?? 0,
           strokeDashArray: obj.strokeDashArray || [],
@@ -262,7 +262,7 @@ const useCanvasGridSync = (canvas) => {
               qrText
             }
           } catch (error) {
-            console.error('Erreur lors de la régénération du QR code :', error)
+            console.error('Erreur lors de la régénération du QR code :', error)
             return {
               ...baseProperties,
               type: 'image',
@@ -359,8 +359,8 @@ const useCanvasGridSync = (canvas) => {
           }
         })
 
-        // Réorganiser les objets dans la cellule liée selon les mêmes positions relatives
-        const reorderedContent = currentContent
+        // Réorganiser et appliquer les z-index
+        synchronizedContent = synchronizedContent
           .map((obj) => {
             const sourceObj = updatedObjects.find((updated) => updated.id === obj.id)
             if (sourceObj) {
@@ -374,10 +374,10 @@ const useCanvasGridSync = (canvas) => {
           .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
 
         // Comparer et mettre à jour uniquement si le contenu a changé
-        if (!_.isEqual(currentContent, reorderedContent)) {
+        if (!_.isEqual(currentContent, synchronizedContent)) {
           dispatch({
             type: 'UPDATE_CELL_CONTENT',
-            payload: { id: cellId, content: reorderedContent }
+            payload: { id: cellId, content: synchronizedContent }
           })
         }
       })
@@ -403,7 +403,7 @@ const useCanvasGridSync = (canvas) => {
           fontSize: item.fontSize || 16,
           fontStyle: item.fontStyle || 'normal',
           fontWeight: item.fontWeight || 'normal',
-          // Propriétés de stroke étendues dans le layout
+          // Propriétés de stroke dans le layout
           stroke: item.stroke || '#000000',
           strokeWidth: item.strokeWidth ?? 0,
           strokeDashArray: item.strokeDashArray || [],
