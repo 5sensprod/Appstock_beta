@@ -1,12 +1,26 @@
 import { useCallback } from 'react'
 import { useCanvas } from '../context/CanvasContext'
 
-export const STROKE_DASH_PATTERNS = {
-  solid: [], // Changé de null à tableau vide pour meilleure compatibilité
-  dashed: [12, 8],
-  dotted: [3, 3],
-  dashedDotted: [12, 6, 3, 6],
-  longDashed: [24, 12]
+export const STROKE_PATTERN_TYPES = {
+  solid: 'solid',
+  dashed: 'dashed',
+  dotted: 'dotted'
+}
+
+const generatePattern = (type, density = 5, strokeWidth = 1) => {
+  const baseSpacing = 24
+  const spacing = baseSpacing / density
+
+  switch (type) {
+    case 'dotted':
+      // Pour les points, utiliser la strokeWidth comme base
+      return [1, spacing * 2] // Un point de la taille du stroke, avec un espacement proportionnel
+    case 'dashed':
+      return [spacing, spacing]
+    case 'solid':
+    default:
+      return []
+  }
 }
 
 export const useStrokeManager = () => {
@@ -16,68 +30,63 @@ export const useStrokeManager = () => {
     (strokeProps, isClosing = false) => {
       if (!selectedObject) return
 
-      // Forcer la mise à jour des propriétés sur l'objet
-      if ('strokeDashArray' in strokeProps) {
-        // Convertir explicitement en tableau vide pour le style solide
-        const dashArray =
-          Array.isArray(strokeProps.strokeDashArray) && strokeProps.strokeDashArray.length > 0
-            ? strokeProps.strokeDashArray
-            : []
-
-        selectedObject.set('strokeDashArray', dashArray)
-      }
+      const updates = {}
 
       if ('strokeWidth' in strokeProps) {
-        selectedObject.set('strokeWidth', strokeProps.strokeWidth)
+        updates.strokeWidth = strokeProps.strokeWidth
       }
 
       if ('stroke' in strokeProps) {
-        selectedObject.set('stroke', strokeProps.stroke)
+        updates.stroke = strokeProps.stroke
       }
 
-      // Toujours maintenir strokeUniform à true
-      selectedObject.set('strokeUniform', true)
+      // Gérer les changements de motif
+      if ('patternType' in strokeProps || 'density' in strokeProps || strokeProps.forceUpdate) {
+        const type = strokeProps.patternType || selectedObject.patternType || 'solid'
+        const density = strokeProps.density || selectedObject.patternDensity || 5
+        const currentStrokeWidth = updates.strokeWidth || selectedObject.strokeWidth || 1
 
-      // Forcer la mise à jour du canvas
+        updates.patternType = type
+        updates.patternDensity = density
+        updates.strokeDashArray = generatePattern(type, density, currentStrokeWidth)
+        updates.strokeLineCap = type === 'dotted' ? 'round' : 'butt'
+        updates.strokeUniform = true
+      }
+
+      // Appliquer les mises à jour
+      selectedObject.set(updates)
+
+      // Si le motif est en points, forcer la mise à jour du strokeLineCap
+      if (selectedObject.patternType === 'dotted') {
+        selectedObject.set('strokeLineCap', 'round')
+      }
+
       selectedObject.setCoords()
-      canvas.requestRenderAll()
+      canvas.renderAll()
 
       if (isClosing) {
         canvas.fire('object:modified')
       }
 
-      // Mettre à jour l'état global avec les mêmes valeurs
       dispatchCanvasAction({
         type: 'SET_STROKE_PROPERTIES',
         payload: {
-          ...(strokeProps.strokeDashArray !== undefined && {
-            strokeDashArray:
-              Array.isArray(strokeProps.strokeDashArray) && strokeProps.strokeDashArray.length > 0
-                ? strokeProps.strokeDashArray
-                : []
-          }),
-          ...(strokeProps.strokeWidth !== undefined && {
-            strokeWidth: strokeProps.strokeWidth
-          }),
-          ...(strokeProps.stroke !== undefined && {
-            stroke: strokeProps.stroke
-          })
+          ...updates,
+          strokeLineCap: updates.strokeLineCap
         }
       })
     },
     [selectedObject, canvas, dispatchCanvasAction]
   )
 
-  // Retourner les valeurs actuelles avec gestion explicite du cas solide
-  const currentStrokeDashArray = selectedObject?.strokeDashArray
-  const isPatternEmpty =
-    !currentStrokeDashArray ||
-    (Array.isArray(currentStrokeDashArray) && currentStrokeDashArray.length === 0)
+  // Détecter le type de motif actuel
+  const currentPatternType = selectedObject?.patternType || 'solid'
 
   return {
     currentStroke: selectedObject?.stroke || '#000000',
     currentStrokeWidth: selectedObject?.strokeWidth || 0,
-    currentStrokeDashArray: isPatternEmpty ? [] : currentStrokeDashArray,
+    currentPatternType,
+    currentPatternDensity: selectedObject?.patternDensity || 5,
     handleStrokeChange
   }
 }

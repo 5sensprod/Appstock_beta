@@ -234,11 +234,14 @@ const useCanvasGridSync = (canvas) => {
           angle: obj.angle || 0,
           scaleX: obj.scaleX || 1,
           scaleY: obj.scaleY || 1,
-          // Propriétés de stroke
+          // Propriétés de stroke étendues
           stroke: obj.stroke || '#000000',
           strokeWidth: obj.strokeWidth ?? 0,
           strokeDashArray: obj.strokeDashArray || [],
           strokeUniform: true,
+          strokeLineCap: obj.strokeLineCap || 'butt',
+          patternType: obj.patternType || 'solid',
+          patternDensity: obj.patternDensity || 5,
           // Position dans la pile
           zIndex: objects.indexOf(obj) / Math.max(1, objects.length - 1)
         }
@@ -400,11 +403,14 @@ const useCanvasGridSync = (canvas) => {
           fontSize: item.fontSize || 16,
           fontStyle: item.fontStyle || 'normal',
           fontWeight: item.fontWeight || 'normal',
-          // Ajout des propriétés de stroke dans le layout
+          // Propriétés de stroke étendues dans le layout
           stroke: item.stroke || '#000000',
           strokeWidth: item.strokeWidth ?? 0,
           strokeDashArray: item.strokeDashArray || [],
           strokeUniform: true,
+          strokeLineCap: item.strokeLineCap || 'butt',
+          patternType: item.patternType || 'solid',
+          patternDensity: item.patternDensity || 5,
           ...(item.isQRCode && { src: item.src, qrText: item.qrText })
         }
         return acc

@@ -1,32 +1,34 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { faRuler } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../ui/IconButton'
 import ColorPicker from './texttool/ColorPicker'
-import { STROKE_DASH_PATTERNS } from '../../hooks/useStrokeManager'
+import { STROKE_PATTERN_TYPES } from '../../hooks/useStrokeManager'
 
 export const StrokeControls = ({
   isOpen,
   onToggle,
   strokeWidth,
   strokeColor,
-  strokePattern,
+  patternType,
+  patternDensity = 5,
   onStrokeChange,
   pickerRef
 }) => {
-  // Helper pour comparer les patterns
-  const isPatternActive = (pattern) => {
-    const currentPattern = strokePattern || []
-    const comparePattern = pattern || []
+  // State local pour suivre le type de motif
+  const [activePattern, setActivePattern] = useState(patternType || 'solid')
 
-    // Si les deux sont vides ou null, ils sont considérés comme égaux (trait solide)
-    if (
-      (!currentPattern || currentPattern.length === 0) &&
-      (!comparePattern || comparePattern.length === 0)
-    ) {
-      return true
-    }
+  // Synchroniser l'état local avec les props
+  useEffect(() => {
+    setActivePattern(patternType)
+  }, [patternType])
 
-    return JSON.stringify(currentPattern) === JSON.stringify(comparePattern)
+  const handlePatternChange = (type) => {
+    setActivePattern(type)
+    onStrokeChange({
+      patternType: type,
+      density: patternDensity,
+      forceUpdate: true // Ajouter un flag pour forcer la mise à jour
+    })
   }
 
   if (!isOpen) {
@@ -71,36 +73,59 @@ export const StrokeControls = ({
         {/* Style de la bordure */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">Style</label>
-          <div className="grid grid-cols-2 gap-2">
-            {Object.entries(STROKE_DASH_PATTERNS).map(([name, pattern]) => (
+          <div className="grid grid-cols-3 gap-2">
+            {Object.entries(STROKE_PATTERN_TYPES).map(([type, label]) => (
               <button
-                key={name}
-                onClick={() => onStrokeChange({ strokeDashArray: pattern })}
+                key={type}
+                onClick={() => handlePatternChange(type)}
                 className={`flex h-8 items-center justify-center rounded border ${
-                  isPatternActive(pattern)
+                  activePattern === type
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-300 hover:border-gray-400'
                 }`}
               >
-                <div
-                  className="h-0.5 w-16"
-                  style={{
-                    background:
-                      pattern && pattern.length > 0
-                        ? `repeating-linear-gradient(
-                          to right,
-                          black 0,
-                          black ${pattern[0]}px,
-                          transparent ${pattern[0]}px,
-                          transparent ${pattern[0] + (pattern[1] || 0)}px
-                        )`
-                        : 'black'
-                  }}
-                />
+                <div className="relative h-0.5 w-16">
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background:
+                        type === 'solid'
+                          ? 'black'
+                          : type === 'dotted'
+                            ? 'linear-gradient(to right, black 1px, transparent 1px)'
+                            : 'linear-gradient(to right, black 8px, transparent 8px)',
+                      backgroundSize: type === 'solid' ? 'auto' : '12px 100%'
+                    }}
+                  />
+                </div>
               </button>
             ))}
           </div>
         </div>
+
+        {/* Densité du motif */}
+        {activePattern !== 'solid' && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">
+              Densité {activePattern === 'dotted' ? 'des points' : 'des traits'}
+            </label>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={patternDensity}
+              onChange={(e) =>
+                onStrokeChange({
+                  density: parseInt(e.target.value, 10),
+                  patternType: activePattern,
+                  forceUpdate: true
+                })
+              }
+              className="w-full"
+            />
+            <div className="text-right text-sm text-gray-500">{patternDensity}</div>
+          </div>
+        )}
       </div>
     </div>
   )

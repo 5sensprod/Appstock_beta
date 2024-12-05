@@ -85,7 +85,10 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
   if (!canvas) throw new Error('Canvas non disponible')
   canvas.clear()
 
+  // Garder les propriétés de base comme dans la version qui fonctionne pour les QR codes
   const baseObjectProps = {
+    strokeWidth: 0,
+    stroke: null,
     borderColor: 'transparent',
     cornerColor: 'transparent',
     cornerSize: 0,
@@ -95,10 +98,17 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
   }
 
   const validatedObjects = objects.map((obj) => {
-    // Gérer spécifiquement le strokeDashArray
+    // Si c'est un QR code, appliquer uniquement baseObjectProps
+    if (obj.isQRCode) {
+      return {
+        ...obj,
+        ...baseObjectProps
+      }
+    }
+
+    // Pour les autres objets, gérer le strokeDashArray
     let adjustedDashArray = null
     if (obj.strokeDashArray && Array.isArray(obj.strokeDashArray)) {
-      // Pour un motif dashed, on ajuste chaque valeur avec le scaleFactor
       adjustedDashArray = obj.strokeDashArray.map((value) => value * scaleFactor)
     }
 
@@ -106,7 +116,8 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
       stroke: obj.stroke || null,
       strokeWidth: obj.strokeWidth !== undefined ? obj.strokeWidth * scaleFactor : 0,
       strokeDashArray: adjustedDashArray,
-      strokeUniform: obj.strokeUniform || true
+      strokeUniform: obj.strokeUniform || true,
+      strokeLineCap: obj.strokeLineCap || 'butt'
     }
 
     let validatedObj = {
@@ -132,10 +143,7 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
       }
     }
 
-    return {
-      ...validatedObj,
-      isQRCode: obj.isQRCode || false
-    }
+    return validatedObj
   })
 
   const fabricObjects = await Promise.all(
@@ -144,11 +152,20 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
 
   fabricObjects.forEach((fabricObject) => {
     if (fabricObject) {
-      // Appliquer les propriétés de base en préservant les strokes
-      fabricObject.set({
-        ...baseObjectProps,
-        strokeDashArray: fabricObject.strokeDashArray // Préserver le motif après l'ajout
-      })
+      if (fabricObject.isQRCode) {
+        // Pour les QR codes, appliquer uniquement baseObjectProps
+        fabricObject.set(baseObjectProps)
+      } else {
+        // Pour les autres objets, préserver leurs propriétés de stroke
+        fabricObject.set({
+          borderColor: 'transparent',
+          cornerColor: 'transparent',
+          cornerSize: 0,
+          padding: 0,
+          transparentCorners: true,
+          hasBorders: false
+        })
+      }
       canvas.add(fabricObject)
     }
   })
