@@ -5,7 +5,13 @@ import useAddObjectToCanvas from './useAddObjectToCanvas'
 const useAddShape = (canvas, labelConfig, selectedColor) => {
   const { centerObject } = useAddObjectToCanvas(labelConfig)
 
-  // Fonction générique pour ajouter une forme
+  // Propriétés de bordure par défaut
+  const defaultStrokeProps = {
+    stroke: '#000000',
+    strokeWidth: 1,
+    strokeUniform: true
+  }
+
   const addShape = useCallback(
     (shape) => {
       if (!canvas) {
@@ -13,10 +19,7 @@ const useAddShape = (canvas, labelConfig, selectedColor) => {
         return
       }
 
-      // Ajoute un ID unique à la forme
       shape.id = Math.random().toString(36).substring(2, 11)
-
-      // Centre et ajoute la forme au canvas
       centerObject(shape)
       canvas.add(shape)
       canvas.setActiveObject(shape)
@@ -32,9 +35,7 @@ const useAddShape = (canvas, labelConfig, selectedColor) => {
     const circle = new fabric.Circle({
       radius: circleRadius,
       fill: selectedColor,
-      stroke: '#aaf',
-      strokeWidth: 2,
-      strokeUniform: true
+      ...defaultStrokeProps
     })
 
     addShape(circle)
@@ -47,7 +48,8 @@ const useAddShape = (canvas, labelConfig, selectedColor) => {
     const rectangle = new fabric.Rect({
       width: rectWidth,
       height: rectHeight,
-      fill: selectedColor
+      fill: selectedColor,
+      ...defaultStrokeProps
     })
 
     addShape(rectangle)

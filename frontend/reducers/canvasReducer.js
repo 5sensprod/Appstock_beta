@@ -4,6 +4,11 @@ export const initialCanvasState = {
   selectedObject: null,
   selectedColor: '#000000',
   selectedFont: 'Lato',
+  selectedStroke: {
+    color: '#000000',
+    width: 1,
+    dashArray: null
+  },
   labelConfig: {
     labelWidth: 48.5,
     labelHeight: 25,
@@ -46,6 +51,19 @@ export const canvasReducer = (state, action) => {
         ...state,
         selectedColor: action.payload.color || state.selectedColor,
         selectedFont: action.payload.font || state.selectedFont
+      }
+
+    case 'SET_STROKE_PROPERTIES':
+      return {
+        ...state,
+        selectedStroke: {
+          ...state.selectedStroke,
+          ...(action.payload.stroke && { color: action.payload.stroke }),
+          ...(action.payload.strokeWidth !== undefined && { width: action.payload.strokeWidth }),
+          ...(action.payload.strokeDashArray !== undefined && {
+            dashArray: action.payload.strokeDashArray
+          })
+        }
       }
 
     // Mise à jour des dimensions spécifiques
