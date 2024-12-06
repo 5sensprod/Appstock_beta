@@ -23,7 +23,7 @@ export const createFabricObject = (obj, scaleFactor = 1) => {
     originY: fabricOptions.originY || 'top',
     fill: fabricOptions.fill || 'rgba(0, 0, 0, 0.5)',
     stroke: fabricOptions.stroke || null,
-    strokeWidth: fabricOptions.strokeWidth || 1,
+    strokeWidth: fabricOptions.strokeWidth || 0,
     isQRCode
   }
 
@@ -110,6 +110,16 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
       ...extractObjectProperties(obj, propertyGroups, scaleFactor)
     }
 
+    // Préserver les propriétés du gradient si elles existent
+    if (obj.fill && typeof obj.fill === 'object' && obj.fill.type) {
+      validatedObj.gradientInfo = {
+        type: obj.fill.type,
+        colorStops: obj.fill.colorStops,
+        coords: scaleGradientCoords(obj.fill.coords, scaleFactor),
+        angle: obj.gradientAngle || 0
+      }
+    }
+
     // Gérer les dimensions par défaut selon le type
     if (type === 'rect' || type === 'triangle') {
       validatedObj = {
@@ -151,6 +161,12 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
           transparentCorners: true,
           hasBorders: false
         })
+
+        // Réappliquer le gradient si nécessaire
+        const originalObj = validatedObjects.find((obj) => obj.id === fabricObject.id)
+        if (originalObj?.gradientInfo) {
+          applyGradientToObject(fabricObject, originalObj.gradientInfo, scaleFactor)
+        }
       }
       canvas.add(fabricObject)
     }
@@ -158,6 +174,63 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
 
   canvas.renderAll()
   return canvas
+}
+
+// Fonction utilitaire pour mettre à l'échelle les coordonnées du gradient
+const scaleGradientCoords = (coords, scaleFactor) => {
+  if (!coords) return null
+
+  const scaledCoords = {}
+  for (const [key, value] of Object.entries(coords)) {
+    // Mettre à l'échelle toutes les coordonnées sauf les angles et les offsets
+    if (['x1', 'x2', 'y1', 'y2', 'r1', 'r2'].includes(key)) {
+      scaledCoords[key] = value * scaleFactor
+    } else {
+      scaledCoords[key] = value
+    }
+  }
+  return scaledCoords
+}
+
+// Fonction pour appliquer un gradient à un objet
+const applyGradientToObject = (fabricObject, gradientInfo, scaleFactor) => {
+  const { type, colorStops, coords, angle } = gradientInfo
+  const width = fabricObject.width * fabricObject.scaleX
+  const height = fabricObject.height * fabricObject.scaleY
+
+  let gradientOptions = {
+    type,
+    coords: coords || {},
+    colorStops
+  }
+
+  if (type === 'linear') {
+    const angleRad = (angle * Math.PI) / 180
+    const halfDiagonal = Math.sqrt(width * width + height * height) / 2
+    const dx = Math.cos(angleRad)
+    const dy = Math.sin(angleRad)
+
+    gradientOptions.coords = {
+      x1: -dx * halfDiagonal,
+      y1: -dy * halfDiagonal,
+      x2: dx * halfDiagonal,
+      y2: dy * halfDiagonal
+    }
+  } else if (type === 'radial') {
+    const radius = Math.min(width, height) / 2
+    gradientOptions.coords = {
+      r1: 0,
+      r2: radius,
+      x1: 0,
+      y1: 0,
+      x2: 0,
+      y2: 0
+    }
+  }
+
+  const gradient = new fabric.Gradient(gradientOptions)
+  gradient.gradientAngle = angle // Conserver l'angle pour référence future
+  fabricObject.set('fill', gradient)
 }
 
 export const QRCodeCache = new Map()
