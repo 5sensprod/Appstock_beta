@@ -1,10 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { faAdjust } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../ui/IconButton'
 import ColorPicker from './texttool/ColorPicker'
 import { GRADIENT_TYPES, useAppearanceManager } from '../../hooks/useAppearanceManager'
+import { useCanvas } from '../../context/CanvasContext'
 
 export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
+  const { canvas } = useCanvas()
   const {
     currentOpacity,
     currentGradientType,
@@ -17,6 +19,26 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
 
   const [gradientColors, setGradientColors] = useState(currentGradientColors)
   const [gradientDirection, setGradientDirection] = useState(currentGradientDirection)
+
+  // Synchroniser les états locaux avec les valeurs courantes
+  useEffect(() => {
+    setGradientColors(currentGradientColors)
+    setGradientDirection(currentGradientDirection)
+  }, [currentGradientColors, currentGradientDirection])
+
+  const handleOpacityChangeEnd = () => {
+    handleOpacityChange(currentOpacity, true)
+    canvas?.fire('object:modified')
+  }
+
+  const handleGradientChange = (type, colors, direction) => {
+    if (type === 'none') {
+      removeGradient()
+    } else {
+      createGradient(type, colors, direction)
+    }
+    canvas?.fire('object:modified')
+  }
 
   if (!isOpen) {
     return (
@@ -47,6 +69,8 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
             step="0.1"
             value={currentOpacity}
             onChange={(e) => handleOpacityChange(parseFloat(e.target.value))}
+            onMouseUp={handleOpacityChangeEnd}
+            onTouchEnd={handleOpacityChangeEnd}
             className="w-full"
           />
           <div className="text-right text-sm text-gray-500">
@@ -61,13 +85,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
             {Object.entries(GRADIENT_TYPES).map(([type, label]) => (
               <button
                 key={type}
-                onClick={() => {
-                  if (type === 'none') {
-                    removeGradient()
-                  } else {
-                    createGradient(type, gradientColors, gradientDirection)
-                  }
-                }}
+                onClick={() => handleGradientChange(type, gradientColors, gradientDirection)}
                 className={`rounded border px-3 py-1 text-sm ${
                   currentGradientType === type
                     ? 'border-blue-500 bg-blue-50'
@@ -93,7 +111,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
                     setSelectedColor={(color) => {
                       const newColors = [color, gradientColors[1]]
                       setGradientColors(newColors)
-                      createGradient(currentGradientType, newColors, gradientDirection)
+                      handleGradientChange(currentGradientType, newColors, gradientDirection)
                     }}
                   />
                 </div>
@@ -104,7 +122,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
                     setSelectedColor={(color) => {
                       const newColors = [gradientColors[0], color]
                       setGradientColors(newColors)
-                      createGradient(currentGradientType, newColors, gradientDirection)
+                      handleGradientChange(currentGradientType, newColors, gradientDirection)
                     }}
                   />
                 </div>
@@ -123,7 +141,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
                   onChange={(e) => {
                     const direction = parseInt(e.target.value)
                     setGradientDirection(direction)
-                    createGradient(currentGradientType, gradientColors, direction)
+                    handleGradientChange(currentGradientType, gradientColors, direction)
                   }}
                   className="w-full"
                 />

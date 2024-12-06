@@ -6,6 +6,8 @@ import {
   withUndoRedo,
   redistributeCellContents
 } from '../utils/gridUtils'
+import { extractObjectProperties, TYPE_PROPERTY_GROUPS } from '../utils/objectPropertiesConfig'
+import _ from 'lodash'
 
 export const initialGridState = {
   config: {
@@ -96,18 +98,19 @@ export function gridReducer(state, action) {
       const { id, content } = action.payload
       const existingContent = state.cellContents[id] || []
 
-      // Mettez à jour le contenu avec les drapeaux existants
+      // Mettre à jour le contenu en préservant les drapeaux existants
       const updatedContent = content.map((item) => {
         const existingItem = existingContent.find((old) => old.id === item.id)
+        const type = item.isQRCode ? 'qrcode' : item.type
+        const propertyGroups = TYPE_PROPERTY_GROUPS[type] || ['basic']
 
         return {
-          ...item,
+          ...extractObjectProperties(item, propertyGroups),
           linkedByCsv: existingItem?.linkedByCsv || false,
-          linkedGroup: existingItem?.linkedGroup || false // Conserver le drapeau linkedGroup si nécessaire
+          linkedGroup: existingItem?.linkedGroup || false
         }
       })
 
-      // Supprimez les doublons tout en conservant les propriétés fusionnées
       const deduplicatedContent = _.uniqBy(updatedContent, 'id')
 
       return withUndoRedo(state, {
@@ -122,8 +125,7 @@ export function gridReducer(state, action) {
       return withUndoRedo(state, importCsvData(state, action.payload))
     }
     case 'SYNC_CELL_LAYOUT': {
-      const { sourceId, layout } = action.payload
-      const linkedGroup = state.linkedGroups.find((group) => group.includes(sourceId))
+      const { sourceId, layout, linkedGroup } = action.payload
       if (!linkedGroup) return state
 
       const updatedCellContents = { ...state.cellContents }
@@ -134,47 +136,39 @@ export function gridReducer(state, action) {
             const layoutItem = layout[item.id]
             if (!layoutItem) return item
 
-            if (item.id.startsWith('Gencode-')) {
-              // Gestion spécifique des QR codes
-              const newItem = {
-                ...item,
-                left: layoutItem.left,
-                top: layoutItem.top,
-                angle: layoutItem.angle,
-                scaleX: layoutItem.scaleX,
-                scaleY: layoutItem.scaleY,
-                fill: layoutItem.fill,
-                // Ajout des propriétés de stroke pour les QR codes
-                stroke: layoutItem.stroke || item.stroke || '#000000',
-                strokeWidth: layoutItem.strokeWidth ?? item.strokeWidth ?? 0,
-                strokeDashArray: layoutItem.strokeDashArray || item.strokeDashArray || [],
-                strokeUniform: true
-              }
+            const type = item.isQRCode ? 'qrcode' : item.type
+            const propertyGroups = TYPE_PROPERTY_GROUPS[type] || ['basic']
 
+            if (item.isQRCode) {
+              const qrProps = extractObjectProperties(layoutItem, ['basic', 'qr'])
               // Préserver qrText et src pour les QR codes liés via CSV
               if (item.linkedByCsv) {
-                newItem.qrText = item.qrText
-                newItem.src = item.src
+                return {
+                  ...item,
+                  ...qrProps,
+                  qrText: item.qrText,
+                  src: item.src
+                }
               }
-
-              return newItem
+              return {
+                ...item,
+                ...qrProps
+              }
             }
 
-            // Pour les autres éléments, fusion des propriétés existantes avec le layout
+            // Pour les autres éléments, synchronisation complète
             return {
               ...item,
-              ...layoutItem,
-              // S'assurer que les propriétés de stroke sont correctement synchronisées
-              stroke: layoutItem.stroke || item.stroke || '#000000',
-              strokeWidth: layoutItem.strokeWidth ?? item.strokeWidth ?? 0,
-              strokeDashArray: layoutItem.strokeDashArray || item.strokeDashArray || [],
-              strokeUniform: true
+              ...extractObjectProperties(layoutItem, propertyGroups)
             }
           })
         }
       })
 
-      return { ...state, cellContents: updatedCellContents }
+      return {
+        ...state,
+        cellContents: updatedCellContents
+      }
     }
     case 'DELETE_CLEARED_OBJECT': {
       const { id } = action.payload

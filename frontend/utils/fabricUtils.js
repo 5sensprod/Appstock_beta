@@ -1,5 +1,6 @@
 import QRCode from 'qrcode'
 import { rgbToHex } from './conversionUtils'
+import { extractObjectProperties, TYPE_PROPERTY_GROUPS } from './objectPropertiesConfig'
 
 import * as fabric from 'fabric'
 
@@ -81,11 +82,11 @@ export const createFabricObject = (obj, scaleFactor = 1) => {
 }
 
 // Fonction pour charger des objets sur un canvas
+
 export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
   if (!canvas) throw new Error('Canvas non disponible')
   canvas.clear()
 
-  // Garder les propriétés de base comme dans la version qui fonctionne pour les QR codes
   const baseObjectProps = {
     strokeWidth: 0,
     stroke: null,
@@ -98,44 +99,27 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
   }
 
   const validatedObjects = objects.map((obj) => {
-    // Si c'est un QR code, appliquer uniquement baseObjectProps
-    if (obj.isQRCode) {
-      return {
-        ...obj,
-        ...baseObjectProps
-      }
-    }
+    // Déterminer le type et les groupes de propriétés associés
+    const type = obj.isQRCode ? 'qrcode' : obj.type
+    const propertyGroups = TYPE_PROPERTY_GROUPS[type] || ['basic']
 
-    // Pour les autres objets, gérer le strokeDashArray
-    let adjustedDashArray = null
-    if (obj.strokeDashArray && Array.isArray(obj.strokeDashArray)) {
-      adjustedDashArray = obj.strokeDashArray.map((value) => value * scaleFactor)
-    }
-
-    const strokeProps = {
-      stroke: obj.stroke || null,
-      strokeWidth: obj.strokeWidth !== undefined ? obj.strokeWidth * scaleFactor : 0,
-      strokeDashArray: adjustedDashArray,
-      strokeUniform: obj.strokeUniform || true,
-      strokeLineCap: obj.strokeLineCap || 'butt'
-    }
-
+    // Extraire les propriétés avec le scaling
     let validatedObj = {
       ...obj,
       ...baseObjectProps,
-      ...strokeProps
+      ...extractObjectProperties(obj, propertyGroups, scaleFactor)
     }
 
-    if (obj.type === 'rect' || obj.type === 'triangle') {
-      return {
+    // Gérer les dimensions par défaut selon le type
+    if (type === 'rect' || type === 'triangle') {
+      validatedObj = {
         ...validatedObj,
         width: obj.width || 50,
         height: obj.height || 50
       }
     }
-
-    if (obj.type === 'circle') {
-      return {
+    if (type === 'circle') {
+      validatedObj = {
         ...validatedObj,
         radius: obj.radius || 25,
         left: obj.left || 0,
@@ -143,7 +127,10 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
       }
     }
 
-    return validatedObj
+    return {
+      ...validatedObj,
+      isQRCode: type === 'qrcode'
+    }
   })
 
   const fabricObjects = await Promise.all(
@@ -152,11 +139,10 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
 
   fabricObjects.forEach((fabricObject) => {
     if (fabricObject) {
+      // Appliquer uniquement les propriétés de base pour les QR codes
       if (fabricObject.isQRCode) {
-        // Pour les QR codes, appliquer uniquement baseObjectProps
         fabricObject.set(baseObjectProps)
       } else {
-        // Pour les autres objets, préserver leurs propriétés de stroke
         fabricObject.set({
           borderColor: 'transparent',
           cornerColor: 'transparent',

@@ -3,6 +3,7 @@ import * as fabric from 'fabric'
 import { GridContext } from '../context/GridContext'
 import _ from 'lodash'
 import { createQRCodeFabricImage, generateQRCodeImage } from '../utils/fabricUtils'
+import { extractObjectProperties, TYPE_PROPERTY_GROUPS } from '../utils/objectPropertiesConfig'
 
 const useCanvasGridSync = (canvas) => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
@@ -226,23 +227,10 @@ const useCanvasGridSync = (canvas) => {
     // Créer une version sérialisée des objets actuels sur le canevas
     const updatedObjects = await Promise.all(
       objects.map(async (obj) => {
+        // Utiliser extractObjectProperties pour les propriétés de base et de stroke
         const baseProperties = {
-          id: obj.id || Date.now().toString(),
-          left: obj.left || 0,
-          top: obj.top || 0,
-          fill: obj.fill,
-          angle: obj.angle || 0,
-          scaleX: obj.scaleX || 1,
-          scaleY: obj.scaleY || 1,
-          // Propriétés de stroke
-          stroke: obj.stroke || '#000000',
-          strokeWidth: obj.strokeWidth ?? 0,
-          strokeDashArray: obj.strokeDashArray || [],
-          strokeUniform: true,
-          strokeLineCap: obj.strokeLineCap || 'butt',
-          patternType: obj.patternType || 'solid',
-          patternDensity: obj.patternDensity || 5,
-          // Position dans la pile
+          ...extractObjectProperties(obj, ['basic', 'stroke']),
+          opacity: obj.savedOpacity || obj.opacity || 1, // Utiliser l'opacité sauvegardée
           zIndex: objects.indexOf(obj) / Math.max(1, objects.length - 1)
         }
 
@@ -266,13 +254,14 @@ const useCanvasGridSync = (canvas) => {
             return {
               ...baseProperties,
               type: 'image',
-              src: obj.src, // Utiliser l'ancien QR code en cas d'erreur
+              src: obj.src,
               isQRCode: true,
               qrText
             }
           }
         }
 
+        // Retourner les propriétés selon le type avec extractObjectProperties
         switch (obj.type) {
           case 'image':
             return {
@@ -288,22 +277,14 @@ const useCanvasGridSync = (canvas) => {
           case 'text':
             return {
               ...baseProperties,
-              type: 'i-text',
-              text: obj.text || '',
-              fontSize: obj.fontSize,
-              fontFamily: obj.fontFamily,
-              fontStyle: obj.fontStyle || 'normal',
-              fontWeight: obj.fontWeight || 'normal'
+              ...extractObjectProperties(obj, ['text']),
+              type: 'i-text'
             }
           case 'textbox':
             return {
               ...baseProperties,
+              ...extractObjectProperties(obj, ['text']),
               type: 'textbox',
-              text: obj.text || '',
-              fontSize: obj.fontSize,
-              fontFamily: obj.fontFamily,
-              fontStyle: obj.fontStyle || 'normal',
-              fontWeight: obj.fontWeight || 'normal',
               width: obj.width
             }
           case 'rect':
@@ -325,19 +306,17 @@ const useCanvasGridSync = (canvas) => {
       })
     )
 
-    // Détecter les objets ajoutés
+    // Garder la logique originale intacte pour la partie de synchronisation
     const newObjects = updatedObjects.filter(
       (obj) => !lastContentRef.current?.some((prevObj) => prevObj.id === obj.id)
     )
 
-    // Détecter les objets supprimés
     const removedObjects = lastContentRef.current
       ? lastContentRef.current.filter(
           (prevObj) => !updatedObjects.some((obj) => obj.id === prevObj.id)
         )
       : []
 
-    // Mettre à jour la référence du dernier contenu
     lastContentRef.current = updatedObjects
 
     const linkedGroup = findLinkedGroup(selectedCellId)
@@ -347,33 +326,44 @@ const useCanvasGridSync = (canvas) => {
 
         const currentContent = cellContents[cellId] || []
 
-        // Supprimer les objets manquants
         let synchronizedContent = currentContent.filter(
           (obj) => !removedObjects.some((removedObj) => removedObj.id === obj.id)
         )
 
-        // Ajouter les nouveaux objets
         newObjects.forEach((newObj) => {
           if (!synchronizedContent.some((obj) => obj.id === newObj.id)) {
             synchronizedContent.push(newObj)
           }
         })
 
-        // Réorganiser et appliquer les z-index
+        // Conserver la logique originale pour le z-index
         synchronizedContent = synchronizedContent
           .map((obj) => {
             const sourceObj = updatedObjects.find((updated) => updated.id === obj.id)
             if (sourceObj) {
               return {
                 ...obj,
-                zIndex: sourceObj.zIndex
+                // Propriétés de base
+                zIndex: sourceObj.zIndex,
+                // Propriétés d'apparence
+                opacity: sourceObj.opacity,
+                gradientType: sourceObj.gradientType,
+                gradientColors: sourceObj.gradientColors,
+                gradientDirection: sourceObj.gradientDirection,
+                // Conserver les props CSV si nécessaire
+                ...(obj.linkedByCsv && {
+                  linkedByCsv: true,
+                  ...(obj.isQRCode && {
+                    qrText: obj.qrText,
+                    src: obj.src
+                  })
+                })
               }
             }
             return obj
           })
           .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
 
-        // Comparer et mettre à jour uniquement si le contenu a changé
         if (!_.isEqual(currentContent, synchronizedContent)) {
           dispatch({
             type: 'UPDATE_CELL_CONTENT',
@@ -383,27 +373,28 @@ const useCanvasGridSync = (canvas) => {
       })
     }
 
-    // Toujours mettre à jour la cellule courante
     dispatch({
       type: 'UPDATE_CELL_CONTENT',
       payload: { id: selectedCellId, content: updatedObjects }
     })
 
-    // Synchronisation des groupes liés (ajouts et mises à jour de disposition)
+    // Garder la logique originale pour le layout
     if (linkedGroup && linkedGroup.length > 1) {
       const layout = updatedObjects.reduce((acc, item) => {
         acc[item.id] = {
+          // Propriétés de base existantes
           left: item.left,
           top: item.top,
           fill: item.fill,
           scaleX: item.scaleX,
           scaleY: item.scaleY,
           angle: item.angle || 0,
+          opacity: item.savedOpacity || item.opacity || 1,
           fontFamily: item.fontFamily || 'Arial',
           fontSize: item.fontSize || 16,
           fontStyle: item.fontStyle || 'normal',
           fontWeight: item.fontWeight || 'normal',
-          // Propriétés de stroke dans le layout
+          // Propriétés de stroke
           stroke: item.stroke || '#000000',
           strokeWidth: item.strokeWidth ?? 0,
           strokeDashArray: item.strokeDashArray || [],
@@ -411,6 +402,12 @@ const useCanvasGridSync = (canvas) => {
           strokeLineCap: item.strokeLineCap || 'butt',
           patternType: item.patternType || 'solid',
           patternDensity: item.patternDensity || 5,
+          // Propriétés d'apparence
+          opacity: item.opacity || 1,
+          gradientType: item.gradientType || 'none',
+          gradientColors: item.gradientColors || [],
+          gradientDirection: item.gradientDirection || 0,
+          // Propriétés QR code si nécessaire
           ...(item.isQRCode && { src: item.src, qrText: item.qrText })
         }
         return acc
