@@ -95,6 +95,21 @@ export const useAppearanceManager = () => {
     })
   }, [selectedObject, canvas, dispatchCanvasAction])
 
+  const getCurrentObjectColor = useCallback(() => {
+    if (!selectedObject) return '#000000'
+    const fill = selectedObject.get('fill')
+
+    // Si c'est une couleur unie
+    if (typeof fill === 'string') {
+      return fill
+    }
+    // Si c'est un gradient, retourner la première couleur
+    if (fill?.colorStops) {
+      return fill.colorStops[0].color
+    }
+    return '#000000'
+  }, [selectedObject])
+
   return {
     currentOpacity: selectedObject?.opacity || 1,
     currentGradientType: selectedObject?.get('fill')?.type || 'none',
@@ -105,6 +120,7 @@ export const useAppearanceManager = () => {
     currentGradientDirection: selectedObject?.gradientDirection || 0,
     handleOpacityChange,
     createGradient,
-    removeGradient
+    removeGradient,
+    currentColor: getCurrentObjectColor()
   }
 }

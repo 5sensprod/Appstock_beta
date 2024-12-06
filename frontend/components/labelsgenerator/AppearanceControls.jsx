@@ -12,6 +12,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     currentGradientType,
     currentGradientColors,
     currentGradientDirection,
+    currentColor, // Ajouté
     handleOpacityChange,
     createGradient,
     removeGradient
@@ -19,11 +20,29 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
 
   const [gradientColors, setGradientColors] = useState(currentGradientColors)
   const [gradientDirection, setGradientDirection] = useState(currentGradientDirection)
+  const [solidColor, setSolidColor] = useState(currentColor)
 
-  // Utiliser useCallback pour la fonction handleGradientChange
+  // Gestion unifiée du changement de couleur
+  const handleColorChange = useCallback(
+    (color) => {
+      if (currentGradientType === 'none') {
+        setSolidColor(color)
+        canvas?.getActiveObject()?.set('fill', color)
+        canvas?.renderAll()
+        canvas?.fire('object:modified')
+      } else {
+        const newColors = [color, gradientColors[1]]
+        setGradientColors(newColors)
+        handleGradientChange(currentGradientType, newColors, gradientDirection)
+      }
+    },
+    [canvas, currentGradientType, gradientColors, gradientDirection]
+  )
+
   const handleGradientChange = useCallback(
     (type, colors, direction) => {
       if (type === 'none') {
+        setSolidColor(colors[0])
         removeGradient()
       } else {
         createGradient(type, colors, direction)
@@ -33,13 +52,10 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     [canvas, createGradient, removeGradient]
   )
 
-  // Synchroniser uniquement quand les valeurs changent réellement
+  // Synchronisation avec l'état global
   useEffect(() => {
-    const colorsChanged = JSON.stringify(gradientColors) !== JSON.stringify(currentGradientColors)
-    if (colorsChanged) {
-      setGradientColors(currentGradientColors)
-    }
-  }, [currentGradientColors])
+    setSolidColor(currentColor)
+  }, [currentColor])
 
   useEffect(() => {
     if (gradientDirection !== currentGradientDirection) {
@@ -48,7 +64,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
   }, [currentGradientDirection])
 
   const handleOpacityChangeEnd = () => {
-    handleOpacityChange(currentOpacity, true)
+    handleOpacityChange(currentOpacity)
     canvas?.fire('object:modified')
   }
 
@@ -71,6 +87,15 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
       ref={pickerRef}
     >
       <div className="space-y-4">
+        {/* Couleur unie */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">Couleur</label>
+          <ColorPicker
+            color={currentGradientType === 'none' ? solidColor : gradientColors[0]}
+            setSelectedColor={handleColorChange}
+          />
+        </div>
+
         {/* Opacité */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">Opacité</label>
@@ -166,3 +191,5 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     </div>
   )
 }
+
+export default AppearanceControls

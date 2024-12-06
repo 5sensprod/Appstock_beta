@@ -85,14 +85,6 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
         size="w-12 h-12"
         iconSize="text-xl"
       />
-      <IconButton
-        onClick={() => setIsColorPickerOpen((prev) => !prev)}
-        icon={faPalette}
-        title="Choisir une couleur"
-        className="bg-gray-500 hover:bg-gray-600"
-        size="w-12 h-12"
-        iconSize="text-xl"
-      />
 
       <StrokeControls
         isOpen={isStrokeControlOpen}
