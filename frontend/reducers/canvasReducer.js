@@ -9,6 +9,11 @@ export const initialCanvasState = {
     width: 1,
     dashArray: null
   },
+  gradientProperties: {
+    type: 'none',
+    colors: ['#000000', '#ffffff'],
+    direction: 0
+  },
   labelConfig: {
     labelWidth: 48.5,
     labelHeight: 25,
@@ -49,8 +54,17 @@ export const canvasReducer = (state, action) => {
     case 'SET_OBJECT_PROPERTIES':
       return {
         ...state,
-        selectedColor: action.payload.color || state.selectedColor,
-        selectedFont: action.payload.font || state.selectedFont
+        selectedColor: action.payload.fill || action.payload.color || state.selectedColor,
+        selectedFont: action.payload.font || state.selectedFont,
+        gradientProperties: {
+          ...state.gradientProperties,
+          type: action.payload.gradientType || state.gradientProperties.type,
+          colors: action.payload.gradientColors || state.gradientProperties.colors,
+          direction:
+            action.payload.gradientDirection !== undefined
+              ? action.payload.gradientDirection
+              : state.gradientProperties.direction
+        }
       }
 
     case 'SET_STROKE_PROPERTIES':
