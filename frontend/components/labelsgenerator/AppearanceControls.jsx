@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { faAdjust } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../ui/IconButton'
 import ColorPicker from './texttool/ColorPicker'
@@ -20,23 +20,35 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
   const [gradientColors, setGradientColors] = useState(currentGradientColors)
   const [gradientDirection, setGradientDirection] = useState(currentGradientDirection)
 
-  // Synchroniser les états locaux avec les valeurs courantes
+  // Utiliser useCallback pour la fonction handleGradientChange
+  const handleGradientChange = useCallback(
+    (type, colors, direction) => {
+      if (type === 'none') {
+        removeGradient()
+      } else {
+        createGradient(type, colors, direction)
+      }
+      canvas?.fire('object:modified')
+    },
+    [canvas, createGradient, removeGradient]
+  )
+
+  // Synchroniser uniquement quand les valeurs changent réellement
   useEffect(() => {
-    setGradientColors(currentGradientColors)
-    setGradientDirection(currentGradientDirection)
-  }, [currentGradientColors, currentGradientDirection])
+    const colorsChanged = JSON.stringify(gradientColors) !== JSON.stringify(currentGradientColors)
+    if (colorsChanged) {
+      setGradientColors(currentGradientColors)
+    }
+  }, [currentGradientColors])
+
+  useEffect(() => {
+    if (gradientDirection !== currentGradientDirection) {
+      setGradientDirection(currentGradientDirection)
+    }
+  }, [currentGradientDirection])
 
   const handleOpacityChangeEnd = () => {
     handleOpacityChange(currentOpacity, true)
-    canvas?.fire('object:modified')
-  }
-
-  const handleGradientChange = (type, colors, direction) => {
-    if (type === 'none') {
-      removeGradient()
-    } else {
-      createGradient(type, colors, direction)
-    }
     canvas?.fire('object:modified')
   }
 

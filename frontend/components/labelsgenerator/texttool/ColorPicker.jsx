@@ -1,3 +1,5 @@
+//frontend\components\labelsgenerator\texttool\ColorPicker.jsx
+
 import React, { useEffect, useState } from 'react'
 import { HexColorPicker } from 'react-colorful'
 import { faEyeDropper } from '@fortawesome/free-solid-svg-icons'
