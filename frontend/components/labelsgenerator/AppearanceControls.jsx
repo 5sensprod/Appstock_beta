@@ -12,37 +12,36 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     currentGradientType,
     currentGradientColors,
     currentGradientDirection,
-    currentColor, // Ajouté
+    currentColor,
     handleOpacityChange,
     createGradient,
     removeGradient
   } = useAppearanceManager()
 
+  const [activeColorStop, setActiveColorStop] = useState(0) // 0 = début, 1 = fin
   const [gradientColors, setGradientColors] = useState(currentGradientColors)
   const [gradientDirection, setGradientDirection] = useState(currentGradientDirection)
-  const [solidColor, setSolidColor] = useState(currentColor)
 
   // Gestion unifiée du changement de couleur
   const handleColorChange = useCallback(
     (color) => {
       if (currentGradientType === 'none') {
-        setSolidColor(color)
         canvas?.getActiveObject()?.set('fill', color)
         canvas?.renderAll()
         canvas?.fire('object:modified')
       } else {
-        const newColors = [color, gradientColors[1]]
+        const newColors = [...gradientColors]
+        newColors[activeColorStop] = color
         setGradientColors(newColors)
         handleGradientChange(currentGradientType, newColors, gradientDirection)
       }
     },
-    [canvas, currentGradientType, gradientColors, gradientDirection]
+    [canvas, currentGradientType, gradientColors, gradientDirection, activeColorStop]
   )
 
   const handleGradientChange = useCallback(
     (type, colors, direction) => {
       if (type === 'none') {
-        setSolidColor(colors[0])
         removeGradient()
       } else {
         createGradient(type, colors, direction)
@@ -54,21 +53,13 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
 
   // Synchronisation avec l'état global
   useEffect(() => {
-    setSolidColor(currentColor)
-  }, [currentColor])
-
-  useEffect(() => {
-    if (gradientDirection !== currentGradientDirection) {
-      setGradientDirection(currentGradientDirection)
+    const colorsChanged = JSON.stringify(gradientColors) !== JSON.stringify(currentGradientColors)
+    if (colorsChanged) {
+      setGradientColors(currentGradientColors)
     }
-  }, [currentGradientDirection])
+  }, [currentGradientColors])
 
-  const handleOpacityChangeEnd = () => {
-    handleOpacityChange(currentOpacity)
-    canvas?.fire('object:modified')
-  }
-
-  if (!isOpen) {
+  if (!isOpen)
     return (
       <IconButton
         onClick={onToggle}
@@ -79,7 +70,6 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
         iconSize="text-xl"
       />
     )
-  }
 
   return (
     <div
@@ -87,11 +77,15 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
       ref={pickerRef}
     >
       <div className="space-y-4">
-        {/* Couleur unie */}
+        {/* ColorPicker principal */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Couleur</label>
+          <label className="text-sm font-medium text-gray-700">
+            {currentGradientType === 'none'
+              ? 'Couleur'
+              : `Couleur ${activeColorStop === 0 ? 'de début' : 'de fin'}`}
+          </label>
           <ColorPicker
-            color={currentGradientType === 'none' ? solidColor : gradientColors[0]}
+            color={currentGradientType === 'none' ? currentColor : gradientColors[activeColorStop]}
             setSelectedColor={handleColorChange}
           />
         </div>
@@ -106,8 +100,6 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
             step="0.1"
             value={currentOpacity}
             onChange={(e) => handleOpacityChange(parseFloat(e.target.value))}
-            onMouseUp={handleOpacityChangeEnd}
-            onTouchEnd={handleOpacityChangeEnd}
             className="w-full"
           />
           <div className="text-right text-sm text-gray-500">
@@ -135,57 +127,50 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
           </div>
         </div>
 
-        {/* Couleurs du dégradé */}
+        {/* Gradient Color Stops */}
         {currentGradientType !== 'none' && (
-          <>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Couleurs du dégradé</label>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs text-gray-500">Début</label>
-                  <ColorPicker
-                    color={gradientColors[0]}
-                    setSelectedColor={(color) => {
-                      const newColors = [color, gradientColors[1]]
-                      setGradientColors(newColors)
-                      handleGradientChange(currentGradientType, newColors, gradientDirection)
-                    }}
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500">Fin</label>
-                  <ColorPicker
-                    color={gradientColors[1]}
-                    setSelectedColor={(color) => {
-                      const newColors = [gradientColors[0], color]
-                      setGradientColors(newColors)
-                      handleGradientChange(currentGradientType, newColors, gradientDirection)
-                    }}
-                  />
-                </div>
-              </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Couleurs du dégradé</label>
+            <div
+              className="relative h-8 rounded-lg"
+              style={{
+                background: `linear-gradient(to right, ${gradientColors[0]}, ${gradientColors[1]})`
+              }}
+            >
+              {/* Bouton couleur de début */}
+              <button
+                className={`absolute left-0 top-1/2 -ml-2 -mt-2 h-4 w-4 rounded-full border-2 ${activeColorStop === 0 ? 'border-blue-500' : 'border-white'}`}
+                style={{ background: gradientColors[0] }}
+                onClick={() => setActiveColorStop(0)}
+              />
+              {/* Bouton couleur de fin */}
+              <button
+                className={`absolute right-0 top-1/2 -mr-2 -mt-2 h-4 w-4 rounded-full border-2 ${activeColorStop === 1 ? 'border-blue-500' : 'border-white'}`}
+                style={{ background: gradientColors[1] }}
+                onClick={() => setActiveColorStop(1)}
+              />
             </div>
+          </div>
+        )}
 
-            {/* Direction (uniquement pour le dégradé linéaire) */}
-            {currentGradientType === 'linear' && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Direction (degrés)</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="360"
-                  value={gradientDirection}
-                  onChange={(e) => {
-                    const direction = parseInt(e.target.value)
-                    setGradientDirection(direction)
-                    handleGradientChange(currentGradientType, gradientColors, direction)
-                  }}
-                  className="w-full"
-                />
-                <div className="text-right text-sm text-gray-500">{gradientDirection}°</div>
-              </div>
-            )}
-          </>
+        {/* Direction (uniquement pour le dégradé linéaire) */}
+        {currentGradientType === 'linear' && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Direction (degrés)</label>
+            <input
+              type="range"
+              min="0"
+              max="360"
+              value={gradientDirection}
+              onChange={(e) => {
+                const direction = parseInt(e.target.value)
+                setGradientDirection(direction)
+                handleGradientChange(currentGradientType, gradientColors, direction)
+              }}
+              className="w-full"
+            />
+            <div className="text-right text-sm text-gray-500">{gradientDirection}°</div>
+          </div>
         )}
       </div>
     </div>
