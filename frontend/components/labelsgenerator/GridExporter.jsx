@@ -1,3 +1,4 @@
+//frontend\components\labelsgenerator\GridExporter.jsx
 import { jsPDF } from 'jspdf'
 import * as fabric from 'fabric'
 import { mmToPx } from '../../utils/conversionUtils'

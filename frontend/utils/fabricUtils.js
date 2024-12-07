@@ -1,3 +1,4 @@
+//frontend\utils\fabricUtils.js
 import QRCode from 'qrcode'
 import { rgbToHex } from './conversionUtils'
 import { extractObjectProperties, TYPE_PROPERTY_GROUPS } from './objectPropertiesConfig'
