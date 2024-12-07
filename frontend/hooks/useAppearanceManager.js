@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { useCanvas } from '../context/CanvasContext'
+import { GradientService } from '../services/GradientService'
 import * as fabric from 'fabric'
 
 export const GRADIENT_TYPES = {
@@ -30,56 +31,34 @@ export const useAppearanceManager = () => {
     (type, colors, direction = 0, offsets = [0, 1]) => {
       if (!selectedObject) return
 
-      let gradientOptions
-      const width = selectedObject.width * selectedObject.scaleX
-      const height = selectedObject.height * selectedObject.scaleY
-
-      if (type === 'linear') {
-        const angleRad = (direction * Math.PI) / 180
-        gradientOptions = {
-          type: 'linear',
-          coords: {
-            x1: -width / 2,
-            y1: -height / 2,
-            x2: width / 2,
-            y2: height / 2
-          }
-        }
-      } else if (type === 'radial') {
-        const radius = Math.min(width, height) / 2
-        const centerX = -width / 2
-        const centerY = -height / 2
-        gradientOptions = {
-          type: 'radial',
-          coords: {
-            r1: radius * Math.min(offsets[0], offsets[1]), // Utiliser le plus petit offset pour r1
-            r2: radius * Math.max(offsets[0], offsets[1]),
-            x1: -centerX,
-            y1: -centerY,
-            x2: -centerX,
-            y2: -centerY
-          }
-        }
+      if (type === 'none') {
+        removeGradient()
+        return
       }
 
-      if (gradientOptions) {
-        gradientOptions.colorStops = [
-          { offset: offsets[0], color: colors[0] },
-          { offset: offsets[1], color: colors[1] }
-        ]
+      const gradient = GradientService.createGradient(
+        selectedObject,
+        type,
+        colors,
+        direction,
+        offsets
+      )
 
-        selectedObject.set('fill', new fabric.Gradient(gradientOptions))
-        canvas.renderAll()
+      selectedObject.set('fill', gradient)
+      canvas.renderAll()
 
-        dispatchCanvasAction({
-          type: 'SET_OBJECT_PROPERTIES',
-          payload: {
-            gradientType: type,
-            gradientColors: colors,
-            gradientDirection: direction
-          }
-        })
-      }
+      // Mettre à jour le state avec les propriétés sérialisées du gradient
+      const gradientProps = GradientService.serializeGradient(selectedObject)
+      dispatchCanvasAction({
+        type: 'SET_OBJECT_PROPERTIES',
+        payload: {
+          gradientType: type,
+          gradientColors: colors,
+          gradientDirection: direction,
+          gradientOffsets: offsets,
+          gradientCoords: gradientProps.coords
+        }
+      })
     },
     [selectedObject, canvas, dispatchCanvasAction]
   )
