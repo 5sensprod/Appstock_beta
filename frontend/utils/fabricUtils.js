@@ -115,8 +115,8 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
       const gradientProps = {
         type: obj.fill.type,
         colors: obj.fill.colorStops.map((stop) => stop.color),
-        direction: obj.gradientDirection || 0,
-        offsets: obj.fill.colorStops.map((stop) => stop.offset)
+        offsets: obj.fill.colorStops.map((stop) => stop.offset),
+        direction: obj.fill.gradientAngle || obj.gradientDirection || 0 // Utiliser l'angle sauvegardé
       }
       validatedObj.gradientInfo = gradientProps
     }
@@ -143,17 +143,18 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
           hasBorders: false
         })
 
-        // Réappliquer le gradient si nécessaire
+        // Réappliquer le gradient avec le service
         const originalObj = validatedObjects.find((obj) => obj.id === fabricObject.id)
         if (originalObj?.gradientInfo) {
           const gradient = GradientService.createGradient(
             fabricObject,
             originalObj.gradientInfo.type,
             originalObj.gradientInfo.colors,
-            originalObj.gradientInfo.direction,
+            originalObj.gradientInfo.direction, // Utiliser la direction sauvegardée
             originalObj.gradientInfo.offsets
           )
           fabricObject.set('fill', gradient)
+          fabricObject.set('gradientDirection', originalObj.gradientInfo.direction) // Sauvegarder la direction
         }
       }
       canvas.add(fabricObject)

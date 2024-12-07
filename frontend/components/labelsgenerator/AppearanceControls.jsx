@@ -13,6 +13,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     currentGradientType,
     currentGradientColors,
     currentGradientDirection,
+    currentGradientOffsets,
     currentColor,
     handleOpacityChange,
     createGradient,
@@ -157,6 +158,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
               activeStop={activeColorStop}
               onStopSelect={setActiveColorStop}
               onPositionChange={handlePositionChange}
+              offsets={currentGradientOffsets}
             />
           </div>
         )}

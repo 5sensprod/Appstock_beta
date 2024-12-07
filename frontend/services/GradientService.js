@@ -51,28 +51,31 @@ export class GradientService {
     const baseHeight = object.height
     const globalScaleX = object.scaleX
     const globalScaleY = object.scaleY
-
     const coords = {}
 
-    if (type === 'radial') {
-      // Calcul du centre en tenant compte de la position de l'objet
+    if (type === 'linear') {
+      // Logique linéaire inchangée
+      const angleRad = (direction * Math.PI) / 180
+      const halfDiagonal =
+        Math.sqrt(Math.pow(baseWidth * globalScaleX, 2) + Math.pow(baseHeight * globalScaleY, 2)) /
+        2
+      const dx = Math.cos(angleRad)
+      const dy = Math.sin(angleRad)
+      coords.x1 = -dx * halfDiagonal
+      coords.y1 = -dy * halfDiagonal
+      coords.x2 = dx * halfDiagonal
+      coords.y2 = dy * halfDiagonal
+    } else if (type === 'radial') {
       const scale = Math.min(globalScaleX, globalScaleY)
-      const centerX = baseWidth / 2
-      const centerY = baseHeight / 2
+      const radius = Math.min(baseWidth, baseHeight) / 2
 
-      GRADIENT_PROPERTIES.radial.forEach((prop) => {
-        if (prop.startsWith('r')) {
-          // Pour les rayons
-          const baseCoord = this.calculateRadialCoordinate(prop, baseWidth, baseHeight, offsets)
-          coords[prop] = baseCoord * scale
-        } else if (prop.includes('x')) {
-          // Pour les coordonnées x du centre
-          coords[prop] = centerX
-        } else if (prop.includes('y')) {
-          // Pour les coordonnées y du centre
-          coords[prop] = centerY
-        }
-      })
+      // Garder la logique d'origine pour radial
+      coords.r1 = radius * Math.min(offsets[0], offsets[1]) * scale
+      coords.r2 = radius * Math.max(offsets[0], offsets[1]) * scale
+      coords.x1 = baseWidth / 2
+      coords.y1 = baseHeight / 2
+      coords.x2 = baseWidth / 2
+      coords.y2 = baseHeight / 2
     }
 
     return coords
@@ -80,8 +83,7 @@ export class GradientService {
 
   static createGradient(object, type, colors, direction, offsets) {
     const coords = this.calculateGradientCoordinates(object, type, colors, direction, offsets)
-
-    return new fabric.Gradient({
+    const gradient = new fabric.Gradient({
       type,
       coords,
       colorStops: colors.map((color, index) => ({
@@ -89,6 +91,13 @@ export class GradientService {
         color
       }))
     })
+
+    // Ajouter l'angle pour les dégradés linéaires
+    if (type === 'linear') {
+      gradient.gradientAngle = direction
+    }
+
+    return gradient
   }
 
   static serializeGradient(gradientObject) {

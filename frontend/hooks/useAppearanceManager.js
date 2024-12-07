@@ -99,6 +99,12 @@ export const useAppearanceManager = () => {
       selectedObject?.get('fill')?.colorStops?.[1]?.color || '#ffffff'
     ],
     currentGradientDirection: selectedObject?.gradientDirection || 0,
+    currentGradientOffsets: selectedObject?.get('fill')?.colorStops
+      ? [
+          selectedObject.get('fill').colorStops[0].offset,
+          selectedObject.get('fill').colorStops[1].offset
+        ]
+      : [0, 1],
     handleOpacityChange,
     createGradient,
     removeGradient,
