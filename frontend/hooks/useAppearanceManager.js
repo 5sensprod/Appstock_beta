@@ -27,7 +27,7 @@ export const useAppearanceManager = () => {
   )
 
   const createGradient = useCallback(
-    (type, colors, direction = 0) => {
+    (type, colors, direction = 0, offsets = [0, 1]) => {
       if (!selectedObject) return
 
       let gradientOptions
@@ -47,23 +47,25 @@ export const useAppearanceManager = () => {
         }
       } else if (type === 'radial') {
         const radius = Math.min(width, height) / 2
+        const centerX = -width / 2
+        const centerY = -height / 2
         gradientOptions = {
           type: 'radial',
           coords: {
-            r1: 0,
-            r2: radius,
-            x1: 0,
-            y1: 0,
-            x2: 0,
-            y2: 0
+            r1: radius * Math.min(offsets[0], offsets[1]), // Utiliser le plus petit offset pour r1
+            r2: radius * Math.max(offsets[0], offsets[1]),
+            x1: -centerX,
+            y1: -centerY,
+            x2: -centerX,
+            y2: -centerY
           }
         }
       }
 
       if (gradientOptions) {
         gradientOptions.colorStops = [
-          { offset: 0, color: colors[0] },
-          { offset: 1, color: colors[1] }
+          { offset: offsets[0], color: colors[0] },
+          { offset: offsets[1], color: colors[1] }
         ]
 
         selectedObject.set('fill', new fabric.Gradient(gradientOptions))

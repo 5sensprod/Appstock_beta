@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { faAdjust } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../ui/IconButton'
 import ColorPicker from './texttool/ColorPicker'
+import GradientSlider from './GradientSlider'
 import { GRADIENT_TYPES, useAppearanceManager } from '../../hooks/useAppearanceManager'
 import { useCanvas } from '../../context/CanvasContext'
 
@@ -21,7 +22,8 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
   const [activeColorStop, setActiveColorStop] = useState(0) // 0 = début, 1 = fin
   const [gradientColors, setGradientColors] = useState(currentGradientColors)
   const [gradientDirection, setGradientDirection] = useState(currentGradientDirection)
-
+  const [colorPositions, setColorPositions] = useState([0, 100])
+  const [gradientOffsets, setGradientOffsets] = useState([0, 1])
   // Gestion unifiée du changement de couleur
   const handleColorChange = useCallback(
     (color) => {
@@ -40,15 +42,34 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
   )
 
   const handleGradientChange = useCallback(
-    (type, colors, direction) => {
+    (type, colors, newDirection) => {
       if (type === 'none') {
         removeGradient()
       } else {
-        createGradient(type, colors, direction)
+        createGradient(type, colors, newDirection, gradientOffsets)
       }
       canvas?.fire('object:modified')
     },
-    [canvas, createGradient, removeGradient]
+    [canvas, createGradient, removeGradient, gradientOffsets]
+  )
+
+  const handlePositionChange = useCallback(
+    (stopIndex, offset) => {
+      // Créer de nouveaux offsets en ne modifiant que celui qui change
+      const newOffsets = [...gradientOffsets]
+      newOffsets[stopIndex] = offset
+
+      // Empêcher les stops de se croiser
+      if (stopIndex === 0) {
+        newOffsets[0] = Math.min(newOffsets[0], newOffsets[1] - 0.05)
+      } else {
+        newOffsets[1] = Math.max(newOffsets[1], newOffsets[0] + 0.05)
+      }
+
+      setGradientOffsets(newOffsets)
+      createGradient(currentGradientType, gradientColors, gradientDirection, newOffsets)
+    },
+    [currentGradientType, gradientColors, gradientDirection, gradientOffsets, createGradient]
   )
 
   // Synchronisation avec l'état global
@@ -131,28 +152,14 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
         {currentGradientType !== 'none' && (
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Couleurs du dégradé</label>
-            <div
-              className="relative h-8 rounded-lg"
-              style={{
-                background: `linear-gradient(to right, ${gradientColors[0]}, ${gradientColors[1]})`
-              }}
-            >
-              {/* Bouton couleur de début */}
-              <button
-                className={`absolute left-0 top-1/2 -ml-2 -mt-2 h-4 w-4 rounded-full border-2 ${activeColorStop === 0 ? 'border-blue-500' : 'border-white'}`}
-                style={{ background: gradientColors[0] }}
-                onClick={() => setActiveColorStop(0)}
-              />
-              {/* Bouton couleur de fin */}
-              <button
-                className={`absolute right-0 top-1/2 -mr-2 -mt-2 h-4 w-4 rounded-full border-2 ${activeColorStop === 1 ? 'border-blue-500' : 'border-white'}`}
-                style={{ background: gradientColors[1] }}
-                onClick={() => setActiveColorStop(1)}
-              />
-            </div>
+            <GradientSlider
+              colors={gradientColors}
+              activeStop={activeColorStop}
+              onStopSelect={setActiveColorStop}
+              onPositionChange={handlePositionChange}
+            />
           </div>
         )}
-
         {/* Direction (uniquement pour le dégradé linéaire) */}
         {currentGradientType === 'linear' && (
           <div className="space-y-2">

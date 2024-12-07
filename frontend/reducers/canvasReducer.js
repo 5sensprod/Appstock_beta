@@ -12,7 +12,8 @@ export const initialCanvasState = {
   gradientProperties: {
     type: 'none',
     colors: ['#000000', '#ffffff'],
-    direction: 0
+    direction: 0,
+    offsets: [0, 1]
   },
   labelConfig: {
     labelWidth: 48.5,
@@ -63,7 +64,8 @@ export const canvasReducer = (state, action) => {
           direction:
             action.payload.gradientDirection !== undefined
               ? action.payload.gradientDirection
-              : state.gradientProperties.direction
+              : state.gradientProperties.direction,
+          offsets: action.payload.gradientOffsets || state.gradientProperties.offsets // Nouveau
         }
       }
 

@@ -218,13 +218,16 @@ const applyGradientToObject = (fabricObject, gradientInfo, scaleFactor) => {
     }
   } else if (type === 'radial') {
     const radius = Math.min(width, height) / 2
+    const centerX = -width / 2
+    const centerY = -height / 2
+
     gradientOptions.coords = {
-      r1: 0,
-      r2: radius,
-      x1: 0,
-      y1: 0,
-      x2: 0,
-      y2: 0
+      r1: radius * colorStops[0].offset,
+      r2: radius * colorStops[1].offset,
+      x1: -centerX,
+      y1: -centerY,
+      x2: -centerX,
+      y2: -centerY
     }
   }
 
