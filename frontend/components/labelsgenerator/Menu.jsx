@@ -13,7 +13,6 @@ import ShapeMenu from './menus/ShapeMenu'
 import TextMenu from './menus/TextMenu'
 import ImageMenu from './menus/ImageMenu'
 import QrMenu from './menus/QrMenu'
-import ImportMenu from './menus/ImportMenu'
 import CSVImporter from './CSVImporter'
 import { useCanvas } from '../../context/CanvasContext'
 

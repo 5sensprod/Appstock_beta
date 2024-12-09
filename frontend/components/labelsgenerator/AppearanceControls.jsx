@@ -23,6 +23,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
   const [activeColorStop, setActiveColorStop] = useState(0) // 0 = début, 1 = fin
   const [gradientColors, setGradientColors] = useState(currentGradientColors)
   const [gradientDirection, setGradientDirection] = useState(currentGradientDirection)
+  const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
     if (isOpen && selectedObject) {
@@ -45,7 +46,10 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
       if (currentGradientType === 'none') {
         canvas?.getActiveObject()?.set('fill', color)
         canvas?.renderAll()
-        canvas?.fire('object:modified')
+        // Ne pas déclencher object:modified pendant le drag
+        if (!isDragging) {
+          canvas?.fire('object:modified')
+        }
       } else {
         const newColors = [...gradientColors]
         newColors[activeColorStop] = color
@@ -53,7 +57,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
         handleGradientChange(currentGradientType, newColors, gradientDirection)
       }
     },
-    [canvas, currentGradientType, gradientColors, gradientDirection, activeColorStop]
+    [canvas, currentGradientType, gradientColors, gradientDirection, activeColorStop, isDragging]
   )
 
   // Gestionnaire de changement de type de dégradé modifié
@@ -62,7 +66,6 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
       if (type === 'none') {
         removeGradient()
       } else {
-        // Utiliser les offsets actuels lors du changement de type
         const currentOffsets = canvas?.getActiveObject()?.get('fill')?.colorStops
           ? [
               canvas.getActiveObject().get('fill').colorStops[0].offset,
@@ -70,11 +73,13 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
             ]
           : currentGradientOffsets
 
-        // Conserver la direction actuelle lors du changement de type
         const direction = type === 'linear' ? newDirection : 0
         createGradient(type, colors, direction, currentOffsets)
       }
-      canvas?.fire('object:modified')
+      // Ne déclencher object:modified que si on n'est pas en train de drag
+      if (!isDragging) {
+        canvas?.fire('object:modified')
+      }
     },
     [
       canvas,
@@ -82,7 +87,8 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
       gradientDirection,
       currentGradientOffsets,
       createGradient,
-      removeGradient
+      removeGradient,
+      isDragging
     ]
   )
 
@@ -94,6 +100,23 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     },
     [currentGradientType, gradientColors, currentGradientOffsets, createGradient]
   )
+
+  useEffect(() => {
+    const handleMouseUp = () => {
+      if (isDragging) {
+        setIsDragging(false)
+        // Déclencher object:modified à la fin du drag
+        canvas?.fire('object:modified')
+      }
+    }
+
+    window.addEventListener('mouseup', handleMouseUp)
+    return () => window.removeEventListener('mouseup', handleMouseUp)
+  }, [canvas, isDragging])
+
+  const handleMouseDown = () => {
+    setIsDragging(true)
+  }
 
   // Synchronisation avec l'état global
   useEffect(() => {
@@ -119,6 +142,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     <div
       className="absolute left-0 top-2 z-50 mt-2 w-64 rounded-lg bg-white p-4 shadow-xl"
       ref={pickerRef}
+      onMouseDown={handleMouseDown}
     >
       <div className="space-y-4">
         {/* ColorPicker principal */}
