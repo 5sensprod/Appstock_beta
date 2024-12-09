@@ -49,16 +49,11 @@ export class GradientService {
   static calculateGradientCoordinates(object, type, colors, direction, offsets) {
     const baseWidth = object.width
     const baseHeight = object.height
-    const globalScaleX = object.scaleX
-    const globalScaleY = object.scaleY
     const coords = {}
 
     if (type === 'linear') {
-      // Logique linéaire inchangée
       const angleRad = (direction * Math.PI) / 180
-      const halfDiagonal =
-        Math.sqrt(Math.pow(baseWidth * globalScaleX, 2) + Math.pow(baseHeight * globalScaleY, 2)) /
-        2
+      const halfDiagonal = Math.sqrt(Math.pow(baseWidth, 2) + Math.pow(baseHeight, 2)) / 2
       const dx = Math.cos(angleRad)
       const dy = Math.sin(angleRad)
       coords.x1 = -dx * halfDiagonal
@@ -66,16 +61,25 @@ export class GradientService {
       coords.x2 = dx * halfDiagonal
       coords.y2 = dy * halfDiagonal
     } else if (type === 'radial') {
-      const scale = Math.min(globalScaleX, globalScaleY)
-      const radius = Math.min(baseWidth, baseHeight) / 2
+      const scaleX = object.scaleX || 1
+      const scaleY = object.scaleY || 1
+      const avgScale = (scaleX + scaleY) / 2
 
-      // Garder la logique d'origine pour radial
-      coords.r1 = radius * Math.min(offsets[0], offsets[1]) * scale
-      coords.r2 = radius * Math.max(offsets[0], offsets[1]) * scale
-      coords.x1 = baseWidth / 2
-      coords.y1 = baseHeight / 2
-      coords.x2 = baseWidth / 2
-      coords.y2 = baseHeight / 2
+      // Centre du gradient
+      const centerX = baseWidth / 2
+      const centerY = baseHeight / 2
+      coords.x1 = centerX
+      coords.y1 = centerY
+      coords.x2 = centerX
+      coords.y2 = centerY
+
+      // Rayon de base ajusté pour maintenir l'aspect visuel
+      const baseRadius = Math.min(baseWidth, baseHeight) / 2
+      const radiusScale = 1 / avgScale // Inverse du scale pour compenser l'effet de dilatation
+
+      // Ajustement des rayons pour maintenir la distribution visuelle
+      coords.r1 = baseRadius * radiusScale * 0.1 // Point central
+      coords.r2 = baseRadius * radiusScale // Rayon extérieur
     }
 
     return coords
@@ -92,7 +96,26 @@ export class GradientService {
       }))
     })
 
-    // Ajouter l'angle pour les dégradés linéaires
+    if (type === 'radial' && object.scaleX && object.scaleY) {
+      const scaleX = object.scaleX
+      const scaleY = object.scaleY
+      const avgScale = (scaleX + scaleY) / 2
+
+      // Calcul de la translation pour maintenir le centrage
+      const translateX = (object.width * (scaleX - 1)) / 2
+      const translateY = (object.height * (scaleY - 1)) / 2
+
+      // Matrice de transformation complète
+      gradient.gradientTransform = [
+        avgScale,
+        0,
+        0,
+        avgScale,
+        -translateX,
+        -translateY // Translation négative pour compenser le décalage
+      ]
+    }
+
     if (type === 'linear') {
       gradient.gradientAngle = direction
     }
@@ -100,6 +123,17 @@ export class GradientService {
     return gradient
   }
 
+  static updateGradientOnScale(object) {
+    if (!object.fill || !object.fill.type) return null
+
+    return this.createGradient(
+      object,
+      object.fill.type,
+      object.fill.colorStops.map((stop) => stop.color),
+      object.gradientDirection || 0,
+      object.fill.colorStops.map((stop) => stop.offset)
+    )
+  }
   static serializeGradient(gradientObject) {
     if (!gradientObject.fill || !gradientObject.fill.type) return null
 
