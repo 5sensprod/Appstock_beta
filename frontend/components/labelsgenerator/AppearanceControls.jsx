@@ -7,7 +7,7 @@ import { GRADIENT_TYPES, useAppearanceManager } from '../../hooks/useAppearanceM
 import { useCanvas } from '../../context/CanvasContext'
 
 export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
-  const { canvas } = useCanvas()
+  const { canvas, selectedObject } = useCanvas()
   const {
     currentOpacity,
     currentGradientType,
@@ -23,8 +23,22 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
   const [activeColorStop, setActiveColorStop] = useState(0) // 0 = début, 1 = fin
   const [gradientColors, setGradientColors] = useState(currentGradientColors)
   const [gradientDirection, setGradientDirection] = useState(currentGradientDirection)
-  const [colorPositions, setColorPositions] = useState([0, 100])
-  const [gradientOffsets, setGradientOffsets] = useState([0, 1])
+
+  useEffect(() => {
+    if (isOpen && selectedObject) {
+      const fill = selectedObject.get('fill')
+      if (fill?.type && fill.type !== 'none') {
+        // Forcer une mise à jour du gradient avec les offsets actuels
+        createGradient(
+          fill.type,
+          [fill.colorStops[0].color, fill.colorStops[1].color],
+          currentGradientDirection,
+          [fill.colorStops[0].offset, fill.colorStops[1].offset]
+        )
+      }
+    }
+  }, [isOpen, selectedObject, createGradient])
+
   // Gestion unifiée du changement de couleur
   const handleColorChange = useCallback(
     (color) => {
@@ -42,35 +56,43 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     [canvas, currentGradientType, gradientColors, gradientDirection, activeColorStop]
   )
 
+  // Gestionnaire de changement de type de dégradé modifié
   const handleGradientChange = useCallback(
-    (type, colors, newDirection) => {
+    (type, colors = gradientColors, newDirection = gradientDirection) => {
       if (type === 'none') {
         removeGradient()
       } else {
-        createGradient(type, colors, newDirection, gradientOffsets)
+        // Utiliser les offsets actuels lors du changement de type
+        const currentOffsets = canvas?.getActiveObject()?.get('fill')?.colorStops
+          ? [
+              canvas.getActiveObject().get('fill').colorStops[0].offset,
+              canvas.getActiveObject().get('fill').colorStops[1].offset
+            ]
+          : currentGradientOffsets
+
+        // Conserver la direction actuelle lors du changement de type
+        const direction = type === 'linear' ? newDirection : 0
+        createGradient(type, colors, direction, currentOffsets)
       }
       canvas?.fire('object:modified')
     },
-    [canvas, createGradient, removeGradient, gradientOffsets]
+    [
+      canvas,
+      gradientColors,
+      gradientDirection,
+      currentGradientOffsets,
+      createGradient,
+      removeGradient
+    ]
   )
 
-  const handlePositionChange = useCallback(
-    (stopIndex, offset) => {
-      // Créer de nouveaux offsets en ne modifiant que celui qui change
-      const newOffsets = [...gradientOffsets]
-      newOffsets[stopIndex] = offset
-
-      // Empêcher les stops de se croiser
-      if (stopIndex === 0) {
-        newOffsets[0] = Math.min(newOffsets[0], newOffsets[1] - 0.05)
-      } else {
-        newOffsets[1] = Math.max(newOffsets[1], newOffsets[0] + 0.05)
-      }
-
-      setGradientOffsets(newOffsets)
-      createGradient(currentGradientType, gradientColors, gradientDirection, newOffsets)
+  // Gestionnaire de changement de direction
+  const handleDirectionChange = useCallback(
+    (direction) => {
+      setGradientDirection(direction)
+      createGradient(currentGradientType, gradientColors, direction, currentGradientOffsets)
     },
-    [currentGradientType, gradientColors, gradientDirection, gradientOffsets, createGradient]
+    [currentGradientType, gradientColors, currentGradientOffsets, createGradient]
   )
 
   // Synchronisation avec l'état global
@@ -136,7 +158,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
             {Object.entries(GRADIENT_TYPES).map(([type, label]) => (
               <button
                 key={type}
-                onClick={() => handleGradientChange(type, gradientColors, gradientDirection)}
+                onClick={() => handleGradientChange(type)}
                 className={`rounded border px-3 py-1 text-sm ${
                   currentGradientType === type
                     ? 'border-blue-500 bg-blue-50'
@@ -157,7 +179,11 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
               colors={gradientColors}
               activeStop={activeColorStop}
               onStopSelect={setActiveColorStop}
-              onPositionChange={handlePositionChange}
+              onPositionChange={(stopIndex, offset) => {
+                const newOffsets = [...currentGradientOffsets]
+                newOffsets[stopIndex] = offset
+                createGradient(currentGradientType, gradientColors, gradientDirection, newOffsets)
+              }}
               offsets={currentGradientOffsets}
             />
           </div>
@@ -171,11 +197,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
               min="0"
               max="360"
               value={gradientDirection}
-              onChange={(e) => {
-                const direction = parseInt(e.target.value)
-                setGradientDirection(direction)
-                handleGradientChange(currentGradientType, gradientColors, direction)
-              }}
+              onChange={(e) => handleDirectionChange(parseInt(e.target.value))}
               className="w-full"
             />
             <div className="text-right text-sm text-gray-500">{gradientDirection}°</div>

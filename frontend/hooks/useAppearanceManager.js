@@ -36,6 +36,7 @@ export const useAppearanceManager = () => {
         return
       }
 
+      // Créer le gradient avec les offsets existants
       const gradient = GradientService.createGradient(
         selectedObject,
         type,
@@ -47,16 +48,15 @@ export const useAppearanceManager = () => {
       selectedObject.set('fill', gradient)
       canvas.renderAll()
 
-      // Mettre à jour le state avec les propriétés sérialisées du gradient
-      const gradientProps = GradientService.serializeGradient(selectedObject)
+      // Sauvegarder les propriétés du gradient dans le state global
       dispatchCanvasAction({
         type: 'SET_OBJECT_PROPERTIES',
         payload: {
           gradientType: type,
           gradientColors: colors,
           gradientDirection: direction,
-          gradientOffsets: offsets,
-          gradientCoords: gradientProps.coords
+          gradientOffsets: offsets, // Sauvegarder les offsets dans le state global
+          gradientCoords: GradientService.serializeGradient(selectedObject).coords
         }
       })
     },

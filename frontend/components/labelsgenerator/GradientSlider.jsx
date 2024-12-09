@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react' // ajout de useEffect
+import React, { useCallback, useRef } from 'react'
 
 const GradientSlider = ({
   colors,
@@ -7,54 +7,43 @@ const GradientSlider = ({
   onPositionChange,
   offsets = [0, 1]
 }) => {
-  const [positions, setPositions] = useState(offsets)
   const sliderRef = useRef(null)
-
-  // Mettre à jour les positions quand les offsets changent
-  useEffect(() => {
-    if (!arraysAreEqual(positions, offsets)) {
-      setPositions(offsets)
-    }
-  }, [offsets])
-
-  // Fonction utilitaire pour comparer les tableaux
-  const arraysAreEqual = (arr1, arr2) => {
-    if (arr1.length !== arr2.length) return false
-    return arr1.every((value, index) => Math.abs(value - arr2[index]) < 0.001) // Utiliser une petite tolérance pour les nombres flottants
-  }
 
   const handleMouseDown = useCallback(
     (stopIndex, e) => {
       e.preventDefault()
       e.stopPropagation()
+
       const handleMouseMove = (moveEvent) => {
         if (!sliderRef.current) return
         const rect = sliderRef.current.getBoundingClientRect()
         const x = moveEvent.clientX - rect.left
         const width = rect.width
+
         // Calculer le nouvel offset (0-1)
         let newOffset = Math.max(0, Math.min(1, x / width))
-        // Empêcher les stops de se croiser
+
+        // Empêcher les stops de se croiser en utilisant les offsets actuels
+        const otherOffset = offsets[stopIndex === 0 ? 1 : 0]
         if (stopIndex === 0) {
-          newOffset = Math.min(newOffset, positions[1] - 0.05)
+          newOffset = Math.min(newOffset, otherOffset - 0.05)
         } else {
-          newOffset = Math.max(newOffset, positions[0] + 0.05)
+          newOffset = Math.max(newOffset, otherOffset + 0.05)
         }
-        // Mettre à jour la position visuelle
-        const newPositions = [...positions]
-        newPositions[stopIndex] = newOffset
-        setPositions(newPositions)
-        // Notifier le parent
+
+        // Notifier le parent du changement
         onPositionChange(stopIndex, newOffset)
       }
+
       const handleMouseUp = () => {
         document.removeEventListener('mousemove', handleMouseMove)
         document.removeEventListener('mouseup', handleMouseUp)
       }
+
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
     },
-    [positions, onPositionChange]
+    [offsets, onPositionChange]
   )
 
   return (
@@ -73,7 +62,7 @@ const GradientSlider = ({
           }`}
           style={{
             background: colors[index],
-            left: `${positions[index] * 100}%`,
+            left: `${offsets[index] * 100}%`,
             transform: 'translateX(-50%)',
             zIndex: 10
           }}
