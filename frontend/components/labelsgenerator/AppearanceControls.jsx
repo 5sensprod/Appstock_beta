@@ -25,21 +25,6 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
   const [gradientDirection, setGradientDirection] = useState(currentGradientDirection)
   const [isDragging, setIsDragging] = useState(false)
 
-  useEffect(() => {
-    if (isOpen && selectedObject) {
-      const fill = selectedObject.get('fill')
-      if (fill?.type && fill.type !== 'none') {
-        // Forcer une mise à jour du gradient avec les offsets actuels
-        createGradient(
-          fill.type,
-          [fill.colorStops[0].color, fill.colorStops[1].color],
-          currentGradientDirection,
-          [fill.colorStops[0].offset, fill.colorStops[1].offset]
-        )
-      }
-    }
-  }, [isOpen, selectedObject, createGradient])
-
   // Gestion unifiée du changement de couleur
   const handleColorChange = useCallback(
     (color) => {
@@ -59,6 +44,11 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     },
     [canvas, currentGradientType, gradientColors, gradientDirection, activeColorStop, isDragging]
   )
+
+  // Sync avec l'état actuel
+  useEffect(() => {
+    setGradientDirection(currentGradientDirection)
+  }, [currentGradientDirection])
 
   // Gestionnaire de changement de type de dégradé modifié
   const handleGradientChange = useCallback(
@@ -94,9 +84,17 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
 
   // Gestionnaire de changement de direction
   const handleDirectionChange = useCallback(
-    (direction) => {
-      setGradientDirection(direction)
-      createGradient(currentGradientType, gradientColors, direction, currentGradientOffsets)
+    (newDirection) => {
+      setGradientDirection(newDirection)
+      // Appliquer directement le gradient avec la nouvelle direction
+      const currentOffsets = canvas?.getActiveObject()?.get('fill')?.colorStops
+        ? [
+            canvas.getActiveObject().get('fill').colorStops[0].offset,
+            canvas.getActiveObject().get('fill').colorStops[1].offset
+          ]
+        : currentGradientOffsets
+
+      createGradient(currentGradientType, gradientColors, newDirection, currentOffsets)
     },
     [currentGradientType, gradientColors, currentGradientOffsets, createGradient]
   )
@@ -105,7 +103,6 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     const handleMouseUp = () => {
       if (isDragging) {
         setIsDragging(false)
-        // Déclencher object:modified à la fin du drag
         canvas?.fire('object:modified')
       }
     }
@@ -113,10 +110,6 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     window.addEventListener('mouseup', handleMouseUp)
     return () => window.removeEventListener('mouseup', handleMouseUp)
   }, [canvas, isDragging])
-
-  const handleMouseDown = () => {
-    setIsDragging(true)
-  }
 
   // Synchronisation avec l'état global
   useEffect(() => {
@@ -142,7 +135,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     <div
       className="absolute left-0 top-2 z-50 mt-2 w-64 rounded-lg bg-white p-4 shadow-xl"
       ref={pickerRef}
-      onMouseDown={handleMouseDown}
+      onMouseDown={() => setIsDragging(true)}
     >
       <div className="space-y-4">
         {/* ColorPicker principal */}
@@ -221,7 +214,11 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
               min="0"
               max="360"
               value={gradientDirection}
-              onChange={(e) => handleDirectionChange(parseInt(e.target.value))}
+              onChange={(e) => {
+                const newDirection = parseInt(e.target.value)
+                handleDirectionChange(newDirection)
+              }}
+              onMouseUp={() => canvas?.fire('object:modified')}
               className="w-full"
             />
             <div className="text-right text-sm text-gray-500">{gradientDirection}°</div>
