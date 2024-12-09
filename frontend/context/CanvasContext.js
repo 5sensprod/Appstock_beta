@@ -9,7 +9,6 @@ import { GridContext } from './GridContext'
 import useCanvasGridSync from '../hooks/useCanvasGridSync'
 import useCanvasObjectUpdater from '../hooks/useCanvasObjectUpdater'
 import useCanvasContextMenu from '../hooks/useCanvasContextMenu'
-import { GradientService } from '../services/GradientService'
 
 const CanvasContext = createContext()
 
@@ -69,14 +68,6 @@ const CanvasProvider = ({ children }) => {
         top: obj?.top
       })
     }
-    canvas.on('object:scaling', function (e) {
-      const object = e.target
-      if (object.fill && object.fill.type) {
-        object.set('fill', GradientService.updateGradientOnScale(object))
-        canvas.requestRenderAll()
-      }
-    })
-
     const events = ['object:added', 'object:modified', 'object:removed']
     const handlers = events.reduce((acc, event) => {
       acc[event] = (e) => logObjectChanges(event, e.target)
