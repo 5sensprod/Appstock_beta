@@ -81,24 +81,21 @@ export const extractObjectProperties = (obj, propertyGroups = ['basic'], scaleFa
 
 export const extractGradientProperties = (obj, scaleFactor = 1) => {
   const gradientProps = {}
-
   if (obj.fill && obj.fill.type) {
     gradientProps.type = obj.fill.type
     gradientProps.colors = obj.fill.colorStops.map((stop) => stop.color)
     gradientProps.offsets = obj.fill.colorStops.map((stop) => stop.offset)
+    gradientProps.gradientDirection = obj.gradientDirection || 0 // Ajout ici
 
     // Scaling des coordonnées
     const coords = obj.fill.coords
     gradientProps.coords = Object.entries(coords).reduce((acc, [key, value]) => {
-      // Appliquer le scaleFactor uniquement aux propriétés de dimension (r1, r2, x1, x2, y1, y2)
       acc[key] = ['r1', 'r2', 'x1', 'x2', 'y1', 'y2'].includes(key) ? value * scaleFactor : value
       return acc
     }, {})
   }
-
   return gradientProps
 }
-
 export const hasAppearanceChanges = (oldObj, newObj) => {
   return OBJECT_PROPERTIES.appearance.some(
     (prop) => JSON.stringify(oldObj[prop]) !== JSON.stringify(newObj[prop])

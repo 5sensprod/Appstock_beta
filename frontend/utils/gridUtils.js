@@ -93,11 +93,18 @@ export const importCsvData = (state, rows) => {
   const cellCount = Object.values(state.cellContents).filter((content) => content?.length).length
   const totalPages = Math.max(state.totalPages, Math.ceil((cellCount + rows.length) / cellsPerPage))
 
-  const defaultStrokeProps = {
+  // Ajout des propriétés par défaut pour les gradients
+  const defaultProperties = {
     stroke: '#000000',
     strokeWidth: 0,
     strokeDashArray: [],
-    strokeUniform: true
+    strokeUniform: true,
+    // Ajout des propriétés de gradient par défaut
+    gradientType: 'none',
+    gradientColors: [],
+    gradientDirection: 0,
+    gradientOffsets: [],
+    opacity: 1
   }
 
   const newCells = rows.reduce((acc, row, index) => {
@@ -107,7 +114,7 @@ export const importCsvData = (state, rows) => {
       linkedByCsv: true,
       left: 10 + idx * 50,
       top: 10,
-      ...defaultStrokeProps,
+      ...defaultProperties, // Utilisation des propriétés par défaut complètes
       ...(key.includes('shape')
         ? { type: 'rect', width: 50, height: 30, fill: '#FFD700' }
         : { type: 'i-text', text: value, fontSize: 14, fill: '#333' })
