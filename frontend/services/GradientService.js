@@ -1,5 +1,4 @@
 // services/GradientService.js
-import { GRADIENT_PROPERTIES } from '../utils/objectPropertiesConfig'
 import * as fabric from 'fabric'
 
 export class GradientService {
