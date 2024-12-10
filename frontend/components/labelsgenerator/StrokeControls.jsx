@@ -16,18 +16,32 @@ export const StrokeControls = ({
 }) => {
   // State local pour suivre le type de motif
   const [activePattern, setActivePattern] = useState(patternType || 'solid')
+  const [localPatternDensity, setLocalPatternDensity] = useState(patternDensity)
 
   // Synchroniser l'état local avec les props
   useEffect(() => {
     setActivePattern(patternType)
   }, [patternType])
 
+  useEffect(() => {
+    setLocalPatternDensity(patternDensity)
+  }, [patternDensity])
+
   const handlePatternChange = (type) => {
     setActivePattern(type)
     onStrokeChange({
       patternType: type,
-      density: patternDensity,
-      forceUpdate: true // Ajouter un flag pour forcer la mise à jour
+      density: localPatternDensity,
+      forceUpdate: true
+    })
+  }
+
+  const handleDensityChange = (newDensity) => {
+    setLocalPatternDensity(newDensity)
+    onStrokeChange({
+      density: newDensity,
+      patternType: activePattern,
+      forceUpdate: true
     })
   }
 
@@ -113,17 +127,11 @@ export const StrokeControls = ({
               type="range"
               min="1"
               max="10"
-              value={patternDensity}
-              onChange={(e) =>
-                onStrokeChange({
-                  density: parseInt(e.target.value, 10),
-                  patternType: activePattern,
-                  forceUpdate: true
-                })
-              }
+              value={localPatternDensity}
+              onChange={(e) => handleDensityChange(parseInt(e.target.value, 10))}
               className="w-full"
             />
-            <div className="text-right text-sm text-gray-500">{patternDensity}</div>
+            <div className="text-right text-sm text-gray-500">{localPatternDensity}</div>
           </div>
         )}
       </div>
