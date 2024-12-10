@@ -6,7 +6,7 @@ import GradientSlider from './GradientSlider'
 import { GRADIENT_TYPES, useAppearanceManager } from '../../hooks/useAppearanceManager'
 import { useCanvas } from '../../context/CanvasContext'
 
-export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
+export const AppearanceControls = ({ isOpen, onToggle, pickerRef, onModification }) => {
   const { canvas } = useCanvas()
   const {
     currentOpacity,
@@ -50,14 +50,24 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
       if (currentGradientType === 'none') {
         canvas?.getActiveObject()?.set('fill', color)
         canvas?.renderAll()
+        onModification?.()
       } else {
         const newColors = [...localGradientColors]
         newColors[activeColorStop] = color
         setLocalGradientColors(newColors)
         handleGradientChange(currentGradientType, newColors, localGradientDirection)
+        onModification?.()
       }
     },
-    [canvas, currentGradientType, localGradientColors, localGradientDirection, activeColorStop]
+    [
+      canvas,
+      currentGradientType,
+      localGradientColors, // Changé ici
+      localGradientDirection, // Changé ici
+      activeColorStop,
+      onModification,
+      handleGradientChange
+    ]
   )
 
   const handleGradientChange = useCallback(
@@ -75,6 +85,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
         createGradient(type, colors, direction, currentOffsets)
       }
       canvas?.renderAll()
+      onModification?.()
     },
     [
       canvas,
@@ -82,7 +93,8 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
       localGradientDirection,
       currentGradientOffsets,
       createGradient,
-      removeGradient
+      removeGradient,
+      onModification
     ]
   )
 
@@ -98,8 +110,16 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
 
       createGradient(currentGradientType, localGradientColors, newDirection, currentOffsets)
       canvas?.renderAll()
+      onModification?.()
     },
-    [canvas, currentGradientType, localGradientColors, currentGradientOffsets, createGradient]
+    [
+      canvas,
+      currentGradientType,
+      localGradientColors,
+      currentGradientOffsets,
+      createGradient,
+      onModification
+    ]
   )
 
   if (!isOpen) {

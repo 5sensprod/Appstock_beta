@@ -16,60 +16,69 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   const pickerRef = useRef(null)
   const strokePickerRef = useRef(null)
   const appearancePickerRef = useRef(null)
+  const hasModifications = useRef(false)
 
   const { currentColor, handleColorChange } = useShapeManager()
   const { currentStroke, currentStrokeWidth, currentStrokeDashArray, handleStrokeChange } =
     useStrokeManager()
   const { canvas } = useCanvas()
 
+  // Reset du flag quand on ouvre un contrôle
+  const resetModificationFlag = () => {
+    hasModifications.current = false
+  }
+
+  // Handler pour marquer qu'il y a eu une modification
+  const handleModification = () => {
+    hasModifications.current = true
+  }
+
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Gestion du clic en dehors du color picker
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
         setIsColorPickerOpen(false)
-        setTimeout(() => {
-          handleColorChange(currentColor, true)
-          canvas?.fire('object:modified')
-          canvas?.renderAll()
-        }, 0)
+        if (hasModifications.current) {
+          setTimeout(() => {
+            canvas?.fire('object:modified')
+            canvas?.renderAll()
+          }, 0)
+        }
       }
 
-      // Gestion du clic en dehors des contrôles de bordure
       if (strokePickerRef.current && !strokePickerRef.current.contains(event.target)) {
         setIsStrokeControlOpen(false)
-        setTimeout(() => {
-          handleStrokeChange(
-            {
-              stroke: currentStroke,
-              strokeWidth: currentStrokeWidth,
-              strokeDashArray: currentStrokeDashArray
-            },
-            true
-          )
-          canvas?.fire('object:modified')
-          canvas?.renderAll()
-        }, 0)
+        if (hasModifications.current) {
+          setTimeout(() => {
+            canvas?.fire('object:modified')
+            canvas?.renderAll()
+          }, 0)
+        }
       }
+
       if (appearancePickerRef.current && !appearancePickerRef.current.contains(event.target)) {
         setIsAppearanceOpen(false)
-        setTimeout(() => {
-          canvas?.fire('object:modified')
-          canvas?.renderAll()
-        }, 0)
+        if (hasModifications.current) {
+          setTimeout(() => {
+            canvas?.fire('object:modified')
+            canvas?.renderAll()
+          }, 0)
+        }
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [
-    handleColorChange,
-    handleStrokeChange,
-    currentColor,
-    currentStroke,
-    currentStrokeWidth,
-    currentStrokeDashArray,
-    canvas
-  ])
+  }, [canvas])
+
+  const handleColorChangeWithFlag = (color) => {
+    handleColorChange(color)
+    handleModification()
+  }
+
+  const handleStrokeChangeWithFlag = (...args) => {
+    handleStrokeChange(...args)
+    handleModification()
+  }
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
@@ -92,23 +101,34 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
 
       <StrokeControls
         isOpen={isStrokeControlOpen}
-        onToggle={() => setIsStrokeControlOpen((prev) => !prev)}
+        onToggle={() => {
+          setIsStrokeControlOpen(!isStrokeControlOpen)
+          setIsColorPickerOpen(false)
+          setIsAppearanceOpen(false)
+          resetModificationFlag()
+        }}
         strokeWidth={currentStrokeWidth}
         strokeColor={currentStroke}
         strokePattern={currentStrokeDashArray}
-        onStrokeChange={handleStrokeChange}
+        onStrokeChange={handleStrokeChangeWithFlag}
         pickerRef={strokePickerRef}
       />
 
       <AppearanceControls
         isOpen={isAppearanceOpen}
-        onToggle={() => setIsAppearanceOpen((prev) => !prev)}
+        onToggle={() => {
+          setIsAppearanceOpen(!isAppearanceOpen)
+          setIsColorPickerOpen(false)
+          setIsStrokeControlOpen(false)
+          resetModificationFlag()
+        }}
         pickerRef={appearancePickerRef}
+        onModification={handleModification}
       />
 
       {isColorPickerOpen && (
         <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
-          <ColorPicker color={currentColor} setSelectedColor={handleColorChange} />
+          <ColorPicker color={currentColor} setSelectedColor={handleColorChangeWithFlag} />
         </div>
       )}
     </div>
