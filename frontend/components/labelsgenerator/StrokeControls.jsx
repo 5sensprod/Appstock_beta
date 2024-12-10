@@ -7,8 +7,6 @@ import { STROKE_PATTERN_TYPES } from '../../hooks/useStrokeManager'
 import { useStyle } from '../../context/StyleContext'
 
 export const StrokeControls = ({ isOpen, onToggle, onStrokeChange, pickerRef }) => {
-  const { handleStrokeChange, strokeState } = useStyle()
-
   const { currentStroke, currentStrokeWidth, currentPatternType, currentPatternDensity } =
     useStyle()
 
@@ -58,7 +56,7 @@ export const StrokeControls = ({ isOpen, onToggle, onStrokeChange, pickerRef }) 
             min="0"
             max="20"
             value={currentStrokeWidth}
-            onChange={(e) => handleStrokeChange({ strokeWidth: parseInt(e.target.value, 10) })}
+            onChange={(e) => handleStrokeWidthChange(e.target.value)} // Utiliser handleStrokeWidthChange
             className="w-full"
           />
           <div className="text-right text-sm text-gray-500">{currentStrokeWidth}px</div>
@@ -69,7 +67,7 @@ export const StrokeControls = ({ isOpen, onToggle, onStrokeChange, pickerRef }) 
           <label className="text-sm font-medium text-gray-700">Couleur</label>
           <ColorPicker
             color={currentStroke}
-            setSelectedColor={(color) => handleStrokeChange({ stroke: color })}
+            setSelectedColor={handleStrokeColorChange} // Utiliser handleStrokeColorChange
           />
         </div>
 

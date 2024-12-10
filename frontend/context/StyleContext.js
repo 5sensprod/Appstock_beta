@@ -1,7 +1,7 @@
 // contexts/StyleContext.js
 import React, { createContext, useContext } from 'react'
 import { useStrokeManager } from '../hooks/useStrokeManager'
-
+import { useAppearanceManager } from '../hooks/useAppearanceManager'
 const StyleContext = createContext()
 
 export const useStyle = () => {
@@ -13,16 +13,37 @@ export const useStyle = () => {
 }
 
 export const StyleProvider = ({ children }) => {
-  // On utilise directement useStrokeManager sans modifier sa logique
   const strokeManager = useStrokeManager()
+  const {
+    currentOpacity,
+    currentGradientType,
+    currentGradientColors,
+    currentGradientDirection,
+    currentGradientOffsets,
+    currentColor,
+    handleOpacityChange,
+    createGradient,
+    removeGradient
+  } = useAppearanceManager()
 
   const value = {
-    ...strokeManager,
+    // Stroke properties
     currentStroke: strokeManager.currentStroke,
     currentStrokeWidth: strokeManager.currentStrokeWidth,
     currentPatternType: strokeManager.currentPatternType,
     currentPatternDensity: strokeManager.currentPatternDensity,
-    handleStrokeChange: strokeManager.handleStrokeChange
+    handleStrokeChange: strokeManager.handleStrokeChange,
+
+    // Appearance properties
+    currentOpacity,
+    currentGradientType,
+    currentGradientColors,
+    currentGradientDirection,
+    currentGradientOffsets,
+    currentColor,
+    handleOpacityChange,
+    createGradient,
+    removeGradient
   }
 
   return <StyleContext.Provider value={value}>{children}</StyleContext.Provider>

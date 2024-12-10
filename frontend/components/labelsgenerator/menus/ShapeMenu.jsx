@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { faCircle, faSquare, faPalette } from '@fortawesome/free-solid-svg-icons'
+import { faCircle, faSquare } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../../ui/IconButton'
 import ColorPicker from '../texttool/ColorPicker'
 import { useShapeManager } from '../../../hooks/useShapeManager'
-import { useStrokeManager } from '../../../hooks/useStrokeManager'
 import { useCanvas } from '../../../context/CanvasContext'
 import { StrokeControls } from '../StrokeControls'
 import { AppearanceControls } from '../AppearanceControls'
@@ -18,8 +17,7 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   const strokePickerRef = useRef(null)
   const appearancePickerRef = useRef(null)
   const hasModifications = useRef(false)
-  const { handleStrokeChange, currentStroke, currentStrokeWidth, currentPatternType } = useStyle()
-
+  const { handleStrokeChange, handleOpacityChange, createGradient, removeGradient } = useStyle()
   const { currentColor, handleColorChange } = useShapeManager()
 
   const { canvas } = useCanvas()
@@ -36,12 +34,30 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      console.log('Click outside detected') // Debug
+      if (pickerRef.current && !pickerRef.current.contains(event.target)) {
+        setIsColorPickerOpen(false)
+        if (hasModifications.current) {
+          setTimeout(() => {
+            canvas?.fire('object:modified')
+            canvas?.renderAll()
+          }, 0)
+        }
+      }
+
       if (strokePickerRef.current && !strokePickerRef.current.contains(event.target)) {
-        console.log('Click outside stroke picker') // Debug
         setIsStrokeControlOpen(false)
         if (hasModifications.current) {
-          console.log('Has modifications, firing object:modified') // Debug
+          setTimeout(() => {
+            canvas?.fire('object:modified')
+            canvas?.renderAll()
+          }, 0)
+        }
+      }
+
+      // Ajout de la gestion du clic extérieur pour AppearanceControls
+      if (appearancePickerRef.current && !appearancePickerRef.current.contains(event.target)) {
+        setIsAppearanceOpen(false)
+        if (hasModifications.current) {
           setTimeout(() => {
             canvas?.fire('object:modified')
             canvas?.renderAll()
@@ -61,6 +77,22 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
 
   const handleStrokeChangeWithFlag = (...args) => {
     handleStrokeChange(...args)
+    handleModification()
+  }
+
+  const handleAppearanceChangeWithFlag = (props) => {
+    switch (props.type) {
+      case 'opacity':
+        handleOpacityChange(props.opacity)
+        break
+      case 'gradient':
+        if (props.gradientType === 'none') {
+          removeGradient()
+        } else {
+          createGradient(props.gradientType, props.colors, props.direction, props.offsets)
+        }
+        break
+    }
     handleModification()
   }
 
@@ -102,7 +134,7 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
           resetModificationFlag()
         }}
         pickerRef={appearancePickerRef}
-        onModification={handleModification}
+        onModification={handleAppearanceChangeWithFlag}
       />
 
       {isColorPickerOpen && (
