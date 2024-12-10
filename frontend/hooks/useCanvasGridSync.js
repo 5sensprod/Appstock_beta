@@ -4,7 +4,6 @@ import { GridContext } from '../context/GridContext'
 import _ from 'lodash'
 import { createQRCodeFabricImage, generateQRCodeImage } from '../utils/fabricUtils'
 import { extractObjectProperties, TYPE_PROPERTY_GROUPS } from '../utils/objectPropertiesConfig'
-import { GradientService } from '../services/GradientService'
 
 const useCanvasGridSync = (canvas) => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
