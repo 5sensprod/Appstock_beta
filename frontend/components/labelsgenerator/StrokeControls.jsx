@@ -1,48 +1,37 @@
-import React, { useState, useEffect } from 'react'
+// components/StrokeControls.jsx
+import React from 'react'
 import { faRuler } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../ui/IconButton'
 import ColorPicker from './texttool/ColorPicker'
 import { STROKE_PATTERN_TYPES } from '../../hooks/useStrokeManager'
+import { useStyle } from '../../context/StyleContext'
 
-export const StrokeControls = ({
-  isOpen,
-  onToggle,
-  strokeWidth,
-  strokeColor,
-  patternType,
-  patternDensity = 5,
-  onStrokeChange,
-  pickerRef
-}) => {
-  // State local pour suivre le type de motif
-  const [activePattern, setActivePattern] = useState(patternType || 'solid')
-  const [localPatternDensity, setLocalPatternDensity] = useState(patternDensity)
+export const StrokeControls = ({ isOpen, onToggle, onStrokeChange, pickerRef }) => {
+  const { handleStrokeChange, strokeState } = useStyle()
 
-  // Synchroniser l'état local avec les props
-  useEffect(() => {
-    setActivePattern(patternType)
-  }, [patternType])
-
-  useEffect(() => {
-    setLocalPatternDensity(patternDensity)
-  }, [patternDensity])
+  const { currentStroke, currentStrokeWidth, currentPatternType, currentPatternDensity } =
+    useStyle()
 
   const handlePatternChange = (type) => {
-    setActivePattern(type)
     onStrokeChange({
       patternType: type,
-      density: localPatternDensity,
-      forceUpdate: true
+      density: currentPatternDensity
     })
   }
 
   const handleDensityChange = (newDensity) => {
-    setLocalPatternDensity(newDensity)
     onStrokeChange({
       density: newDensity,
-      patternType: activePattern,
-      forceUpdate: true
+      patternType: currentPatternType
     })
+  }
+
+  const handleStrokeWidthChange = (width) => {
+    onStrokeChange({ strokeWidth: parseInt(width, 10) })
+  }
+
+  const handleStrokeColorChange = (color) => {
+    onStrokeChange({ stroke: color })
   }
 
   if (!isOpen) {
@@ -68,19 +57,19 @@ export const StrokeControls = ({
             type="range"
             min="0"
             max="20"
-            value={strokeWidth}
-            onChange={(e) => onStrokeChange({ strokeWidth: parseInt(e.target.value, 10) })}
+            value={currentStrokeWidth}
+            onChange={(e) => handleStrokeChange({ strokeWidth: parseInt(e.target.value, 10) })}
             className="w-full"
           />
-          <div className="text-right text-sm text-gray-500">{strokeWidth}px</div>
+          <div className="text-right text-sm text-gray-500">{currentStrokeWidth}px</div>
         </div>
 
         {/* Couleur de la bordure */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">Couleur</label>
           <ColorPicker
-            color={strokeColor}
-            setSelectedColor={(color) => onStrokeChange({ stroke: color })}
+            color={currentStroke}
+            setSelectedColor={(color) => handleStrokeChange({ stroke: color })}
           />
         </div>
 
@@ -93,7 +82,7 @@ export const StrokeControls = ({
                 key={type}
                 onClick={() => handlePatternChange(type)}
                 className={`flex h-8 items-center justify-center rounded border ${
-                  activePattern === type
+                  currentPatternType === type
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-300 hover:border-gray-400'
                 }`}
@@ -118,20 +107,20 @@ export const StrokeControls = ({
         </div>
 
         {/* Densité du motif */}
-        {activePattern !== 'solid' && (
+        {currentPatternType !== 'solid' && (
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">
-              Densité {activePattern === 'dotted' ? 'des points' : 'des traits'}
+              Densité {currentPatternType === 'dotted' ? 'des points' : 'des traits'}
             </label>
             <input
               type="range"
               min="1"
               max="10"
-              value={localPatternDensity}
+              value={currentPatternDensity}
               onChange={(e) => handleDensityChange(parseInt(e.target.value, 10))}
               className="w-full"
             />
-            <div className="text-right text-sm text-gray-500">{localPatternDensity}</div>
+            <div className="text-right text-sm text-gray-500">{currentPatternDensity}</div>
           </div>
         )}
       </div>

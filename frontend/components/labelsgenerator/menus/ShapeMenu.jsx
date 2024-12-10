@@ -7,6 +7,7 @@ import { useStrokeManager } from '../../../hooks/useStrokeManager'
 import { useCanvas } from '../../../context/CanvasContext'
 import { StrokeControls } from '../StrokeControls'
 import { AppearanceControls } from '../AppearanceControls'
+import { useStyle } from '../../../context/StyleContext'
 
 export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
@@ -17,10 +18,10 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   const strokePickerRef = useRef(null)
   const appearancePickerRef = useRef(null)
   const hasModifications = useRef(false)
+  const { handleStrokeChange, currentStroke, currentStrokeWidth, currentPatternType } = useStyle()
 
   const { currentColor, handleColorChange } = useShapeManager()
-  const { currentStroke, currentStrokeWidth, currentStrokeDashArray, handleStrokeChange } =
-    useStrokeManager()
+
   const { canvas } = useCanvas()
 
   // Reset du flag quand on ouvre un contrôle
@@ -35,29 +36,12 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (pickerRef.current && !pickerRef.current.contains(event.target)) {
-        setIsColorPickerOpen(false)
-        if (hasModifications.current) {
-          setTimeout(() => {
-            canvas?.fire('object:modified')
-            canvas?.renderAll()
-          }, 0)
-        }
-      }
-
+      console.log('Click outside detected') // Debug
       if (strokePickerRef.current && !strokePickerRef.current.contains(event.target)) {
+        console.log('Click outside stroke picker') // Debug
         setIsStrokeControlOpen(false)
         if (hasModifications.current) {
-          setTimeout(() => {
-            canvas?.fire('object:modified')
-            canvas?.renderAll()
-          }, 0)
-        }
-      }
-
-      if (appearancePickerRef.current && !appearancePickerRef.current.contains(event.target)) {
-        setIsAppearanceOpen(false)
-        if (hasModifications.current) {
+          console.log('Has modifications, firing object:modified') // Debug
           setTimeout(() => {
             canvas?.fire('object:modified')
             canvas?.renderAll()
@@ -103,14 +87,9 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
         isOpen={isStrokeControlOpen}
         onToggle={() => {
           setIsStrokeControlOpen(!isStrokeControlOpen)
-          setIsColorPickerOpen(false)
-          setIsAppearanceOpen(false)
           resetModificationFlag()
         }}
-        strokeWidth={currentStrokeWidth}
-        strokeColor={currentStroke}
-        strokePattern={currentStrokeDashArray}
-        onStrokeChange={handleStrokeChangeWithFlag}
+        onStrokeChange={handleStrokeChangeWithFlag} // Passer le handler avec flag
         pickerRef={strokePickerRef}
       />
 
