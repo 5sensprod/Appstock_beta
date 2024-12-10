@@ -4,6 +4,7 @@ import IconButton from '../../ui/IconButton'
 import { useShapeManager } from '../../../hooks/useShapeManager'
 import { useCanvas } from '../../../context/CanvasContext'
 import { StrokeControls } from '../StrokeControls'
+import { ShadowControls } from '../ShadowControls'
 import { AppearanceControls } from '../AppearanceControls'
 import { useStyle } from '../../../context/StyleContext'
 
@@ -17,6 +18,9 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   const appearancePickerRef = useRef(null)
   const hasModifications = useRef(false)
   const { handleStrokeChange, handleOpacityChange, createGradient, removeGradient } = useStyle()
+  const [isShadowOpen, setIsShadowOpen] = useState(false)
+  const shadowPickerRef = useRef(null)
+
   const { currentColor } = useShapeManager()
 
   const { canvas } = useCanvas()
@@ -92,6 +96,11 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
     handleModification()
   }
 
+  const handleShadowChangeWithFlag = (...args) => {
+    handleShadowChange(...args)
+    handleModification()
+  }
+
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
       <IconButton
@@ -131,6 +140,17 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
         }}
         pickerRef={appearancePickerRef}
         onModification={handleAppearanceChangeWithFlag}
+      />
+      <ShadowControls
+        isOpen={isShadowOpen}
+        onToggle={() => {
+          setIsShadowOpen(!isShadowOpen)
+          setIsStrokeControlOpen(false)
+          setIsAppearanceOpen(false)
+          resetModificationFlag()
+        }}
+        onModification={handleModification}
+        pickerRef={shadowPickerRef}
       />
     </div>
   )

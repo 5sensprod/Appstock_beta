@@ -2,6 +2,8 @@
 import React, { createContext, useContext } from 'react'
 import { useStrokeManager } from '../hooks/useStrokeManager'
 import { useAppearanceManager } from '../hooks/useAppearanceManager'
+import { useShadowManager } from '../hooks/useShadowManager'
+
 const StyleContext = createContext()
 
 export const useStyle = () => {
@@ -26,6 +28,8 @@ export const StyleProvider = ({ children }) => {
     removeGradient
   } = useAppearanceManager()
 
+  const { currentShadow, handleShadowChange } = useShadowManager()
+
   const value = {
     // Stroke properties
     currentStroke: strokeManager.currentStroke,
@@ -43,7 +47,11 @@ export const StyleProvider = ({ children }) => {
     currentColor,
     handleOpacityChange,
     createGradient,
-    removeGradient
+    removeGradient,
+
+    // Shadow properties
+    currentShadow,
+    handleShadowChange
   }
 
   return <StyleContext.Provider value={value}>{children}</StyleContext.Provider>

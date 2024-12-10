@@ -41,6 +41,14 @@ export const OBJECT_PROPERTIES = {
     'patternType',
     'patternDensity'
   ],
+  shadow: [
+    'shadowColor',
+    'shadowBlur',
+    'shadowOffsetX',
+    'shadowOffsetY',
+    'shadowOpacity',
+    'shadow' // pour l'objet shadow complet de fabric
+  ],
   text: ['fontSize', 'fontFamily', 'fontStyle', 'fontWeight', 'text'],
   qr: ['isQRCode', 'qrText', 'src']
 }
