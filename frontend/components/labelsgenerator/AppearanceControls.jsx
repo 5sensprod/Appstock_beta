@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { faAdjust } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../ui/IconButton'
 import ColorPicker from './texttool/ColorPicker'
@@ -8,6 +8,7 @@ import { useCanvas } from '../../context/CanvasContext'
 
 export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
   const { canvas, handleCanvasModification } = useCanvas()
+  const pendingChangesRef = useRef(false)
   const {
     currentOpacity,
     currentGradientType,
@@ -20,42 +21,52 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     removeGradient
   } = useAppearanceManager()
 
-  const [activeColorStop, setActiveColorStop] = useState(0) // 0 = début, 1 = fin
+  const [activeColorStop, setActiveColorStop] = useState(0)
   const [gradientColors, setGradientColors] = useState(currentGradientColors)
   const [gradientDirection, setGradientDirection] = useState(currentGradientDirection)
   const [isDragging, setIsDragging] = useState(false)
 
-  // Gestion unifiée du changement de couleur
+  // Nouvelle fonction pour gérer les modifications en attente
+  const setPendingChanges = useCallback(() => {
+    pendingChangesRef.current = true
+  }, [])
+
+  // Synchronisation des modifications lors de la fermeture du menu
+  useEffect(() => {
+    if (!isOpen && pendingChangesRef.current) {
+      handleCanvasModification()
+      pendingChangesRef.current = false
+    }
+  }, [isOpen, handleCanvasModification])
+
   const handleColorChange = useCallback(
     (color) => {
       if (currentGradientType === 'none') {
         canvas?.getActiveObject()?.set('fill', color)
         canvas?.renderAll()
-        // Ne pas déclencher object:modified pendant le drag
-        if (!isDragging) {
-          canvas?.fire('object:modified')
-        }
+        setPendingChanges()
       } else {
         const newColors = [...gradientColors]
         newColors[activeColorStop] = color
         setGradientColors(newColors)
         handleGradientChange(currentGradientType, newColors, gradientDirection)
+        setPendingChanges()
       }
     },
-    [canvas, currentGradientType, gradientColors, gradientDirection, activeColorStop, isDragging]
+    [
+      canvas,
+      currentGradientType,
+      gradientColors,
+      gradientDirection,
+      activeColorStop,
+      setPendingChanges
+    ]
   )
 
-  // Sync avec l'état actuel
   useEffect(() => {
     setGradientDirection(currentGradientDirection)
   }, [currentGradientDirection])
 
-  // Ajoutez cette fonction
-  const handleApplyChanges = useCallback(() => {
-    if (!isDragging) handleCanvasModification()
-  }, [isDragging, handleCanvasModification])
-
-  // Gestionnaire de changement de type de dégradé modifié
   const handleGradientChange = useCallback(
     (type, colors = gradientColors, newDirection = gradientDirection) => {
       if (type === 'none') {
@@ -71,7 +82,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
         const direction = type === 'linear' ? newDirection : 0
         createGradient(type, colors, direction, currentOffsets)
       }
-      handleApplyChanges()
+      setPendingChanges()
     },
     [
       gradientColors,
@@ -79,16 +90,14 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
       currentGradientOffsets,
       createGradient,
       removeGradient,
-      handleApplyChanges,
+      setPendingChanges,
       canvas
     ]
   )
 
-  // Gestionnaire de changement de direction
   const handleDirectionChange = useCallback(
     (newDirection) => {
       setGradientDirection(newDirection)
-      // Appliquer directement le gradient avec la nouvelle direction
       const currentOffsets = canvas?.getActiveObject()?.get('fill')?.colorStops
         ? [
             canvas.getActiveObject().get('fill').colorStops[0].offset,
@@ -97,22 +106,31 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
         : currentGradientOffsets
 
       createGradient(currentGradientType, gradientColors, newDirection, currentOffsets)
+      setPendingChanges()
     },
-    [currentGradientType, gradientColors, currentGradientOffsets, createGradient]
+    [currentGradientType, gradientColors, currentGradientOffsets, createGradient, setPendingChanges]
+  )
+
+  // Modification du gestionnaire d'opacité
+  const handleOpacityChangeWithDelay = useCallback(
+    (value) => {
+      handleOpacityChange(value)
+      setPendingChanges()
+    },
+    [handleOpacityChange, setPendingChanges]
   )
 
   useEffect(() => {
     const handleMouseUp = () => {
       if (isDragging) {
         setIsDragging(false)
-        handleApplyChanges()
+        setPendingChanges()
       }
     }
     window.addEventListener('mouseup', handleMouseUp)
     return () => window.removeEventListener('mouseup', handleMouseUp)
-  }, [isDragging, handleApplyChanges])
+  }, [isDragging, setPendingChanges])
 
-  // Synchronisation avec l'état global
   useEffect(() => {
     const colorsChanged = JSON.stringify(gradientColors) !== JSON.stringify(currentGradientColors)
     if (colorsChanged) {
@@ -120,7 +138,16 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     }
   }, [currentGradientColors])
 
-  if (!isOpen)
+  // Assurez-vous d'appliquer les changements en attente lors du démontage
+  useEffect(() => {
+    return () => {
+      if (pendingChangesRef.current) {
+        handleCanvasModification()
+      }
+    }
+  }, [handleCanvasModification])
+
+  if (!isOpen) {
     return (
       <IconButton
         onClick={onToggle}
@@ -131,6 +158,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
         iconSize="text-xl"
       />
     )
+  }
 
   return (
     <div
@@ -161,7 +189,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
             max="1"
             step="0.1"
             value={currentOpacity}
-            onChange={(e) => handleOpacityChange(parseFloat(e.target.value))}
+            onChange={(e) => handleOpacityChangeWithDelay(parseFloat(e.target.value))}
             className="w-full"
           />
           <div className="text-right text-sm text-gray-500">
