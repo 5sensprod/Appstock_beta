@@ -1,7 +1,6 @@
 import { useCallback } from 'react'
 import { useCanvas } from '../context/CanvasContext'
 import { GradientService } from '../services/GradientService'
-import * as fabric from 'fabric'
 
 export const GRADIENT_TYPES = {
   none: 'none',
