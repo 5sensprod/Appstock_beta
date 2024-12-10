@@ -20,20 +20,30 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     removeGradient
   } = useAppearanceManager()
 
+  // Référence pour suivre l'initialisation
   const initialized = useRef(false)
 
+  // États locaux
   const [activeColorStop, setActiveColorStop] = useState(0)
-  const [gradientColors, setGradientColors] = useState(currentGradientColors)
-  const [gradientDirection, setGradientDirection] = useState(currentGradientDirection)
+  const [localGradientColors, setLocalGradientColors] = useState([])
+  const [localGradientDirection, setLocalGradientDirection] = useState(0)
 
-  // Un seul useEffect pour l'initialisation
+  // Initialisation unique des états locaux
   useEffect(() => {
     if (!initialized.current) {
-      setGradientColors(currentGradientColors)
-      setGradientDirection(currentGradientDirection)
+      setLocalGradientColors(currentGradientColors)
+      setLocalGradientDirection(currentGradientDirection)
       initialized.current = true
     }
   }, [currentGradientColors, currentGradientDirection])
+
+  // Réinitialisation lors du changement d'objet
+  useEffect(() => {
+    const activeObject = canvas?.getActiveObject()
+    if (activeObject) {
+      initialized.current = false // Forcer la réinitialisation
+    }
+  }, [canvas?.getActiveObject()])
 
   const handleColorChange = useCallback(
     (color) => {
@@ -41,17 +51,17 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
         canvas?.getActiveObject()?.set('fill', color)
         canvas?.renderAll()
       } else {
-        const newColors = [...gradientColors]
+        const newColors = [...localGradientColors]
         newColors[activeColorStop] = color
-        setGradientColors(newColors)
-        handleGradientChange(currentGradientType, newColors, gradientDirection)
+        setLocalGradientColors(newColors)
+        handleGradientChange(currentGradientType, newColors, localGradientDirection)
       }
     },
-    [canvas, currentGradientType, gradientColors, gradientDirection, activeColorStop]
+    [canvas, currentGradientType, localGradientColors, localGradientDirection, activeColorStop]
   )
 
   const handleGradientChange = useCallback(
-    (type, colors = gradientColors, newDirection = gradientDirection) => {
+    (type, colors = localGradientColors, direction = localGradientDirection) => {
       if (type === 'none') {
         removeGradient()
       } else {
@@ -62,24 +72,23 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
             ]
           : currentGradientOffsets
 
-        const direction = type === 'linear' ? newDirection : 0
         createGradient(type, colors, direction, currentOffsets)
       }
       canvas?.renderAll()
     },
     [
-      gradientColors,
-      gradientDirection,
+      canvas,
+      localGradientColors,
+      localGradientDirection,
       currentGradientOffsets,
       createGradient,
-      removeGradient,
-      canvas
+      removeGradient
     ]
   )
 
   const handleDirectionChange = useCallback(
     (newDirection) => {
-      setGradientDirection(newDirection)
+      setLocalGradientDirection(newDirection)
       const currentOffsets = canvas?.getActiveObject()?.get('fill')?.colorStops
         ? [
             canvas.getActiveObject().get('fill').colorStops[0].offset,
@@ -87,10 +96,10 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
           ]
         : currentGradientOffsets
 
-      createGradient(currentGradientType, gradientColors, newDirection, currentOffsets)
+      createGradient(currentGradientType, localGradientColors, newDirection, currentOffsets)
       canvas?.renderAll()
     },
-    [currentGradientType, gradientColors, currentGradientOffsets, createGradient, canvas]
+    [canvas, currentGradientType, localGradientColors, currentGradientOffsets, createGradient]
   )
 
   if (!isOpen) {
@@ -120,7 +129,9 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
               : `Couleur ${activeColorStop === 0 ? 'de début' : 'de fin'}`}
           </label>
           <ColorPicker
-            color={currentGradientType === 'none' ? currentColor : gradientColors[activeColorStop]}
+            color={
+              currentGradientType === 'none' ? currentColor : localGradientColors[activeColorStop]
+            }
             setSelectedColor={handleColorChange}
           />
         </div>
@@ -170,13 +181,18 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700">Couleurs du dégradé</label>
             <GradientSlider
-              colors={gradientColors}
+              colors={localGradientColors}
               activeStop={activeColorStop}
               onStopSelect={setActiveColorStop}
               onPositionChange={(stopIndex, offset) => {
                 const newOffsets = [...currentGradientOffsets]
                 newOffsets[stopIndex] = offset
-                createGradient(currentGradientType, gradientColors, gradientDirection, newOffsets)
+                createGradient(
+                  currentGradientType,
+                  localGradientColors,
+                  localGradientDirection,
+                  newOffsets
+                )
                 canvas?.renderAll()
               }}
               offsets={currentGradientOffsets}
@@ -192,11 +208,11 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
               type="range"
               min="0"
               max="360"
-              value={gradientDirection}
+              value={localGradientDirection}
               onChange={(e) => handleDirectionChange(parseInt(e.target.value))}
               className="w-full"
             />
-            <div className="text-right text-sm text-gray-500">{gradientDirection}°</div>
+            <div className="text-right text-sm text-gray-500">{localGradientDirection}°</div>
           </div>
         )}
       </div>
