@@ -81,42 +81,26 @@ const useCanvasGridSync = (canvas) => {
       case 'i-text':
       case 'text':
         return Promise.resolve(new fabric.IText(obj.text || '', fabricOptions))
-
       case 'textbox':
         return Promise.resolve(new fabric.Textbox(obj.text || '', fabricOptions))
-
       case 'rect':
-        if (fabricOptions.fill && typeof fabricOptions.fill === 'object') {
-          // Si un gradient existe déjà dans les options, on le récupère
-          if (fabricOptions.fill.type) {
-            const gradient = GradientService.createGradient(
-              { width: fabricOptions.width || 50, height: fabricOptions.height || 50 },
-              fabricOptions.fill.type,
-              fabricOptions.fill.colorStops.map((stop) => stop.color),
-              fabricOptions.gradientDirection || 0,
-              fabricOptions.fill.colorStops.map((stop) => stop.offset)
-            )
-            fabricOptions.fill = gradient
-          }
+        const rect = new fabric.Rect(fabricOptions)
+        if (fabricOptions.fill && fabricOptions.fill.type) {
+          rect.set({
+            fill: fabricOptions.fill,
+            gradientDirection: fabricOptions.gradientDirection
+          })
         }
-        return Promise.resolve(new fabric.Rect(fabricOptions))
-
+        return Promise.resolve(rect)
       case 'circle':
-        if (fabricOptions.fill && typeof fabricOptions.fill === 'object') {
-          // Si un gradient existe déjà dans les options, on le récupère
-          if (fabricOptions.fill.type) {
-            const gradient = GradientService.createGradient(
-              { width: fabricOptions.width || 50, height: fabricOptions.height || 50 },
-              fabricOptions.fill.type,
-              fabricOptions.fill.colorStops.map((stop) => stop.color),
-              fabricOptions.gradientDirection || 0,
-              fabricOptions.fill.colorStops.map((stop) => stop.offset)
-            )
-            fabricOptions.fill = gradient
-          }
+        const circle = new fabric.Circle(fabricOptions)
+        if (fabricOptions.fill && fabricOptions.fill.type) {
+          circle.set({
+            fill: fabricOptions.fill,
+            gradientDirection: fabricOptions.gradientDirection
+          })
         }
-        return Promise.resolve(new fabric.Circle(fabricOptions))
-
+        return Promise.resolve(circle)
       default:
         return Promise.resolve(null)
     }
