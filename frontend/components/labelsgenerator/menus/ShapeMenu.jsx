@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { faCircle, faSquare } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../../ui/IconButton'
-import ColorPicker from '../texttool/ColorPicker'
 import { useShapeManager } from '../../../hooks/useShapeManager'
 import { useCanvas } from '../../../context/CanvasContext'
 import { StrokeControls } from '../StrokeControls'
@@ -9,7 +8,7 @@ import { AppearanceControls } from '../AppearanceControls'
 import { useStyle } from '../../../context/StyleContext'
 
 export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
-  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
+  const [, setIsColorPickerOpen] = useState(false)
   const [isStrokeControlOpen, setIsStrokeControlOpen] = useState(false)
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false)
 
@@ -18,7 +17,7 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   const appearancePickerRef = useRef(null)
   const hasModifications = useRef(false)
   const { handleStrokeChange, handleOpacityChange, createGradient, removeGradient } = useStyle()
-  const { currentColor, handleColorChange } = useShapeManager()
+  const { currentColor } = useShapeManager()
 
   const { canvas } = useCanvas()
 
@@ -69,11 +68,6 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [canvas])
-
-  const handleColorChangeWithFlag = (color) => {
-    handleColorChange(color)
-    handleModification()
-  }
 
   const handleStrokeChangeWithFlag = (...args) => {
     handleStrokeChange(...args)
@@ -138,12 +132,6 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
         pickerRef={appearancePickerRef}
         onModification={handleAppearanceChangeWithFlag}
       />
-
-      {isColorPickerOpen && (
-        <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
-          <ColorPicker color={currentColor} setSelectedColor={handleColorChangeWithFlag} />
-        </div>
-      )}
     </div>
   )
 }
