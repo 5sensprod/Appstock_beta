@@ -4,6 +4,7 @@ import { GridContext } from '../context/GridContext'
 import _ from 'lodash'
 import { createQRCodeFabricImage, generateQRCodeImage } from '../utils/fabricUtils'
 import { extractObjectProperties, TYPE_PROPERTY_GROUPS } from '../utils/objectPropertiesConfig'
+import { GradientService } from '../services/GradientService'
 
 const useCanvasGridSync = (canvas) => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
@@ -80,12 +81,42 @@ const useCanvasGridSync = (canvas) => {
       case 'i-text':
       case 'text':
         return Promise.resolve(new fabric.IText(obj.text || '', fabricOptions))
+
       case 'textbox':
         return Promise.resolve(new fabric.Textbox(obj.text || '', fabricOptions))
+
       case 'rect':
+        if (fabricOptions.fill && typeof fabricOptions.fill === 'object') {
+          // Si un gradient existe déjà dans les options, on le récupère
+          if (fabricOptions.fill.type) {
+            const gradient = GradientService.createGradient(
+              { width: fabricOptions.width || 50, height: fabricOptions.height || 50 },
+              fabricOptions.fill.type,
+              fabricOptions.fill.colorStops.map((stop) => stop.color),
+              fabricOptions.gradientDirection || 0,
+              fabricOptions.fill.colorStops.map((stop) => stop.offset)
+            )
+            fabricOptions.fill = gradient
+          }
+        }
         return Promise.resolve(new fabric.Rect(fabricOptions))
+
       case 'circle':
+        if (fabricOptions.fill && typeof fabricOptions.fill === 'object') {
+          // Si un gradient existe déjà dans les options, on le récupère
+          if (fabricOptions.fill.type) {
+            const gradient = GradientService.createGradient(
+              { width: fabricOptions.width || 50, height: fabricOptions.height || 50 },
+              fabricOptions.fill.type,
+              fabricOptions.fill.colorStops.map((stop) => stop.color),
+              fabricOptions.gradientDirection || 0,
+              fabricOptions.fill.colorStops.map((stop) => stop.offset)
+            )
+            fabricOptions.fill = gradient
+          }
+        }
         return Promise.resolve(new fabric.Circle(fabricOptions))
+
       default:
         return Promise.resolve(null)
     }

@@ -7,7 +7,7 @@ import { GRADIENT_TYPES, useAppearanceManager } from '../../hooks/useAppearanceM
 import { useCanvas } from '../../context/CanvasContext'
 
 export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
-  const { canvas, selectedObject } = useCanvas()
+  const { canvas, handleCanvasModification } = useCanvas()
   const {
     currentOpacity,
     currentGradientType,
@@ -50,6 +50,11 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     setGradientDirection(currentGradientDirection)
   }, [currentGradientDirection])
 
+  // Ajoutez cette fonction
+  const handleApplyChanges = useCallback(() => {
+    if (!isDragging) handleCanvasModification()
+  }, [isDragging, handleCanvasModification])
+
   // Gestionnaire de changement de type de dégradé modifié
   const handleGradientChange = useCallback(
     (type, colors = gradientColors, newDirection = gradientDirection) => {
@@ -66,19 +71,16 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
         const direction = type === 'linear' ? newDirection : 0
         createGradient(type, colors, direction, currentOffsets)
       }
-      // Ne déclencher object:modified que si on n'est pas en train de drag
-      if (!isDragging) {
-        canvas?.fire('object:modified')
-      }
+      handleApplyChanges()
     },
     [
-      canvas,
       gradientColors,
       gradientDirection,
       currentGradientOffsets,
       createGradient,
       removeGradient,
-      isDragging
+      handleApplyChanges,
+      canvas
     ]
   )
 
@@ -103,13 +105,12 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     const handleMouseUp = () => {
       if (isDragging) {
         setIsDragging(false)
-        canvas?.fire('object:modified')
+        handleApplyChanges()
       }
     }
-
     window.addEventListener('mouseup', handleMouseUp)
     return () => window.removeEventListener('mouseup', handleMouseUp)
-  }, [canvas, isDragging])
+  }, [isDragging, handleApplyChanges])
 
   // Synchronisation avec l'état global
   useEffect(() => {
