@@ -52,6 +52,10 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
       }
       if (appearancePickerRef.current && !appearancePickerRef.current.contains(event.target)) {
         setIsAppearanceOpen(false)
+        setTimeout(() => {
+          canvas?.fire('object:modified')
+          canvas?.renderAll()
+        }, 0)
       }
     }
 

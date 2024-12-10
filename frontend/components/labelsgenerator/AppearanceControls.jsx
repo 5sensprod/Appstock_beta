@@ -7,8 +7,7 @@ import { GRADIENT_TYPES, useAppearanceManager } from '../../hooks/useAppearanceM
 import { useCanvas } from '../../context/CanvasContext'
 
 export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
-  const { canvas, handleCanvasModification } = useCanvas()
-  const pendingChangesRef = useRef(false)
+  const { canvas } = useCanvas()
   const {
     currentOpacity,
     currentGradientType,
@@ -21,51 +20,35 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     removeGradient
   } = useAppearanceManager()
 
+  const initialized = useRef(false)
+
   const [activeColorStop, setActiveColorStop] = useState(0)
   const [gradientColors, setGradientColors] = useState(currentGradientColors)
   const [gradientDirection, setGradientDirection] = useState(currentGradientDirection)
-  const [isDragging, setIsDragging] = useState(false)
 
-  // Nouvelle fonction pour gérer les modifications en attente
-  const setPendingChanges = useCallback(() => {
-    pendingChangesRef.current = true
-  }, [])
-
-  // Synchronisation des modifications lors de la fermeture du menu
+  // Un seul useEffect pour l'initialisation
   useEffect(() => {
-    if (!isOpen && pendingChangesRef.current) {
-      handleCanvasModification()
-      pendingChangesRef.current = false
+    if (!initialized.current) {
+      setGradientColors(currentGradientColors)
+      setGradientDirection(currentGradientDirection)
+      initialized.current = true
     }
-  }, [isOpen, handleCanvasModification])
+  }, [currentGradientColors, currentGradientDirection])
 
   const handleColorChange = useCallback(
     (color) => {
       if (currentGradientType === 'none') {
         canvas?.getActiveObject()?.set('fill', color)
         canvas?.renderAll()
-        setPendingChanges()
       } else {
         const newColors = [...gradientColors]
         newColors[activeColorStop] = color
         setGradientColors(newColors)
         handleGradientChange(currentGradientType, newColors, gradientDirection)
-        setPendingChanges()
       }
     },
-    [
-      canvas,
-      currentGradientType,
-      gradientColors,
-      gradientDirection,
-      activeColorStop,
-      setPendingChanges
-    ]
+    [canvas, currentGradientType, gradientColors, gradientDirection, activeColorStop]
   )
-
-  useEffect(() => {
-    setGradientDirection(currentGradientDirection)
-  }, [currentGradientDirection])
 
   const handleGradientChange = useCallback(
     (type, colors = gradientColors, newDirection = gradientDirection) => {
@@ -82,7 +65,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
         const direction = type === 'linear' ? newDirection : 0
         createGradient(type, colors, direction, currentOffsets)
       }
-      setPendingChanges()
+      canvas?.renderAll()
     },
     [
       gradientColors,
@@ -90,7 +73,6 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
       currentGradientOffsets,
       createGradient,
       removeGradient,
-      setPendingChanges,
       canvas
     ]
   )
@@ -106,46 +88,10 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
         : currentGradientOffsets
 
       createGradient(currentGradientType, gradientColors, newDirection, currentOffsets)
-      setPendingChanges()
+      canvas?.renderAll()
     },
-    [currentGradientType, gradientColors, currentGradientOffsets, createGradient, setPendingChanges]
+    [currentGradientType, gradientColors, currentGradientOffsets, createGradient, canvas]
   )
-
-  // Modification du gestionnaire d'opacité
-  const handleOpacityChangeWithDelay = useCallback(
-    (value) => {
-      handleOpacityChange(value)
-      setPendingChanges()
-    },
-    [handleOpacityChange, setPendingChanges]
-  )
-
-  useEffect(() => {
-    const handleMouseUp = () => {
-      if (isDragging) {
-        setIsDragging(false)
-        setPendingChanges()
-      }
-    }
-    window.addEventListener('mouseup', handleMouseUp)
-    return () => window.removeEventListener('mouseup', handleMouseUp)
-  }, [isDragging, setPendingChanges])
-
-  useEffect(() => {
-    const colorsChanged = JSON.stringify(gradientColors) !== JSON.stringify(currentGradientColors)
-    if (colorsChanged) {
-      setGradientColors(currentGradientColors)
-    }
-  }, [currentGradientColors])
-
-  // Assurez-vous d'appliquer les changements en attente lors du démontage
-  useEffect(() => {
-    return () => {
-      if (pendingChangesRef.current) {
-        handleCanvasModification()
-      }
-    }
-  }, [handleCanvasModification])
 
   if (!isOpen) {
     return (
@@ -164,7 +110,6 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
     <div
       className="absolute left-0 top-2 z-50 mt-2 w-64 rounded-lg bg-white p-4 shadow-xl"
       ref={pickerRef}
-      onMouseDown={() => setIsDragging(true)}
     >
       <div className="space-y-4">
         {/* ColorPicker principal */}
@@ -189,7 +134,10 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
             max="1"
             step="0.1"
             value={currentOpacity}
-            onChange={(e) => handleOpacityChangeWithDelay(parseFloat(e.target.value))}
+            onChange={(e) => {
+              handleOpacityChange(parseFloat(e.target.value))
+              canvas?.renderAll()
+            }}
             className="w-full"
           />
           <div className="text-right text-sm text-gray-500">
@@ -229,11 +177,13 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
                 const newOffsets = [...currentGradientOffsets]
                 newOffsets[stopIndex] = offset
                 createGradient(currentGradientType, gradientColors, gradientDirection, newOffsets)
+                canvas?.renderAll()
               }}
               offsets={currentGradientOffsets}
             />
           </div>
         )}
+
         {/* Direction (uniquement pour le dégradé linéaire) */}
         {currentGradientType === 'linear' && (
           <div className="space-y-2">
@@ -243,11 +193,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef }) => {
               min="0"
               max="360"
               value={gradientDirection}
-              onChange={(e) => {
-                const newDirection = parseInt(e.target.value)
-                handleDirectionChange(newDirection)
-              }}
-              onMouseUp={() => canvas?.fire('object:modified')}
+              onChange={(e) => handleDirectionChange(parseInt(e.target.value))}
               className="w-full"
             />
             <div className="text-right text-sm text-gray-500">{gradientDirection}°</div>
