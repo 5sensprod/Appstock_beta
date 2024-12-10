@@ -81,17 +81,19 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   }
 
   const handleAppearanceChangeWithFlag = (props) => {
-    switch (props.type) {
-      case 'opacity':
-        handleOpacityChange(props.opacity)
-        break
-      case 'gradient':
-        if (props.gradientType === 'none') {
-          removeGradient()
-        } else {
-          createGradient(props.gradientType, props.colors, props.direction, props.offsets)
-        }
-        break
+    if (props.type === 'gradient') {
+      if (props.gradientType === 'none') {
+        // Pour une couleur unie
+        removeGradient()
+        // Mettre à jour avec la couleur unie
+        const color = props.colors[0] || currentColor
+        canvas?.getActiveObject()?.set('fill', color)
+        canvas?.renderAll()
+      } else {
+        createGradient(props.gradientType, props.colors, props.direction, props.offsets)
+      }
+    } else if (props.type === 'opacity') {
+      handleOpacityChange(props.opacity)
     }
     handleModification()
   }

@@ -43,9 +43,13 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef, onModification
   const handleColorChange = useCallback(
     (color) => {
       if (currentGradientType === 'none') {
+        // Pour une couleur unie, utiliser directement onModification
         onModification({
-          type: 'color',
-          color
+          type: 'gradient', // On utilise le même type pour unifier la logique
+          gradientType: 'none',
+          colors: [color], // La première couleur sera utilisée comme couleur unie
+          direction: 0,
+          offsets: [0, 1]
         })
       } else {
         const newColors = [...localGradientColors]
