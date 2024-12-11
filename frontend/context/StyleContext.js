@@ -1,4 +1,3 @@
-// contexts/StyleContext.js
 import React, { createContext, useContext } from 'react'
 import { useStrokeManager } from '../hooks/useStrokeManager'
 import { useAppearanceManager } from '../hooks/useAppearanceManager'
@@ -28,6 +27,7 @@ export const StyleProvider = ({ children }) => {
     removeGradient
   } = useAppearanceManager()
 
+  // Récupérer l'état de l'ombre depuis le hook
   const { currentShadow, handleShadowChange } = useShadowManager()
 
   const value = {
@@ -49,7 +49,7 @@ export const StyleProvider = ({ children }) => {
     createGradient,
     removeGradient,
 
-    // Shadow properties
+    // Shadow properties - utiliser directement currentShadow du hook
     currentShadow,
     handleShadowChange
   }

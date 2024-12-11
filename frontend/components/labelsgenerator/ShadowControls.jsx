@@ -1,4 +1,3 @@
-// components/ShadowControls.jsx
 import React, { useState, useEffect } from 'react'
 import { faSquare } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../ui/IconButton'
@@ -7,16 +6,22 @@ import { useStyle } from '../../context/StyleContext'
 
 export const ShadowControls = ({ isOpen, onToggle, onModification, pickerRef }) => {
   const { currentShadow, handleShadowChange } = useStyle()
+  const [localOpacity, setLocalOpacity] = useState(currentShadow?.opacity ?? 0.5)
 
-  console.log('valeur opacity actuelle:', currentShadow.opacity) // Debug
+  // Synchroniser avec currentShadow uniquement quand le menu s'ouvre
+  useEffect(() => {
+    if (isOpen) {
+      setLocalOpacity(currentShadow?.opacity ?? 0.5)
+    }
+  }, [isOpen, currentShadow?.opacity])
 
-  const opacity = typeof currentShadow.opacity === 'number' ? currentShadow.opacity : 0.5
-
-  const handleOpacityChange = (value) => {
-    const newOpacity = parseFloat(value)
-    handleShadowChange({ opacity: newOpacity })
+  const handleOpacityChange = (event) => {
+    const newOpacity = parseFloat(event.target.value)
+    setLocalOpacity(newOpacity) // Pour le mouvement fluide du curseur
+    handleShadowChange({ opacity: newOpacity }) // Pour l'effet sur l'ombre
     onModification()
   }
+
   if (!isOpen) {
     return (
       <IconButton
@@ -104,11 +109,11 @@ export const ShadowControls = ({ isOpen, onToggle, onModification, pickerRef }) 
             min="0"
             max="1"
             step="0.1"
-            value={opacity}
-            onChange={(e) => handleOpacityChange(e.target.value)}
+            value={localOpacity}
+            onChange={handleOpacityChange}
             className="w-full"
           />
-          <div className="text-right text-sm text-gray-500">{Math.round(opacity * 100)}%</div>
+          <div className="text-right text-sm text-gray-500">{Math.round(localOpacity * 100)}%</div>
         </div>
       </div>
     </div>
