@@ -3,7 +3,11 @@ import * as fabric from 'fabric'
 import { GridContext } from '../context/GridContext'
 import _ from 'lodash'
 import { createQRCodeFabricImage, generateQRCodeImage } from '../utils/fabricUtils'
-import { extractObjectProperties, TYPE_PROPERTY_GROUPS } from '../utils/objectPropertiesConfig'
+import {
+  extractObjectProperties,
+  TYPE_PROPERTY_GROUPS,
+  extractQRCodeProperties
+} from '../utils/objectPropertiesConfig'
 
 const useCanvasGridSync = (canvas) => {
   const { state, dispatch, findLinkedGroup } = useContext(GridContext)
@@ -249,10 +253,9 @@ const useCanvasGridSync = (canvas) => {
     // Créer une version sérialisée des objets actuels sur le canevas
     const updatedObjects = await Promise.all(
       objects.map(async (obj) => {
-        // Utiliser extractObjectProperties pour les propriétés de base et de stroke
         const baseProperties = {
           ...extractObjectProperties(obj, ['basic', 'stroke', 'shadow']),
-          opacity: obj.savedOpacity || obj.opacity || 1, // Utiliser l'opacité sauvegardée
+          opacity: obj.savedOpacity || obj.opacity || 1,
           zIndex: objects.indexOf(obj) / Math.max(1, objects.length - 1)
         }
 
@@ -260,8 +263,17 @@ const useCanvasGridSync = (canvas) => {
           const qrText = obj.qrText
           const color = obj.fill || '#000000'
 
+          // Important: Toujours régénérer le QR code si la couleur a changé
+          const shouldRegenerateQR = obj.lastColor !== color
+
           try {
-            const newQRCodeSrc = await generateQRCodeImage(qrText, color, obj.width || 50)
+            let newQRCodeSrc = obj.src
+            // Régénérer si la couleur a changé, même pour les QR codes liés par CSV
+            if (shouldRegenerateQR) {
+              newQRCodeSrc = await generateQRCodeImage(qrText, color, obj.width || 50)
+              obj.lastColor = color // Sauvegarder la dernière couleur utilisée
+            }
+
             return {
               ...baseProperties,
               type: 'image',
@@ -269,7 +281,9 @@ const useCanvasGridSync = (canvas) => {
               width: obj.width || 50,
               height: obj.height || 50,
               isQRCode: true,
-              qrText
+              qrText,
+              fill: color, // Sauvegarder la couleur explicitement
+              lastColor: color // Sauvegarder pour les comparaisons futures
             }
           } catch (error) {
             console.error('Erreur lors de la régénération du QR code :', error)
@@ -278,7 +292,8 @@ const useCanvasGridSync = (canvas) => {
               type: 'image',
               src: obj.src,
               isQRCode: true,
-              qrText
+              qrText,
+              fill: color
             }
           }
         }
@@ -404,7 +419,6 @@ const useCanvasGridSync = (canvas) => {
     if (linkedGroup && linkedGroup.length > 1) {
       const layout = updatedObjects.reduce((acc, item) => {
         acc[item.id] = {
-          // Propriétés de base existantes
           left: item.left,
           top: item.top,
           fill: item.fill,
@@ -416,7 +430,6 @@ const useCanvasGridSync = (canvas) => {
           fontSize: item.fontSize || 16,
           fontStyle: item.fontStyle || 'normal',
           fontWeight: item.fontWeight || 'normal',
-          // Propriétés de stroke
           stroke: item.stroke || '#000000',
           strokeWidth: item.strokeWidth ?? 0,
           strokeDashArray: item.strokeDashArray || [],
@@ -424,24 +437,15 @@ const useCanvasGridSync = (canvas) => {
           strokeLineCap: item.strokeLineCap || 'butt',
           patternType: item.patternType || 'solid',
           patternDensity: item.patternDensity || 5,
-          // Propriétés d'apparence
-          opacity: item.opacity || 1,
-          gradientType: item.gradientType || 'none',
-          gradientColors: item.gradientColors || [],
-          gradientDirection: item.gradientDirection || 0,
-          // Propriétés QR code si nécessaire
-          ...(item.isQRCode && { src: item.src, qrText: item.qrText }),
-          // Ajouter les propriétés shadow
-          ...(item.shadow
-            ? {
-                shadow: item.shadow.toObject(),
-                shadowColor: item.shadow.color,
-                shadowBlur: item.shadow.blur,
-                shadowOffsetX: item.shadow.offsetX,
-                shadowOffsetY: item.shadow.offsetY,
-                shadowOpacity: item.shadow.opacity
-              }
-            : {})
+          // Ajouter les propriétés d'ombre si elles existent déjà dans l'objet sérialisé
+          ...(item.shadow && {
+            shadow: item.shadow,
+            shadowColor: item.shadowColor,
+            shadowBlur: item.shadowBlur,
+            shadowOffsetX: item.shadowOffsetX,
+            shadowOffsetY: item.shadowOffsetY,
+            shadowOpacity: item.shadowOpacity
+          })
         }
         return acc
       }, {})

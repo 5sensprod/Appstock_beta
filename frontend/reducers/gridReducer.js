@@ -144,11 +144,18 @@ export function gridReducer(state, action) {
                 scaleX: layoutItem.scaleX,
                 scaleY: layoutItem.scaleY,
                 fill: layoutItem.fill,
-                // Ajout des propriétés de stroke pour les QR codes
+                // Propriétés de stroke
                 stroke: layoutItem.stroke || item.stroke || '#000000',
                 strokeWidth: layoutItem.strokeWidth ?? item.strokeWidth ?? 0,
                 strokeDashArray: layoutItem.strokeDashArray || item.strokeDashArray || [],
-                strokeUniform: true
+                strokeUniform: true,
+                // Propriétés d'ombre
+                shadow: layoutItem.shadow,
+                shadowColor: layoutItem.shadowColor,
+                shadowBlur: layoutItem.shadowBlur,
+                shadowOffsetX: layoutItem.shadowOffsetX,
+                shadowOffsetY: layoutItem.shadowOffsetY,
+                shadowOpacity: layoutItem.shadowOpacity
               }
 
               // Préserver qrText et src pour les QR codes liés via CSV
@@ -160,11 +167,10 @@ export function gridReducer(state, action) {
               return newItem
             }
 
-            // Pour les autres éléments, fusion des propriétés existantes avec le layout
+            // Pour les autres éléments
             return {
               ...item,
               ...layoutItem,
-              // S'assurer que les propriétés de stroke sont correctement synchronisées
               stroke: layoutItem.stroke || item.stroke || '#000000',
               strokeWidth: layoutItem.strokeWidth ?? item.strokeWidth ?? 0,
               strokeDashArray: layoutItem.strokeDashArray || item.strokeDashArray || [],
