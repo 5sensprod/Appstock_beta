@@ -106,7 +106,6 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   }
 
   const handleShadowChangeWithFlag = (...args) => {
-    handleShadowChange(...args)
     handleModification()
   }
 
@@ -156,7 +155,7 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
           setIsShadowOpen(!isShadowOpen)
           resetModificationFlag()
         }}
-        onModification={handleModification}
+        onModification={handleShadowChangeWithFlag}
         pickerRef={shadowPickerRef}
       />
     </div>

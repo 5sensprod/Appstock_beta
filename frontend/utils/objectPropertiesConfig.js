@@ -69,7 +69,12 @@ export const extractObjectProperties = (obj, propertyGroups = ['basic'], scaleFa
       OBJECT_PROPERTIES[group].forEach((prop) => {
         if (obj[prop] !== undefined) {
           // Appliquer le scaleFactor aux propriétés qui en ont besoin
-          if (prop === 'strokeWidth') {
+          if (
+            prop === 'strokeWidth' ||
+            prop === 'shadowBlur' ||
+            prop === 'shadowOffsetX' ||
+            prop === 'shadowOffsetY'
+          ) {
             props[prop] = obj[prop] * scaleFactor
           }
           // Traitement spécial pour strokeDashArray

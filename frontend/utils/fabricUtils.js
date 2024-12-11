@@ -8,7 +8,17 @@ import * as fabric from 'fabric'
 
 // Fonction pour créer un objet Fabric
 export const createFabricObject = (obj, scaleFactor = 1) => {
-  const { type, isQRCode = false, ...fabricOptions } = obj // Ajout de `isQRCode`
+  const { type, isQRCode = false, ...fabricOptions } = obj
+
+  // Appliquer le scaleFactor aux propriétés de l'ombre si elles existent
+  if (fabricOptions.shadow) {
+    fabricOptions.shadow = new fabric.Shadow({
+      color: fabricOptions.shadow.color || 'rgba(0, 0, 0, 0.5)',
+      blur: (fabricOptions.shadow.blur || 0) * scaleFactor,
+      offsetX: (fabricOptions.shadow.offsetX || 0) * scaleFactor,
+      offsetY: (fabricOptions.shadow.offsetY || 0) * scaleFactor
+    })
+  }
 
   const scaledOptions = {
     ...fabricOptions,
@@ -30,25 +40,16 @@ export const createFabricObject = (obj, scaleFactor = 1) => {
   }
 
   switch (type.toLowerCase()) {
+    case 'circle':
+      console.log('Création du cercle avec les propriétés :', scaledOptions)
+      return Promise.resolve(new fabric.Circle(scaledOptions))
+    case 'rect':
+      return Promise.resolve(new fabric.Rect(scaledOptions))
     case 'i-text':
     case 'text':
       return Promise.resolve(new fabric.IText(obj.text || '', scaledOptions))
     case 'textbox':
       return Promise.resolve(new fabric.Textbox(obj.text || '', scaledOptions))
-    case 'rect':
-      return Promise.resolve(new fabric.Rect(scaledOptions))
-    case 'circle':
-      console.log('Création du cercle avec les propriétés :', scaledOptions)
-      return Promise.resolve(
-        new fabric.Circle({
-          ...scaledOptions,
-          width: (scaledOptions.radius || 25) * 2, // Largeur = 2 * rayon
-          height: (scaledOptions.radius || 25) * 2, // Hauteur = 2 * rayon (optionnel si attendu)
-          radius: scaledOptions.radius || 25,
-          originX: scaledOptions.originX || 'left',
-          originY: scaledOptions.originY || 'top'
-        })
-      )
     case 'triangle':
       return Promise.resolve(new fabric.Triangle(scaledOptions))
     case 'image':
