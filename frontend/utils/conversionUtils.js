@@ -1,4 +1,5 @@
-export const mmToPx = (mm) => (mm / 25.4) * 72
+export const DPI = 72
+export const mmToPx = (mm) => (mm / 25.4) * DPI
 
 export const rgbToHex = (rgb) => {
   if (!rgb || typeof rgb !== 'string') {

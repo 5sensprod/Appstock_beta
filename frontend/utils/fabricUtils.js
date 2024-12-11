@@ -85,7 +85,6 @@ export const createFabricObject = (obj, scaleFactor = 1) => {
 }
 
 // Fonction pour charger des objets sur un canvas
-
 export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
   if (!canvas) throw new Error('Canvas non disponible')
   canvas.clear()

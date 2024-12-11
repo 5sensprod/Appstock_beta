@@ -5,6 +5,7 @@ import { mmToPx } from '../../utils/conversionUtils'
 import { loadCanvasObjects } from '../../utils/fabricUtils'
 
 // Fonction pour charger le design dans un canvas temporaire
+//frontend\components\labelsgenerator\GridExporter.jsx
 export const loadCanvasDesign = async (
   cellIndex,
   cellContent,
@@ -12,17 +13,15 @@ export const loadCanvasDesign = async (
   cellHeight,
   scaleFactor = 4
 ) => {
-  // Créer un canvas natif au lieu d'un canvas Fabric.js
   const canvasElement = document.createElement('canvas')
   const ctx = canvasElement.getContext('2d')
 
-  // Définir les dimensions
+  // Calcul des dimensions pour le PDF
   const width = mmToPx(cellWidth) * scaleFactor
   const height = mmToPx(cellHeight) * scaleFactor
   canvasElement.width = width
   canvasElement.height = height
 
-  // Créer un canvas Fabric.js temporaire pour le rendu initial
   const tempFabricCanvas = new fabric.Canvas(document.createElement('canvas'), {
     width: width,
     height: height,
@@ -30,10 +29,33 @@ export const loadCanvasDesign = async (
   })
 
   try {
-    // Charger les objets sur le canvas Fabric
-    await loadCanvasObjects(tempFabricCanvas, cellContent, scaleFactor)
+    // Calculer le facteur de compensation pour les ombres
+    const shadowCompensationFactor = 0.25 // 1/4 pour compenser le scaleFactor de 4
 
-    // Désactiver la sélection et les bordures
+    const adjustedContent = cellContent.map((obj) => {
+      if (obj.type === 'image') {
+        const originalShadow = obj.shadow
+
+        return {
+          ...obj,
+          scaleX: obj.scaleX || 1,
+          scaleY: obj.scaleY || 1,
+          shadow: originalShadow
+            ? {
+                ...originalShadow,
+                // Ajuster les valeurs d'ombre avec le facteur de compensation
+                blur: originalShadow.blur * shadowCompensationFactor,
+                offsetX: originalShadow.offsetX * shadowCompensationFactor,
+                offsetY: originalShadow.offsetY * shadowCompensationFactor
+              }
+            : null
+        }
+      }
+      return obj
+    })
+
+    await loadCanvasObjects(tempFabricCanvas, adjustedContent, scaleFactor)
+
     tempFabricCanvas.discardActiveObject()
     tempFabricCanvas.getObjects().forEach((obj) => {
       obj.set({
@@ -46,14 +68,11 @@ export const loadCanvasDesign = async (
 
     tempFabricCanvas.renderAll()
 
-    // Convertir le canvas Fabric en image
     return new Promise((resolve) => {
       setTimeout(() => {
-        // Dessiner sur le canvas natif
         ctx.fillStyle = 'white'
         ctx.fillRect(0, 0, width, height)
 
-        // Convertir le canvas Fabric en image et la dessiner sur le canvas natif
         const fabricDataUrl = tempFabricCanvas.toDataURL({
           format: 'png',
           quality: 1
