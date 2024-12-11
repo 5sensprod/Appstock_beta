@@ -1,5 +1,5 @@
 // components/ShadowControls.jsx
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { faSquare } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../ui/IconButton'
 import ColorPicker from './texttool/ColorPicker'
@@ -7,7 +7,20 @@ import { useStyle } from '../../context/StyleContext'
 
 export const ShadowControls = ({ isOpen, onToggle, onModification, pickerRef }) => {
   const { currentShadow, handleShadowChange } = useStyle()
+  console.log('currentShadow:', currentShadow)
+  const [localShadow, setLocalShadow] = useState(currentShadow)
 
+  // Mettre à jour le state local quand currentShadow change
+  useEffect(() => {
+    setLocalShadow(currentShadow)
+  }, [currentShadow])
+
+  const handleChange = (props) => {
+    const newShadow = { ...localShadow, ...props }
+    setLocalShadow(newShadow)
+    handleShadowChange(props, false)
+    onModification()
+  }
   if (!isOpen) {
     return (
       <IconButton
@@ -95,15 +108,12 @@ export const ShadowControls = ({ isOpen, onToggle, onModification, pickerRef }) 
             min="0"
             max="1"
             step="0.1"
-            value={currentShadow.opacity}
-            onChange={(e) => {
-              handleShadowChange({ opacity: parseFloat(e.target.value) })
-              onModification()
-            }}
+            value={localShadow.opacity}
+            onChange={(e) => handleChange({ opacity: parseFloat(e.target.value) })}
             className="w-full"
           />
           <div className="text-right text-sm text-gray-500">
-            {Math.round(currentShadow.opacity * 100)}%
+            {Math.round(localShadow.opacity * 100)}%
           </div>
         </div>
       </div>

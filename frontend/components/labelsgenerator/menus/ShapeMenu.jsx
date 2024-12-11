@@ -67,6 +67,15 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
           }, 0)
         }
       }
+      if (shadowPickerRef.current && !shadowPickerRef.current.contains(event.target)) {
+        setIsShadowOpen(false)
+        if (hasModifications.current) {
+          setTimeout(() => {
+            canvas?.fire('object:modified')
+            canvas?.renderAll()
+          }, 0)
+        }
+      }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
@@ -145,8 +154,6 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
         isOpen={isShadowOpen}
         onToggle={() => {
           setIsShadowOpen(!isShadowOpen)
-          setIsStrokeControlOpen(false)
-          setIsAppearanceOpen(false)
           resetModificationFlag()
         }}
         onModification={handleModification}

@@ -16,7 +16,8 @@ export const useShadowManager = () => {
   const { canvas, selectedObject, dispatchCanvasAction } = useCanvas()
 
   const handleShadowChange = useCallback(
-    (shadowProps) => {
+    (shadowProps, isClosing = false) => {
+      // Ajout du paramètre isClosing ici
       if (!selectedObject) return
 
       const currentShadow = selectedObject.shadow
@@ -24,9 +25,9 @@ export const useShadowManager = () => {
         : { ...DEFAULT_SHADOW }
 
       // Pour l'opacité, s'assurer que la valeur est un nombre
-      if ('opacity' in shadowProps) {
-        shadowProps.opacity = parseFloat(shadowProps.opacity)
-      }
+      // if ('opacity' in shadowProps) {
+      //   shadowProps.opacity = parseFloat(shadowProps.opacity)
+      // }
 
       // Mettre à jour les propriétés de l'ombre
       const updatedShadow = { ...currentShadow, ...shadowProps }
@@ -43,6 +44,10 @@ export const useShadowManager = () => {
           shadow: newShadow.toObject()
         }
       })
+      // Si on ferme le menu, déclencher object:modified
+      if (isClosing) {
+        canvas.fire('object:modified')
+      }
     },
     [selectedObject, canvas, dispatchCanvasAction]
   )
