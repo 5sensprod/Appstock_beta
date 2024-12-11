@@ -6,8 +6,6 @@ import {
   withUndoRedo,
   redistributeCellContents
 } from '../utils/gridUtils'
-import { extractObjectProperties, TYPE_PROPERTY_GROUPS } from '../utils/objectPropertiesConfig'
-import _ from 'lodash'
 
 export const initialGridState = {
   config: {
@@ -98,19 +96,18 @@ export function gridReducer(state, action) {
       const { id, content } = action.payload
       const existingContent = state.cellContents[id] || []
 
-      // Mettre à jour le contenu en préservant les drapeaux existants
+      // Mettez à jour le contenu avec les drapeaux existants
       const updatedContent = content.map((item) => {
         const existingItem = existingContent.find((old) => old.id === item.id)
-        const type = item.isQRCode ? 'qrcode' : item.type
-        const propertyGroups = TYPE_PROPERTY_GROUPS[type] || ['basic']
 
         return {
-          ...extractObjectProperties(item, propertyGroups),
+          ...item,
           linkedByCsv: existingItem?.linkedByCsv || false,
-          linkedGroup: existingItem?.linkedGroup || false
+          linkedGroup: existingItem?.linkedGroup || false // Conserver le drapeau linkedGroup si nécessaire
         }
       })
 
+      // Supprimez les doublons tout en conservant les propriétés fusionnées
       const deduplicatedContent = _.uniqBy(updatedContent, 'id')
 
       return withUndoRedo(state, {
@@ -125,7 +122,8 @@ export function gridReducer(state, action) {
       return withUndoRedo(state, importCsvData(state, action.payload))
     }
     case 'SYNC_CELL_LAYOUT': {
-      const { sourceId, layout, linkedGroup } = action.payload
+      const { sourceId, layout } = action.payload
+      const linkedGroup = state.linkedGroups.find((group) => group.includes(sourceId))
       if (!linkedGroup) return state
 
       const updatedCellContents = { ...state.cellContents }
@@ -136,39 +134,37 @@ export function gridReducer(state, action) {
             const layoutItem = layout[item.id]
             if (!layoutItem) return item
 
-            const type = item.isQRCode ? 'qrcode' : item.type
-            const propertyGroups = TYPE_PROPERTY_GROUPS[type] || ['basic']
+            if (item.id.startsWith('Gencode-')) {
+              // Gestion spécifique des QR codes
+              const newItem = {
+                ...item,
+                left: layoutItem.left,
+                top: layoutItem.top,
+                angle: layoutItem.angle,
+                scaleX: layoutItem.scaleX,
+                scaleY: layoutItem.scaleY,
+                fill: layoutItem.fill
+              }
 
-            if (item.isQRCode) {
-              const qrProps = extractObjectProperties(layoutItem, ['basic', 'qr'])
               // Préserver qrText et src pour les QR codes liés via CSV
               if (item.linkedByCsv) {
-                return {
-                  ...item,
-                  ...qrProps,
-                  qrText: item.qrText,
-                  src: item.src
-                }
+                newItem.qrText = item.qrText
+                newItem.src = item.src
               }
-              return {
-                ...item,
-                ...qrProps
-              }
+
+              return newItem
             }
 
-            // Pour les autres éléments, synchronisation complète
+            // Pour les autres éléments, synchronisation normale
             return {
               ...item,
-              ...extractObjectProperties(layoutItem, propertyGroups)
+              ...layoutItem
             }
           })
         }
       })
 
-      return {
-        ...state,
-        cellContents: updatedCellContents
-      }
+      return { ...state, cellContents: updatedCellContents }
     }
     case 'DELETE_CLEARED_OBJECT': {
       const { id } = action.payload
