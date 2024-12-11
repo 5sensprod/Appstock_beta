@@ -7,18 +7,14 @@ import { useStyle } from '../../context/StyleContext'
 
 export const ShadowControls = ({ isOpen, onToggle, onModification, pickerRef }) => {
   const { currentShadow, handleShadowChange } = useStyle()
-  console.log('currentShadow:', currentShadow)
-  const [localShadow, setLocalShadow] = useState(currentShadow)
 
-  // Mettre à jour le state local quand currentShadow change
-  useEffect(() => {
-    setLocalShadow(currentShadow)
-  }, [currentShadow])
+  console.log('valeur opacity actuelle:', currentShadow.opacity) // Debug
 
-  const handleChange = (props) => {
-    const newShadow = { ...localShadow, ...props }
-    setLocalShadow(newShadow)
-    handleShadowChange(props, false)
+  const opacity = typeof currentShadow.opacity === 'number' ? currentShadow.opacity : 0.5
+
+  const handleOpacityChange = (value) => {
+    const newOpacity = parseFloat(value)
+    handleShadowChange({ opacity: newOpacity })
     onModification()
   }
   if (!isOpen) {
@@ -108,13 +104,11 @@ export const ShadowControls = ({ isOpen, onToggle, onModification, pickerRef }) 
             min="0"
             max="1"
             step="0.1"
-            value={localShadow.opacity}
-            onChange={(e) => handleChange({ opacity: parseFloat(e.target.value) })}
+            value={opacity}
+            onChange={(e) => handleOpacityChange(e.target.value)}
             className="w-full"
           />
-          <div className="text-right text-sm text-gray-500">
-            {Math.round(localShadow.opacity * 100)}%
-          </div>
+          <div className="text-right text-sm text-gray-500">{Math.round(opacity * 100)}%</div>
         </div>
       </div>
     </div>

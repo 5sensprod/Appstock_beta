@@ -4,12 +4,15 @@ import { useCanvas } from '../context/CanvasContext'
 import * as fabric from 'fabric'
 import { extractObjectProperties } from '../utils/objectPropertiesConfig'
 
-export const DEFAULT_SHADOW = {
+// hooks/useShadowManager.js
+export const SHADOW_PROPERTIES = {
   color: '#000000',
   blur: 5,
   offsetX: 5,
   offsetY: 5,
-  opacity: 0.5
+  opacity: 0.5,
+  affectStroke: false,
+  nonScaling: false
 }
 
 export const useShadowManager = () => {
@@ -17,46 +20,47 @@ export const useShadowManager = () => {
 
   const handleShadowChange = useCallback(
     (shadowProps, isClosing = false) => {
-      // Ajout du paramètre isClosing ici
       if (!selectedObject) return
 
-      const currentShadow = selectedObject.shadow
-        ? { ...selectedObject.shadow.toObject() }
-        : { ...DEFAULT_SHADOW }
+      // Obtenir l'état actuel de l'ombre ou utiliser les valeurs par défaut
+      const currentShadow = {
+        ...SHADOW_PROPERTIES,
+        ...(selectedObject.shadow ? selectedObject.shadow.toObject() : {})
+      }
 
-      // Pour l'opacité, s'assurer que la valeur est un nombre
-      // if ('opacity' in shadowProps) {
-      //   shadowProps.opacity = parseFloat(shadowProps.opacity)
-      // }
+      // Mettre à jour seulement la propriété modifiée
+      const updates = { ...shadowProps }
 
-      // Mettre à jour les propriétés de l'ombre
-      const updatedShadow = { ...currentShadow, ...shadowProps }
+      // Créer la nouvelle ombre avec les valeurs mises à jour
+      const newShadow = new fabric.Shadow({
+        ...currentShadow,
+        ...updates
+      })
 
-      // Créer une nouvelle instance de Shadow
-      const newShadow = new fabric.Shadow(updatedShadow)
       selectedObject.set('shadow', newShadow)
       canvas.renderAll()
 
-      // Mettre à jour le state
       dispatchCanvasAction({
-        type: 'SET_OBJECT_PROPERTIES',
-        payload: {
-          shadow: newShadow.toObject()
-        }
+        type: 'SET_SHADOW_PROPERTIES',
+        payload: updates
       })
-      // Si on ferme le menu, déclencher object:modified
+
       if (isClosing) {
         canvas.fire('object:modified')
       }
     },
     [selectedObject, canvas, dispatchCanvasAction]
   )
-  // Obtenir l'ombre actuelle ou les valeurs par défaut
+
+  // Toujours retourner un objet complet avec toutes les propriétés
   const getCurrentShadow = useCallback(() => {
-    if (!selectedObject) return { ...DEFAULT_SHADOW }
-    return selectedObject.shadow
-      ? { ...DEFAULT_SHADOW, ...selectedObject.shadow.toObject() }
-      : { ...DEFAULT_SHADOW }
+    if (!selectedObject) return SHADOW_PROPERTIES
+
+    const currentShadow = selectedObject.shadow ? selectedObject.shadow.toObject() : {}
+    return {
+      ...SHADOW_PROPERTIES,
+      ...currentShadow
+    }
   }, [selectedObject])
 
   return {

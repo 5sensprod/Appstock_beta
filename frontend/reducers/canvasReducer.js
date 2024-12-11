@@ -9,6 +9,15 @@ export const initialCanvasState = {
     width: 1,
     dashArray: null
   },
+  selectedShadow: {
+    color: '#000000',
+    blur: 5,
+    offsetX: 5,
+    offsetY: 5,
+    opacity: 0.5,
+    affectStroke: false,
+    nonScaling: false
+  },
   gradientProperties: {
     type: 'none',
     colors: ['#000000', '#ffffff'],
@@ -87,6 +96,14 @@ export const canvasReducer = (state, action) => {
       return {
         ...state,
         ...action.payload
+      }
+    case 'SET_SHADOW_PROPERTIES':
+      return {
+        ...state,
+        selectedShadow: {
+          ...state.selectedShadow,
+          ...action.payload
+        }
       }
 
     default:
