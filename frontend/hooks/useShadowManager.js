@@ -19,9 +19,14 @@ export const useShadowManager = () => {
     (shadowProps) => {
       if (!selectedObject) return
 
-      let currentShadow = selectedObject.shadow
-        ? { ...DEFAULT_SHADOW, ...selectedObject.shadow.toObject() }
+      const currentShadow = selectedObject.shadow
+        ? { ...selectedObject.shadow.toObject() }
         : { ...DEFAULT_SHADOW }
+
+      // Pour l'opacité, s'assurer que la valeur est un nombre
+      if ('opacity' in shadowProps) {
+        shadowProps.opacity = parseFloat(shadowProps.opacity)
+      }
 
       // Mettre à jour les propriétés de l'ombre
       const updatedShadow = { ...currentShadow, ...shadowProps }
@@ -35,13 +40,12 @@ export const useShadowManager = () => {
       dispatchCanvasAction({
         type: 'SET_OBJECT_PROPERTIES',
         payload: {
-          shadow: extractObjectProperties(selectedObject, ['shadow'])
+          shadow: newShadow.toObject()
         }
       })
     },
     [selectedObject, canvas, dispatchCanvasAction]
   )
-
   // Obtenir l'ombre actuelle ou les valeurs par défaut
   const getCurrentShadow = useCallback(() => {
     if (!selectedObject) return { ...DEFAULT_SHADOW }

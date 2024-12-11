@@ -75,6 +75,12 @@ const useCanvasGridSync = (canvas) => {
       })
     }
 
+    // Créer l'objet shadow si nécessaire
+    if (obj.shadow) {
+      // Changé ici
+      fabricOptions.shadow = new fabric.Shadow(obj.shadow)
+    }
+
     // Gestion des autres types d'objets Fabric
     switch (type) {
       case 'i-text':
@@ -91,6 +97,7 @@ const useCanvasGridSync = (canvas) => {
           })
         }
         return Promise.resolve(rect)
+
       case 'circle':
         const circle = new fabric.Circle(fabricOptions)
         if (fabricOptions.fill && fabricOptions.fill.type) {
@@ -100,6 +107,7 @@ const useCanvasGridSync = (canvas) => {
           })
         }
         return Promise.resolve(circle)
+
       default:
         return Promise.resolve(null)
     }
@@ -243,7 +251,7 @@ const useCanvasGridSync = (canvas) => {
       objects.map(async (obj) => {
         // Utiliser extractObjectProperties pour les propriétés de base et de stroke
         const baseProperties = {
-          ...extractObjectProperties(obj, ['basic', 'stroke']),
+          ...extractObjectProperties(obj, ['basic', 'stroke', 'shadow']),
           opacity: obj.savedOpacity || obj.opacity || 1, // Utiliser l'opacité sauvegardée
           zIndex: objects.indexOf(obj) / Math.max(1, objects.length - 1)
         }
@@ -422,7 +430,18 @@ const useCanvasGridSync = (canvas) => {
           gradientColors: item.gradientColors || [],
           gradientDirection: item.gradientDirection || 0,
           // Propriétés QR code si nécessaire
-          ...(item.isQRCode && { src: item.src, qrText: item.qrText })
+          ...(item.isQRCode && { src: item.src, qrText: item.qrText }),
+          // Ajouter les propriétés shadow
+          ...(item.shadow
+            ? {
+                shadow: item.shadow.toObject(),
+                shadowColor: item.shadow.color,
+                shadowBlur: item.shadow.blur,
+                shadowOffsetX: item.shadow.offsetX,
+                shadowOffsetY: item.shadow.offsetY,
+                shadowOpacity: item.shadow.opacity
+              }
+            : {})
         }
         return acc
       }, {})

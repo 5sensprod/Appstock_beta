@@ -54,14 +54,13 @@ export const OBJECT_PROPERTIES = {
 }
 
 export const TYPE_PROPERTY_GROUPS = {
-  rect: ['basic', 'appearance', 'stroke'],
-  circle: ['basic', 'appearance', 'stroke'],
-  'i-text': ['basic', 'appearance', 'stroke', 'text'],
-  textbox: ['basic', 'appearance', 'stroke', 'text'],
-  image: ['basic', 'appearance'],
-  qrcode: ['basic', 'qr']
+  rect: ['basic', 'appearance', 'stroke', 'shadow'],
+  circle: ['basic', 'appearance', 'stroke', 'shadow'],
+  'i-text': ['basic', 'appearance', 'stroke', 'text', 'shadow'],
+  textbox: ['basic', 'appearance', 'stroke', 'text', 'shadow'],
+  image: ['basic', 'appearance', 'shadow'],
+  qrcode: ['basic', 'qr', 'shadow']
 }
-
 export const extractObjectProperties = (obj, propertyGroups = ['basic'], scaleFactor = 1) => {
   const props = {}
 
