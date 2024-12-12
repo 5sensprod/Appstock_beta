@@ -33,25 +33,51 @@ export const loadCanvasDesign = async (
     const shadowCompensationFactor = 0.25 // 1/4 pour compenser le scaleFactor de 4
 
     const adjustedContent = cellContent.map((obj) => {
-      if (obj.type === 'image') {
-        const originalShadow = obj.shadow
+      console.log('---Object stroke details---')
+      console.log('strokeWidth:', obj.strokeWidth)
+      console.log('patternType:', obj.patternType)
+      console.log('strokeUniform:', obj.strokeUniform)
+      console.log('strokeDashArray:', obj.strokeDashArray)
 
-        return {
-          ...obj,
-          scaleX: obj.scaleX || 1,
-          scaleY: obj.scaleY || 1,
-          shadow: originalShadow
-            ? {
-                ...originalShadow,
-                // Ajuster les valeurs d'ombre avec le facteur de compensation
-                blur: originalShadow.blur * shadowCompensationFactor,
-                offsetX: originalShadow.offsetX * shadowCompensationFactor,
-                offsetY: originalShadow.offsetY * shadowCompensationFactor
-              }
-            : null
+      const originalShadow = obj.shadow
+      const hasStroke = obj.strokeWidth > 0
+      const adjustedObj = {
+        ...obj,
+        scaleX: obj.scaleX || 1,
+        scaleY: obj.scaleY || 1
+      }
+
+      if (hasStroke) {
+        // On garde toujours l'épaisseur d'origine
+        adjustedObj.strokeWidth = obj.strokeWidth
+
+        // Pour dotted et dashed uniquement
+        if (obj.patternType && ['dotted', 'dashed'].includes(obj.patternType)) {
+          // Utiliser la densité pour calculer l'espacement
+          const baseSpacing = 24
+          const spacing = baseSpacing / (obj.patternDensity || 5)
+
+          if (obj.patternType === 'dotted') {
+            // Pour le pointillé : [point, espace]
+            adjustedObj.strokeDashArray = [1, spacing * 2]
+          } else {
+            // Pour le hachuré : [trait, espace]
+            adjustedObj.strokeDashArray = [spacing, spacing]
+          }
         }
       }
-      return obj
+
+      if (originalShadow) {
+        adjustedObj.shadow = {
+          ...originalShadow,
+          blur: originalShadow.blur * shadowCompensationFactor,
+          offsetX: originalShadow.offsetX * shadowCompensationFactor,
+          offsetY: originalShadow.offsetY * shadowCompensationFactor
+        }
+      }
+      console.log('Adjusted strokeWidth:', adjustedObj.strokeWidth)
+      console.log('Adjusted strokeUniform:', adjustedObj.strokeUniform)
+      return adjustedObj
     })
 
     await loadCanvasObjects(tempFabricCanvas, adjustedContent, scaleFactor)

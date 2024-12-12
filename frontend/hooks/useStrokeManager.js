@@ -50,7 +50,7 @@ export const useStrokeManager = () => {
         updates.patternDensity = density
         updates.strokeDashArray = generatePattern(type, density, currentStrokeWidth)
         updates.strokeLineCap = type === 'dotted' ? 'round' : 'butt'
-        updates.strokeUniform = true
+        // updates.strokeUniform = true
       }
 
       // Appliquer les mises à jour
