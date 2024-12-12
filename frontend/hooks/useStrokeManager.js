@@ -13,7 +13,8 @@ const generatePattern = (type, density = 5, visualStrokeWidth = 1) => {
 
   switch (type) {
     case 'dotted':
-      return [visualStrokeWidth, spacing * 2]
+      // Même pattern pour tous les objets
+      return [1, spacing * 2]
     case 'dashed':
       return [spacing, spacing]
     case 'solid':
@@ -26,8 +27,7 @@ const getStrokeWidthFactor = (object) => {
   if (!object) return 1
 
   if (object.type === 'image' || object.id?.startsWith('Gencode-')) {
-    // Facteur fixe plus petit pour maintenir une épaisseur raisonnable
-    return 1.2 // Un trait de 1px donnera 1.2px
+    return 1.2
   }
 
   return 1
@@ -46,6 +46,7 @@ export const useStrokeManager = () => {
         strokeProps.strokeWidth || selectedObject.strokeWidth / strokeWidthFactor
 
       if ('strokeWidth' in strokeProps) {
+        // Garder strokeUniform: true pour tous les objets avec stroke
         updates.strokeWidth = strokeProps.strokeWidth * strokeWidthFactor
         updates.strokeUniform = true
       }
@@ -61,7 +62,14 @@ export const useStrokeManager = () => {
         updates.patternType = type
         updates.patternDensity = density
         updates.strokeDashArray = generatePattern(type, density, visualStrokeWidth)
-        updates.strokeLineCap = type === 'dotted' ? 'round' : 'butt'
+
+        if (type === 'dotted') {
+          updates.strokeLineCap = 'round'
+          // Forcer strokeUniform pour tous les points
+          updates.strokeUniform = true
+        } else {
+          updates.strokeLineCap = 'butt'
+        }
       }
 
       selectedObject.set(updates)

@@ -27,8 +27,6 @@ export const loadCanvasDesign = async (
   })
 
   try {
-    const shadowCompensationFactor = 0.25
-
     const adjustedContent = cellContent.map((obj) => {
       console.log('---Object stroke details---')
       console.log('strokeWidth:', obj.strokeWidth)
@@ -49,7 +47,7 @@ export const loadCanvasDesign = async (
 
         if (isImage) {
           // Pour les images, on applique juste le scaleFactor
-          // strokeUniform: true s'occupe déjà de la cohérence avec le scale de l'image
+
           adjustedObj.strokeWidth = obj.strokeWidth * scaleFactor
           adjustedObj.strokeUniform = true
         } else {
@@ -76,9 +74,9 @@ export const loadCanvasDesign = async (
       if (originalShadow) {
         adjustedObj.shadow = {
           ...originalShadow,
-          blur: originalShadow.blur * shadowCompensationFactor,
-          offsetX: originalShadow.offsetX * shadowCompensationFactor,
-          offsetY: originalShadow.offsetY * shadowCompensationFactor
+          blur: originalShadow.blur,
+          offsetX: originalShadow.offsetX,
+          offsetY: originalShadow.offsetY
         }
       }
 
