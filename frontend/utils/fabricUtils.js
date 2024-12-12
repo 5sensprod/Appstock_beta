@@ -7,6 +7,7 @@ import { GradientService } from '../services/GradientService'
 import * as fabric from 'fabric'
 
 // Fonction pour créer un objet Fabric
+// Fonction pour créer un objet Fabric
 export const createFabricObject = (obj, scaleFactor = 1) => {
   const { type, isQRCode = false, ...fabricOptions } = obj
 
@@ -36,6 +37,7 @@ export const createFabricObject = (obj, scaleFactor = 1) => {
     fill: fabricOptions.fill || 'rgba(0, 0, 0, 0.5)',
     stroke: fabricOptions.stroke || null,
     strokeWidth: fabricOptions.strokeWidth || 0,
+    // strokeUniform: true,
     isQRCode
   }
 
@@ -63,17 +65,24 @@ export const createFabricObject = (obj, scaleFactor = 1) => {
             scaleY: (fabricOptions.scaleY || 1) * scaleFactor
           })
 
-          // Étendre `toObject` pour inclure `isQRCode`
+          // Préserver les proportions originales
+          const originalWidth = img.width
+          const originalHeight = img.height
+          fabricImage.set({
+            width: originalWidth,
+            height: originalHeight
+          })
+
           fabricImage.toObject = (function (toObject) {
             return function () {
               return {
                 ...toObject.call(this),
-                isQRCode: this.isQRCode // Ajouter `isQRCode`
+                isQRCode: this.isQRCode
               }
             }
           })(fabricImage.toObject)
 
-          fabricImage.isQRCode = isQRCode // Ajouter la propriété à l'instance
+          fabricImage.isQRCode = isQRCode
           resolve(fabricImage)
         }
         img.onerror = reject
@@ -90,8 +99,8 @@ export const loadCanvasObjects = async (canvas, objects, scaleFactor = 1) => {
   canvas.clear()
 
   const baseObjectProps = {
-    strokeWidth: 0,
-    stroke: null,
+    // strokeWidth: 0,
+    // stroke: null,
     borderColor: 'transparent',
     cornerColor: 'transparent',
     cornerSize: 0,
