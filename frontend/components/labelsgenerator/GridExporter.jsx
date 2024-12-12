@@ -5,7 +5,6 @@ import { mmToPx } from '../../utils/conversionUtils'
 import { loadCanvasObjects } from '../../utils/fabricUtils'
 
 // Fonction pour charger le design dans un canvas temporaire
-//frontend\components\labelsgenerator\GridExporter.jsx
 export const loadCanvasDesign = async (
   cellIndex,
   cellContent,
@@ -16,7 +15,6 @@ export const loadCanvasDesign = async (
   const canvasElement = document.createElement('canvas')
   const ctx = canvasElement.getContext('2d')
 
-  // Calcul des dimensions pour le PDF
   const width = mmToPx(cellWidth) * scaleFactor
   const height = mmToPx(cellHeight) * scaleFactor
   canvasElement.width = width
@@ -29,8 +27,7 @@ export const loadCanvasDesign = async (
   })
 
   try {
-    // Calculer le facteur de compensation pour les ombres
-    const shadowCompensationFactor = 0.25 // 1/4 pour compenser le scaleFactor de 4
+    const shadowCompensationFactor = 0.25
 
     const adjustedContent = cellContent.map((obj) => {
       console.log('---Object stroke details---')
@@ -48,21 +45,30 @@ export const loadCanvasDesign = async (
       }
 
       if (hasStroke) {
-        // On garde toujours l'épaisseur d'origine
-        adjustedObj.strokeWidth = obj.strokeWidth
+        const isImage = obj.type === 'image' || obj.id?.startsWith('Gencode-')
 
-        // Pour dotted et dashed uniquement
+        if (isImage) {
+          // Pour les images, on applique juste le scaleFactor
+          // strokeUniform: true s'occupe déjà de la cohérence avec le scale de l'image
+          adjustedObj.strokeWidth = obj.strokeWidth * scaleFactor
+          adjustedObj.strokeUniform = true
+        } else {
+          adjustedObj.strokeWidth = obj.strokeWidth
+        }
+
         if (obj.patternType && ['dotted', 'dashed'].includes(obj.patternType)) {
-          // Utiliser la densité pour calculer l'espacement
           const baseSpacing = 24
           const spacing = baseSpacing / (obj.patternDensity || 5)
 
           if (obj.patternType === 'dotted') {
-            // Pour le pointillé : [point, espace]
             adjustedObj.strokeDashArray = [1, spacing * 2]
           } else {
-            // Pour le hachuré : [trait, espace]
             adjustedObj.strokeDashArray = [spacing, spacing]
+          }
+
+          // Pour les patterns sur les images, appliquer aussi le scaleFactor
+          if (isImage) {
+            adjustedObj.strokeDashArray = adjustedObj.strokeDashArray.map((v) => v * scaleFactor)
           }
         }
       }
@@ -75,6 +81,7 @@ export const loadCanvasDesign = async (
           offsetY: originalShadow.offsetY * shadowCompensationFactor
         }
       }
+
       console.log('Adjusted strokeWidth:', adjustedObj.strokeWidth)
       console.log('Adjusted strokeUniform:', adjustedObj.strokeUniform)
       return adjustedObj

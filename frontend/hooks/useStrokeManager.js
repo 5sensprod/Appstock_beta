@@ -7,20 +7,30 @@ export const STROKE_PATTERN_TYPES = {
   dotted: 'dotted'
 }
 
-const generatePattern = (type, density = 5, strokeWidth = 1) => {
+const generatePattern = (type, density = 5, visualStrokeWidth = 1) => {
   const baseSpacing = 24
   const spacing = baseSpacing / density
 
   switch (type) {
     case 'dotted':
-      // Pour les points, utiliser la strokeWidth comme base
-      return [1, spacing * 2] // Un point de la taille du stroke, avec un espacement proportionnel
+      return [visualStrokeWidth, spacing * 2]
     case 'dashed':
       return [spacing, spacing]
     case 'solid':
     default:
       return []
   }
+}
+
+const getStrokeWidthFactor = (object) => {
+  if (!object) return 1
+
+  if (object.type === 'image' || object.id?.startsWith('Gencode-')) {
+    // Facteur fixe plus petit pour maintenir une épaisseur raisonnable
+    return 1.2 // Un trait de 1px donnera 1.2px
+  }
+
+  return 1
 }
 
 export const useStrokeManager = () => {
@@ -31,32 +41,31 @@ export const useStrokeManager = () => {
       if (!selectedObject) return
 
       const updates = {}
+      const strokeWidthFactor = getStrokeWidthFactor(selectedObject)
+      const visualStrokeWidth =
+        strokeProps.strokeWidth || selectedObject.strokeWidth / strokeWidthFactor
 
       if ('strokeWidth' in strokeProps) {
-        updates.strokeWidth = strokeProps.strokeWidth
+        updates.strokeWidth = strokeProps.strokeWidth * strokeWidthFactor
+        updates.strokeUniform = true
       }
 
       if ('stroke' in strokeProps) {
         updates.stroke = strokeProps.stroke
       }
 
-      // Gérer les changements de motif
       if ('patternType' in strokeProps || 'density' in strokeProps || strokeProps.forceUpdate) {
         const type = strokeProps.patternType || selectedObject.patternType || 'solid'
         const density = strokeProps.density || selectedObject.patternDensity || 5
-        const currentStrokeWidth = updates.strokeWidth || selectedObject.strokeWidth || 1
 
         updates.patternType = type
         updates.patternDensity = density
-        updates.strokeDashArray = generatePattern(type, density, currentStrokeWidth)
+        updates.strokeDashArray = generatePattern(type, density, visualStrokeWidth)
         updates.strokeLineCap = type === 'dotted' ? 'round' : 'butt'
-        // updates.strokeUniform = true
       }
 
-      // Appliquer les mises à jour
       selectedObject.set(updates)
 
-      // Si le motif est en points, forcer la mise à jour du strokeLineCap
       if (selectedObject.patternType === 'dotted') {
         selectedObject.set('strokeLineCap', 'round')
       }
@@ -68,24 +77,24 @@ export const useStrokeManager = () => {
         canvas.fire('object:modified')
       }
 
+      const stateUpdates = {
+        ...updates,
+        strokeWidth: visualStrokeWidth,
+        strokeLineCap: updates.strokeLineCap
+      }
+
       dispatchCanvasAction({
         type: 'SET_STROKE_PROPERTIES',
-        payload: {
-          ...updates,
-          strokeLineCap: updates.strokeLineCap
-        }
+        payload: stateUpdates
       })
     },
     [selectedObject, canvas, dispatchCanvasAction]
   )
 
-  // Détecter le type de motif actuel
-  const currentPatternType = selectedObject?.patternType || 'solid'
-
   return {
     currentStroke: selectedObject?.stroke || '#000000',
-    currentStrokeWidth: selectedObject?.strokeWidth || 0,
-    currentPatternType,
+    currentStrokeWidth: (selectedObject?.strokeWidth || 0) / getStrokeWidthFactor(selectedObject),
+    currentPatternType: selectedObject?.patternType || 'solid',
     currentPatternDensity: selectedObject?.patternDensity || 5,
     handleStrokeChange
   }

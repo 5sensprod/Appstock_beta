@@ -56,18 +56,37 @@ const CanvasProvider = ({ children }) => {
     if (!canvas || process.env.NODE_ENV !== 'development') return
 
     let isInitialRender = true
+
     const logObjectChanges = (eventName, obj) => {
       if (isInitialRender) {
         isInitialRender = false
         return
       }
+
+      // Récupérer les dimensions canvas via getScaled
+      const canvasWidth = obj?.getScaledWidth?.() || 0
+      const canvasHeight = obj?.getScaledHeight?.() || 0
+
       console.log(`Canvas Event: ${eventName}`, {
         id: obj?.id || 'N/A',
         type: obj?.type || 'unknown',
         left: obj?.left,
-        top: obj?.top
+        top: obj?.top,
+        // Dimensions originales
+        originalWidth: obj?.width,
+        originalHeight: obj?.height,
+        // Dimensions dans le canvas
+        canvasWidth,
+        canvasHeight,
+        // Scales
+        scaleX: obj?.scaleX,
+        scaleY: obj?.scaleY,
+        // Stroke info
+        strokeWidth: obj?.strokeWidth,
+        strokeUniform: obj?.strokeUniform
       })
     }
+
     const events = ['object:added', 'object:modified', 'object:removed']
     const handlers = events.reduce((acc, event) => {
       acc[event] = (e) => logObjectChanges(event, e.target)
