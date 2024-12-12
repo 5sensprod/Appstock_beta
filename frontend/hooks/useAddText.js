@@ -6,13 +6,6 @@ import useAddObjectToCanvas from './useAddObjectToCanvas'
 const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
   const { centerObject } = useAddObjectToCanvas(labelConfig)
 
-  // Propriétés de bordure par défaut
-  const defaultStrokeProps = {
-    stroke: '#000000',
-    strokeWidth: 0,
-    strokeUniform: true
-  }
-
   const onAddText = useCallback(async () => {
     const fontSize = labelConfig?.labelWidth / 5 || 16
 
@@ -31,10 +24,10 @@ const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
       fontSize,
       fill: selectedColor || 'black',
       textAlign: 'left',
-      fontFamily: selectedFont || 'Lato',
-      ...defaultStrokeProps
+      fontFamily: selectedFont || 'Lato'
     })
 
+    // Ajouter un id unique au texte
     textBox.id = Math.random().toString(36).substring(2, 11)
 
     centerObject(textBox)

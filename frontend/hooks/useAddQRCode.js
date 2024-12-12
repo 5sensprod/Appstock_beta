@@ -1,8 +1,6 @@
 import { createQRCodeFabricImage } from '../utils/fabricUtils'
 import { useCallback } from 'react'
-import * as fabric from 'fabric'
-import QRCode from 'qrcode'
-import { rgbToHex, mmToPx } from '../utils/conversionUtils'
+import { mmToPx } from '../utils/conversionUtils'
 import useAddObjectToCanvas from './useAddObjectToCanvas'
 
 const useAddQRCode = (canvas, labelConfig, selectedColor) => {

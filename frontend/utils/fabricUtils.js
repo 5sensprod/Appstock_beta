@@ -209,6 +209,7 @@ export const createQRCodeFabricImage = async (text, options = {}) => {
     const url = await generateQRCodeImage(text, color, width)
     const img = new Image()
     img.src = url
+
     return new Promise((resolve, reject) => {
       img.onload = () => {
         const fabricImage = new fabric.Image(img, {
@@ -219,9 +220,14 @@ export const createQRCodeFabricImage = async (text, options = {}) => {
           ...options
         })
 
+        // Ajouter un id unique au QR code
+        fabricImage.id = Math.random().toString(36).substring(2, 11)
+
+        // Personnalisation de la méthode `toObject` pour inclure l'`id`
         fabricImage.toObject = (function (toObject) {
           return function () {
             return Object.assign(toObject.call(this), {
+              id: fabricImage.id,
               isQRCode: true,
               qrText: text,
               src: url
@@ -231,6 +237,7 @@ export const createQRCodeFabricImage = async (text, options = {}) => {
 
         resolve(fabricImage)
       }
+
       img.onerror = reject
     })
   } catch (err) {
