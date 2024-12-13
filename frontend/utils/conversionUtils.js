@@ -10,7 +10,6 @@ export const rgbToHex = (rgb) => {
     return rgb // Si déjà en hexadécimal, retourner tel quel
   }
 
-  // Convertir le format `rgb(r, g, b)` en hexadécimal
   const rgbValues = rgb.match(/\d+/g)
   if (!rgbValues || rgbValues.length < 3) {
     return '#000000' // Valeur par défaut en cas d'erreur de parsing
@@ -22,4 +21,9 @@ export const rgbToHex = (rgb) => {
     .join('')
 
   return `#${hex}`
+}
+
+export const getValidHexColor = (hexColor) => {
+  const isValidHex = /^#([0-9A-F]{3}){1,2}$/i.test(hexColor)
+  return isValidHex ? hexColor : '#000000'
 }

@@ -1,12 +1,13 @@
-// components/texttool/ColorPicker.jsx
-import React, { useEffect, useState, useCallback } from 'react'
+// frontend/components/labelsgenerator/texttool/ColorPicker.jsx
+import React, { useEffect, useState } from 'react'
 import { HexColorPicker } from 'react-colorful'
 import { faEyeDropper } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../../ui/IconButton'
+import { rgbToHex, getValidHexColor } from '../../../utils/conversionUtils'
 
 const ColorPicker = ({ color, setSelectedColor }) => {
   const [isEyeDropperSupported, setIsEyeDropperSupported] = useState(false)
-  const [internalColor, setInternalColor] = useState(color)
+  const [internalColor, setInternalColor] = useState(rgbToHex(color))
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.EyeDropper) {
@@ -14,60 +15,22 @@ const ColorPicker = ({ color, setSelectedColor }) => {
     }
   }, [])
 
-  // Synchroniser la couleur interne quand la prop change
   useEffect(() => {
-    const hexColor = rgbaToHex(color)
-    setInternalColor(hexColor)
+    setInternalColor(rgbToHex(color))
   }, [color])
 
-  // Convertir RGBA en HEX
-  const rgbaToHex = useCallback((color) => {
-    if (color.startsWith('rgba')) {
-      const values = color.match(/\d+/g)
-      if (values && values.length >= 3) {
-        const [r, g, b] = values
-        return rgbToHex(parseInt(r), parseInt(g), parseInt(b))
-      }
-    }
-    if (color.startsWith('rgb')) {
-      const values = color.match(/\d+/g)
-      if (values && values.length >= 3) {
-        const [r, g, b] = values
-        return rgbToHex(parseInt(r), parseInt(g), parseInt(b))
-      }
-    }
-    return color
-  }, [])
-
-  // RGB vers HEX
-  const rgbToHex = useCallback((r, g, b) => {
-    const toHex = (n) => {
-      const hex = n.toString(16)
-      return hex.length === 1 ? '0' + hex : hex
-    }
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`
-  }, [])
-
-  // Validation du format hexadécimal
-  const getValidHexColor = useCallback((hexColor) => {
-    const isValidHex = /^#([0-9A-F]{3}){1,2}$/i.test(hexColor)
-    return isValidHex ? hexColor : '#000000'
-  }, [])
-
-  const handleColorChange = useCallback(
-    (newColor) => {
-      const validColor = getValidHexColor(newColor)
-      setInternalColor(validColor)
-      setSelectedColor(validColor)
-    },
-    [setSelectedColor, getValidHexColor]
-  )
+  const handleColorChange = (newColor) => {
+    const validColor = getValidHexColor(newColor)
+    setInternalColor(validColor)
+    setSelectedColor(validColor)
+  }
 
   const handleEyeDropper = async () => {
     if (!isEyeDropperSupported) {
       alert('Votre navigateur ne supporte pas la pipette.')
       return
     }
+
     try {
       const eyeDropper = new window.EyeDropper()
       const result = await eyeDropper.open()
