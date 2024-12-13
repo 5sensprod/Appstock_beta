@@ -7,6 +7,8 @@ import {
   redistributeCellContents
 } from '../utils/gridUtils'
 
+import _ from 'lodash'
+
 export const initialGridState = {
   config: {
     cellWidth: 48.5,
@@ -149,6 +151,10 @@ export function gridReducer(state, action) {
                 strokeWidth: layoutItem.strokeWidth ?? item.strokeWidth ?? 0,
                 strokeDashArray: layoutItem.strokeDashArray || item.strokeDashArray || [],
                 strokeUniform: true,
+                // Ajouter ces propriétés manquantes
+                strokeLineCap: layoutItem.strokeLineCap || item.strokeLineCap || 'butt',
+                patternType: layoutItem.patternType || item.patternType || 'solid',
+                patternDensity: layoutItem.patternDensity || item.patternDensity || 5,
                 // Propriétés d'ombre
                 shadow: layoutItem.shadow,
                 shadowColor: layoutItem.shadowColor,

@@ -4,9 +4,9 @@ import { GridContext } from '../context/GridContext'
 import _ from 'lodash'
 import { createQRCodeFabricImage, generateQRCodeImage } from '../utils/fabricUtils'
 import {
-  extractObjectProperties,
-  TYPE_PROPERTY_GROUPS,
-  extractQRCodeProperties
+  extractObjectProperties
+  // TYPE_PROPERTY_GROUPS,
+  // extractQRCodeProperties
 } from '../utils/objectPropertiesConfig'
 
 const useCanvasGridSync = (canvas) => {
@@ -156,7 +156,7 @@ const useCanvasGridSync = (canvas) => {
       const linkedGroup = findLinkedGroup(selectedCellId)
       if (!linkedGroup || linkedGroup.length <= 1) return
 
-      const currentObjects = cellContents[selectedCellId]
+      // const currentObjects = cellContents[selectedCellId]
       for (const cellId of linkedGroup) {
         if (cellId === selectedCellId) continue
 
@@ -243,7 +243,7 @@ const useCanvasGridSync = (canvas) => {
     }
 
     initializeQRCodes()
-  }, [cellContents])
+  }, [cellContents, dispatch])
 
   const handleCanvasModification = useCallback(async () => {
     if (!canvas || !selectedCellId || isLoadingRef.current || ignoreNextUpdateRef.current) return

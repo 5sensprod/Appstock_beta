@@ -132,48 +132,6 @@ export const extractQRCodeProperties = (obj) => {
   }
 }
 
-// Fonction pour appliquer les propriétés synchronisées à un QR code
-export const applySyncedPropertiesToQRCode = async (originalItem, layoutItem) => {
-  // Si l'élément est lié par CSV, préserver ses propriétés spécifiques
-  if (originalItem.linkedByCsv) {
-    const syncedProperties = {
-      ...originalItem,
-      left: layoutItem.left,
-      top: layoutItem.top,
-      angle: layoutItem.angle,
-      scaleX: layoutItem.scaleX,
-      scaleY: layoutItem.scaleY,
-      // Synchroniser les propriétés d'ombre
-      ...(layoutItem.shadow && {
-        shadow: layoutItem.shadow,
-        shadowColor: layoutItem.shadowColor,
-        shadowBlur: layoutItem.shadowBlur,
-        shadowOffsetX: layoutItem.shadowOffsetX,
-        shadowOffsetY: layoutItem.shadowOffsetY,
-        shadowOpacity: layoutItem.shadowOpacity
-      })
-    }
-
-    // Si le QR code a une couleur différente, regénérer l'image
-    if (layoutItem.fill !== originalItem.fill) {
-      try {
-        const newQRCodeSrc = await generateQRCodeImage(
-          originalItem.qrText,
-          layoutItem.fill || '#000000',
-          originalItem.width || 50
-        )
-        syncedProperties.src = newQRCodeSrc
-      } catch (error) {
-        console.error('Erreur lors de la régénération du QR code:', error)
-      }
-    }
-
-    return syncedProperties
-  }
-
-  return layoutItem
-}
-
 export const hasAppearanceChanges = (oldObj, newObj) => {
   return OBJECT_PROPERTIES.appearance.some(
     (prop) => JSON.stringify(oldObj[prop]) !== JSON.stringify(newObj[prop])
