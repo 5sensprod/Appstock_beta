@@ -9,8 +9,7 @@ import { useCanvas } from '../../../context/CanvasContext'
 export default function TextMenu({ onAddText }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
   const pickerRef = useRef(null)
-  const { isTextSelected, currentColor, currentFont, handleColorChange, handleFontChange } =
-    useTextManager()
+  const { currentColor, currentFont, handleColorChange, handleFontChange } = useTextManager()
 
   const { canvas } = useCanvas()
 
