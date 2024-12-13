@@ -1,6 +1,5 @@
 import React, { useContext, useState } from 'react'
 import { GridContext } from '../../context/GridContext'
-import CSVImporter from './CSVImporter'
 
 const validateConfigValue = (key, value, config) => {
   const { pageWidth, pageHeight } = config
