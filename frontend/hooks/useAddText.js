@@ -1,10 +1,20 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import * as fabric from 'fabric'
 import { loadFont } from '../utils/fontUtils'
 import useAddObjectToCanvas from './useAddObjectToCanvas'
 
 const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
   const { centerObject } = useAddObjectToCanvas(labelConfig)
+
+  // Mémoriser les propriétés de bordure par défaut
+  const defaultStrokeProps = useMemo(
+    () => ({
+      stroke: '#000000',
+      strokeWidth: 0,
+      strokeUniform: true
+    }),
+    []
+  )
 
   const onAddText = useCallback(async () => {
     const fontSize = labelConfig?.labelWidth / 5 || 16
@@ -24,7 +34,8 @@ const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
       fontSize,
       fill: selectedColor || 'black',
       textAlign: 'left',
-      fontFamily: selectedFont || 'Lato'
+      fontFamily: selectedFont || 'Lato',
+      ...defaultStrokeProps
     })
 
     // Ajouter un id unique au texte
@@ -34,7 +45,7 @@ const useAddText = (canvas, labelConfig, selectedColor, selectedFont) => {
     canvas.add(textBox)
     canvas.setActiveObject(textBox)
     canvas.renderAll()
-  }, [canvas, labelConfig, selectedColor, selectedFont, centerObject])
+  }, [canvas, labelConfig, selectedColor, selectedFont, centerObject, defaultStrokeProps])
 
   return { onAddText }
 }

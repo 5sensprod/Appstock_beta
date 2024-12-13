@@ -6,7 +6,7 @@ export const initialCanvasState = {
   selectedFont: 'Lato',
   selectedStroke: {
     color: '#000000',
-    width: 1,
+    width: 0,
     dashArray: null
   },
   selectedShadow: {

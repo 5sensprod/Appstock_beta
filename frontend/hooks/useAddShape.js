@@ -27,7 +27,10 @@ const useAddShape = (canvas, labelConfig, selectedColor) => {
 
     const circle = new fabric.Circle({
       radius: circleRadius,
-      fill: selectedColor
+      fill: selectedColor,
+      stroke: '#000000',
+      strokeWidth: 0,
+      strokeUniform: true
     })
 
     addShape(circle)
@@ -40,7 +43,10 @@ const useAddShape = (canvas, labelConfig, selectedColor) => {
     const rectangle = new fabric.Rect({
       width: rectWidth,
       height: rectHeight,
-      fill: selectedColor
+      fill: selectedColor,
+      stroke: '#000000',
+      strokeWidth: 0,
+      strokeUniform: true
     })
 
     addShape(rectangle)
