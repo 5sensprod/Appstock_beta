@@ -4,7 +4,7 @@ import { useCanvas } from '../context/CanvasContext'
 import useCanvasObjectUpdater from './useCanvasObjectUpdater'
 
 export const useQrCodeManager = (onAddQrCode, onUpdateQrCode) => {
-  const { canvas, selectedColor, selectedObject, dispatchCanvasAction } = useCanvas()
+  const { canvas, selectedObject, dispatchCanvasAction } = useCanvas()
   const updateObjectProperties = useCanvasObjectUpdater(canvas, dispatchCanvasAction)
   const [qrText, setQrText] = useState('')
   const [isModified, setIsModified] = useState(false)

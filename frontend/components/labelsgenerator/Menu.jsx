@@ -84,7 +84,11 @@ const Menu = () => {
         />
         {activeMenu === 'shapes' && (
           <div className="absolute left-full top-0 ml-2" style={{ width: `${shapeMenuWidth}px` }}>
-            <ShapeMenu onAddCircle={onAddCircle} onAddRectangle={onAddRectangle} />
+            <ShapeMenu
+              onAddCircle={onAddCircle}
+              onAddRectangle={onAddRectangle}
+              onUpdateQrCode={onUpdateQrCode}
+            />
           </div>
         )}
       </div>

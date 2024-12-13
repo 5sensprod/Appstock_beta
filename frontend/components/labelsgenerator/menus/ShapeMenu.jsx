@@ -8,7 +8,7 @@ import { ShadowControls } from '../ShadowControls'
 import { AppearanceControls } from '../AppearanceControls'
 import { useStyle } from '../../../context/StyleContext'
 
-export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
+export default function ShapeMenu({ onAddCircle, onAddRectangle, onUpdateQrCode }) {
   const [, setIsColorPickerOpen] = useState(false)
   const [isStrokeControlOpen, setIsStrokeControlOpen] = useState(false)
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false)
@@ -23,7 +23,7 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
 
   const { currentColor } = useShapeManager()
 
-  const { canvas } = useCanvas()
+  const { canvas, selectedObject } = useCanvas()
 
   // Reset du flag quand on ouvre un contrôle
   const resetModificationFlag = () => {
@@ -88,11 +88,21 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   }
 
   const handleAppearanceChangeWithFlag = (props) => {
+    const isQrCode = selectedObject?.isQRCode
+
     if (props.type === 'gradient') {
+      // Pour les QR codes, on applique directement la couleur
+      if (isQrCode && props.colors?.length > 0) {
+        onUpdateQrCode(selectedObject.qrText, props.colors[0])
+        // Mettre à jour l'état global pour maintenir la couleur
+        canvas?.getActiveObject()?.set('fill', props.colors[0])
+        canvas?.renderAll()
+        handleModification()
+        return
+      }
+
       if (props.gradientType === 'none') {
-        // Pour une couleur unie
         removeGradient()
-        // Mettre à jour avec la couleur unie
         const color = props.colors[0] || currentColor
         canvas?.getActiveObject()?.set('fill', color)
         canvas?.renderAll()

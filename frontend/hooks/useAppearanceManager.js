@@ -8,7 +8,7 @@ export const GRADIENT_TYPES = {
   radial: 'radial'
 }
 
-export const useAppearanceManager = () => {
+export const useAppearanceManager = (onUpdateQrCode = null) => {
   const { canvas, selectedObject, dispatchCanvasAction } = useCanvas()
 
   const handleOpacityChange = useCallback(
@@ -26,6 +26,43 @@ export const useAppearanceManager = () => {
     [selectedObject, canvas, dispatchCanvasAction]
   )
 
+  const handleQrCodeColorChange = useCallback(
+    (color) => {
+      if (!selectedObject || !onUpdateQrCode) return
+
+      // Mise à jour immédiate du QR code avec la nouvelle couleur
+      onUpdateQrCode(selectedObject.qrText, color)
+
+      // Mise à jour du state global
+      dispatchCanvasAction({
+        type: 'SET_OBJECT_PROPERTIES',
+        payload: { color }
+      })
+    },
+    [selectedObject, onUpdateQrCode, dispatchCanvasAction]
+  )
+
+  const removeGradient = useCallback(() => {
+    if (!selectedObject) return
+
+    const currentFill = selectedObject.get('fill')
+    const newColor = currentFill?.colorStops?.[0]?.color || '#000000'
+
+    // Si c'est un QR code, utiliser la fonction spéciale
+    if (selectedObject.isQRCode && onUpdateQrCode) {
+      handleQrCodeColorChange(newColor)
+      return
+    }
+
+    selectedObject.set('fill', newColor)
+    canvas.renderAll()
+
+    dispatchCanvasAction({
+      type: 'SET_OBJECT_PROPERTIES',
+      payload: { gradientType: 'none' }
+    })
+  }, [selectedObject, canvas, dispatchCanvasAction, handleQrCodeColorChange, onUpdateQrCode])
+
   const createGradient = useCallback(
     (type, colors, direction = 0, offsets = [0, 1]) => {
       if (!selectedObject) return
@@ -35,7 +72,12 @@ export const useAppearanceManager = () => {
         return
       }
 
-      // Créer le gradient avec les offsets existants
+      // Pour les QR codes, on n'applique que la première couleur du gradient
+      if (selectedObject.isQRCode && onUpdateQrCode) {
+        handleQrCodeColorChange(colors[0])
+        return
+      }
+
       const gradient = GradientService.createGradient(
         selectedObject,
         type,
@@ -47,52 +89,45 @@ export const useAppearanceManager = () => {
       selectedObject.set('fill', gradient)
       canvas.renderAll()
 
-      // Sauvegarder les propriétés du gradient dans le state global
       dispatchCanvasAction({
         type: 'SET_OBJECT_PROPERTIES',
         payload: {
           gradientType: type,
           gradientColors: colors,
           gradientDirection: direction,
-          gradientOffsets: offsets, // Sauvegarder les offsets dans le state global
+          gradientOffsets: offsets,
           gradientCoords: GradientService.serializeGradient(selectedObject).coords
         }
       })
     },
-    [selectedObject, canvas, dispatchCanvasAction]
+    [
+      selectedObject,
+      canvas,
+      dispatchCanvasAction,
+      removeGradient,
+      handleQrCodeColorChange,
+      onUpdateQrCode
+    ]
   )
-
-  const removeGradient = useCallback(() => {
-    if (!selectedObject) return
-
-    const currentFill = selectedObject.get('fill')
-    selectedObject.set('fill', currentFill?.colorStops?.[0]?.color || '#000000')
-    canvas.renderAll()
-
-    dispatchCanvasAction({
-      type: 'SET_OBJECT_PROPERTIES',
-      payload: { gradientType: 'none' }
-    })
-  }, [selectedObject, canvas, dispatchCanvasAction])
 
   const getCurrentObjectColor = useCallback(() => {
     if (!selectedObject) return '#000000'
-    const fill = selectedObject.get('fill')
 
-    // Si c'est une couleur unie
-    if (typeof fill === 'string') {
-      return fill
+    if (selectedObject.isQRCode) {
+      return selectedObject.fill || '#000000'
     }
-    // Si c'est un gradient, retourner la première couleur
-    if (fill?.colorStops) {
-      return fill.colorStops[0].color
-    }
+
+    const fill = selectedObject.get('fill')
+    if (typeof fill === 'string') return fill
+    if (fill?.colorStops) return fill.colorStops[0].color
     return '#000000'
   }, [selectedObject])
 
   return {
     currentOpacity: selectedObject?.opacity || 1,
-    currentGradientType: selectedObject?.get('fill')?.type || 'none',
+    currentGradientType: selectedObject?.isQRCode
+      ? 'none'
+      : selectedObject?.get('fill')?.type || 'none',
     currentGradientColors: [
       selectedObject?.get('fill')?.colorStops?.[0]?.color || '#000000',
       selectedObject?.get('fill')?.colorStops?.[1]?.color || '#ffffff'
@@ -107,6 +142,7 @@ export const useAppearanceManager = () => {
     handleOpacityChange,
     createGradient,
     removeGradient,
+    handleQrCodeColorChange,
     currentColor: getCurrentObjectColor()
   }
 }
