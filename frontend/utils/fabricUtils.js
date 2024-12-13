@@ -65,13 +65,20 @@ export const createFabricObject = (obj, scaleFactor = 1) => {
             scaleY: (fabricOptions.scaleY || 1) * scaleFactor
           })
 
-          // Préserver les proportions originales
-          const originalWidth = img.width
-          const originalHeight = img.height
-          fabricImage.set({
-            width: originalWidth,
-            height: originalHeight
-          })
+          if (isQRCode) {
+            // Pour les QR codes, maintenir les dimensions scalées
+            fabricImage.set({
+              width: fabricOptions.width || img.width,
+              height: fabricOptions.height || img.height,
+              strokeUniform: true
+            })
+          } else {
+            // Pour les autres images, préserver les proportions originales
+            fabricImage.set({
+              width: img.width,
+              height: img.height
+            })
+          }
 
           fabricImage.toObject = (function (toObject) {
             return function () {

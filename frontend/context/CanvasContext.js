@@ -70,6 +70,7 @@ const CanvasProvider = ({ children }) => {
       console.log(`Canvas Event: ${eventName}`, {
         id: obj?.id || 'N/A',
         type: obj?.type || 'unknown',
+        isQRCode: obj?.isQRCode || false, // Ajouter cette ligne
         left: obj?.left,
         top: obj?.top,
         // Dimensions originales
