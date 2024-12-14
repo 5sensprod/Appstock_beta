@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import styles from '../FabricDesigner.module.css'
-import ShapeMenu from './ShapeMenu'
+import StyleMenu from './StyleMenu'
 
 export default function FloatingMenu({ onAddCircle, onAddRectangle, onUpdateQrCode }) {
   const [position, setPosition] = useState({ x: 100, y: 100 })
@@ -60,7 +60,7 @@ export default function FloatingMenu({ onAddCircle, onAddRectangle, onUpdateQrCo
           })
         }}
       />
-      <ShapeMenu
+      <StyleMenu
         onAddCircle={onAddCircle}
         onAddRectangle={onAddRectangle}
         onUpdateQrCode={onUpdateQrCode}

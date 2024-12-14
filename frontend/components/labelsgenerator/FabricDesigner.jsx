@@ -7,7 +7,7 @@ import FloatingMenu from './menus/FloatingMenu'
 import { useCanvas } from '../../context/CanvasContext'
 
 export default function FabricDesigner() {
-  const { onAddCircle, onAddRectangle, onUpdateQrCode } = useCanvas()
+  const { onUpdateQrCode } = useCanvas()
 
   return (
     <div className={styles.app}>
@@ -15,11 +15,7 @@ export default function FabricDesigner() {
       <div className="flex items-center space-x-2">
         <ZoomControl />
       </div>
-      <FloatingMenu
-        onAddCircle={onAddCircle}
-        onAddRectangle={onAddRectangle}
-        onUpdateQrCode={onUpdateQrCode}
-      />
+      <FloatingMenu onUpdateQrCode={onUpdateQrCode} />
       <CanvasControl />
     </div>
   )
