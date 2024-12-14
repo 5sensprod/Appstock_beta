@@ -1,32 +1,10 @@
-// TextMenu.jsx
-import React, { useState, useEffect, useRef } from 'react'
-import { faTextHeight, faPalette } from '@fortawesome/free-solid-svg-icons'
+import React from 'react'
+import { faTextHeight } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../../ui/IconButton'
-import ColorPicker from '../texttool/ColorPicker'
 import { useTextManager } from '../../../hooks/useTextManager'
-import { useCanvas } from '../../../context/CanvasContext'
 
 export default function TextMenu({ onAddText }) {
-  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
-  const pickerRef = useRef(null)
-  const { currentColor, currentFont, handleColorChange, handleFontChange } = useTextManager()
-
-  const { canvas } = useCanvas()
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (pickerRef.current && !pickerRef.current.contains(event.target)) {
-        setIsColorPickerOpen(false)
-        setTimeout(() => {
-          handleColorChange(currentColor, true)
-          canvas?.fire('object:modified')
-          canvas?.renderAll()
-        }, 0)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [handleColorChange, currentColor, canvas])
+  const { currentFont, handleFontChange } = useTextManager()
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
@@ -38,19 +16,6 @@ export default function TextMenu({ onAddText }) {
         size="w-9 h-12"
         iconSize="text-xl"
       />
-      <IconButton
-        onClick={() => setIsColorPickerOpen((prev) => !prev)}
-        icon={faPalette}
-        title="Choisir une couleur"
-        className="bg-gray-500 hover:bg-gray-600"
-        size="w-9 h-12"
-        iconSize="text-xl"
-      />
-      {isColorPickerOpen && (
-        <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
-          <ColorPicker color={currentColor} setSelectedColor={handleColorChange} />
-        </div>
-      )}
       <select
         value={currentFont}
         onChange={(e) => handleFontChange(e.target.value)}

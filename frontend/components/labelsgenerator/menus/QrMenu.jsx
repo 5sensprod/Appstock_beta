@@ -1,16 +1,12 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React from 'react'
 import IconButton from '../../ui/IconButton'
-import ColorPicker from '../texttool/ColorPicker'
-import { faQrcode, faPalette, faSync } from '@fortawesome/free-solid-svg-icons'
-import { useCanvas } from '../../../context/CanvasContext'
+import { faQrcode, faSync } from '@fortawesome/free-solid-svg-icons'
 import { useQrCodeManager } from '../../../hooks/useQrCodeManager'
+import { useCanvas } from '../../../context/CanvasContext'
 
 export default function QrMenu({ onAddQrCode, onUpdateQrCode }) {
-  const { selectedColor, selectedObject, canvas } = useCanvas()
-  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
-  const pickerRef = useRef(null)
-
-  const { qrText, isModified, setQrText, setIsModified, handleColorChange } = useQrCodeManager(
+  const { selectedObject } = useCanvas()
+  const { qrText, isModified, setQrText, setIsModified } = useQrCodeManager(
     onAddQrCode,
     onUpdateQrCode
   )
@@ -25,7 +21,7 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode }) {
 
   const handleUpdate = () => {
     if (isModified && qrText.trim()) {
-      onUpdateQrCode(qrText, selectedColor)
+      onUpdateQrCode(qrText)
       setIsModified(false)
     }
   }
@@ -34,21 +30,6 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode }) {
     setQrText(e.target.value)
     setIsModified(true)
   }
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (pickerRef.current && !pickerRef.current.contains(event.target)) {
-        setIsColorPickerOpen(false)
-        setTimeout(() => {
-          handleColorChange(selectedObject?.fill || selectedColor, true)
-          canvas?.fire('object:modified')
-          canvas?.renderAll()
-        }, 0)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [handleColorChange, selectedColor, canvas, selectedObject])
 
   return (
     <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
@@ -59,7 +40,6 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode }) {
         onChange={handleTextChange}
         className="w-64 rounded border p-2"
       />
-
       <IconButton
         onClick={handleValidate}
         icon={faQrcode}
@@ -68,7 +48,6 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode }) {
         size="w-9 h-12"
         iconSize="text-xl"
       />
-
       {selectedObject?.qrText && isModified && (
         <IconButton
           onClick={handleUpdate}
@@ -78,24 +57,6 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode }) {
           size="w-9 h-12"
           iconSize="text-xl"
         />
-      )}
-
-      <IconButton
-        onClick={() => setIsColorPickerOpen((prev) => !prev)}
-        icon={faPalette}
-        title="Choisir une couleur"
-        className="bg-gray-500 hover:bg-gray-600"
-        size="w-9 h-12"
-        iconSize="text-xl"
-      />
-
-      {isColorPickerOpen && (
-        <div className="absolute top-full z-10 mt-2" ref={pickerRef}>
-          <ColorPicker
-            color={selectedObject?.fill || selectedColor}
-            setSelectedColor={handleColorChange}
-          />
-        </div>
       )}
     </div>
   )

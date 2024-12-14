@@ -21,8 +21,8 @@ const Menu = () => {
   const [selectedQrText, setSelectedQrText] = useState('')
 
   // Largeurs fixes pour chaque sous-menu
-  const shapeMenuWidth = 225
-  const textMenuWidth = 250
+  const shapeMenuWidth = 105
+  const textMenuWidth = 200
   const imageMenuWidth = 305
   const qrMenuWidth = 320
   const importMenuWidth = 300
