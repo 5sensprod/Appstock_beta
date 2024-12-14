@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useShapeManager } from '../../../hooks/useShapeManager'
 import { useCanvas } from '../../../context/CanvasContext'
 import { StrokeControls } from '../StrokeControls'
 import { ShadowControls } from '../ShadowControls'
@@ -16,12 +15,12 @@ export default function StyleMenu({ onUpdateQrCode }) {
   const strokePickerRef = useRef(null)
   const appearancePickerRef = useRef(null)
   const hasModifications = useRef(false)
-  const { handleStrokeChange, handleOpacityChange, createGradient, removeGradient } = useStyle()
   const shadowPickerRef = useRef(null)
 
-  const { currentColor } = useShapeManager()
+  const { handleStrokeChange, handleOpacityChange, createGradient, removeGradient } = useStyle()
+  const { canvas, selectedObject, selectedColor } = useCanvas()
 
-  const { canvas, selectedObject } = useCanvas()
+  const currentColor = selectedObject?.fill || selectedColor
 
   // Reset du flag quand on ouvre un contrôle
   const resetModificationFlag = () => {
@@ -55,7 +54,6 @@ export default function StyleMenu({ onUpdateQrCode }) {
         }
       }
 
-      // Ajout de la gestion du clic extérieur pour AppearanceControls
       if (appearancePickerRef.current && !appearancePickerRef.current.contains(event.target)) {
         setIsAppearanceOpen(false)
         if (hasModifications.current) {
@@ -65,6 +63,7 @@ export default function StyleMenu({ onUpdateQrCode }) {
           }, 0)
         }
       }
+
       if (shadowPickerRef.current && !shadowPickerRef.current.contains(event.target)) {
         setIsShadowOpen(false)
         if (hasModifications.current) {
@@ -89,10 +88,8 @@ export default function StyleMenu({ onUpdateQrCode }) {
     const isQrCode = selectedObject?.isQRCode
 
     if (props.type === 'gradient') {
-      // Pour les QR codes, on applique directement la couleur
       if (isQrCode && props.colors?.length > 0) {
         onUpdateQrCode(selectedObject.qrText, props.colors[0])
-        // Mettre à jour l'état global pour maintenir la couleur
         canvas?.getActiveObject()?.set('fill', props.colors[0])
         canvas?.renderAll()
         handleModification()
@@ -125,7 +122,7 @@ export default function StyleMenu({ onUpdateQrCode }) {
           setIsStrokeControlOpen(!isStrokeControlOpen)
           resetModificationFlag()
         }}
-        onStrokeChange={handleStrokeChangeWithFlag} // Passer le handler avec flag
+        onStrokeChange={handleStrokeChangeWithFlag}
         pickerRef={strokePickerRef}
       />
 
@@ -140,6 +137,7 @@ export default function StyleMenu({ onUpdateQrCode }) {
         pickerRef={appearancePickerRef}
         onModification={handleAppearanceChangeWithFlag}
       />
+
       <ShadowControls
         isOpen={isShadowOpen}
         onToggle={() => {
