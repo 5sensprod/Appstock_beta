@@ -1,63 +1,55 @@
 @font-face {
   font-family: 'Lato';
-  src: url('/assets/fonts/lato.woff2')
-    format('woff2');
+  src: url('/assets/fonts/lato.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'Merriweather';
-  src: url('/assets/fonts/merriweather.woff2')
-    format('woff2');
+  src: url('/assets/fonts/merriweather.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'Nunito';
-  src: url('/assets/fonts/nunito.woff2')
-    format('woff2');
+  src: url('/assets/fonts/nunito.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'Open Sans';
-  src: url('/assets/fonts/opensans.woff2')
-    format('woff2');
+  src: url('/assets/fonts/opensans.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'Pacifico';
-  src: url('/assets/fonts/pacifico.woff2')
-    format('woff2');
+  src: url('/assets/fonts/pacifico.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'Playfair Display';
-  src: url('/assets/fonts/playfairdisplay.woff2')
-    format('woff2');
+  src: url('/assets/fonts/playfairdisplay.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'Roboto';
-  src: url('/assets/fonts/roboto.woff2')
-    format('woff2');
+  src: url('/assets/fonts/roboto.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'Source Code Pro';
-  src: url('/assets/fonts/sourcecodepro.woff2')
-    format('woff2');
+  src: url('/assets/fonts/sourcecodepro.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
@@ -72,4 +64,11 @@ body {
   padding: 0;
   box-sizing: border-box;
   min-height: 100%;
+}
+
+.react-colorful__saturation-pointer,
+.react-colorful__hue-pointer,
+.react-colorful__alpha-pointer {
+  width: 18px !important;
+  height: 18px !important;
 }
