@@ -97,8 +97,8 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef, onModification
         icon={faAdjust}
         title="Apparence"
         className="bg-gray-500 hover:bg-gray-600"
-        size="w-12 h-12"
-        iconSize="text-xl"
+        size="w-8 h-8"
+        iconSize="text-sm"
       />
     )
   }

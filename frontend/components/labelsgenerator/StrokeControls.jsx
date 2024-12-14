@@ -37,10 +37,10 @@ export const StrokeControls = ({ isOpen, onToggle, onStrokeChange, pickerRef }) 
       <IconButton
         onClick={onToggle}
         icon={faRuler}
-        title="Paramètres de bordure"
         className="bg-gray-500 hover:bg-gray-600"
-        size="w-12 h-12"
-        iconSize="text-xl"
+        size="w-8 h-8"
+        iconSize="text-sm"
+        title="Contour"
       />
     )
   }

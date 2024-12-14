@@ -13,7 +13,7 @@ const IconButton = ({
   return (
     <button
       onClick={onClick}
-      className={`rounded p-2 text-white transition-all duration-300 hover:opacity-90 ${size} ${className}`}
+      className={`rounded text-white transition-all duration-300 hover:opacity-90 ${size} ${className}`}
       title={title}
     >
       <FontAwesomeIcon icon={icon} className={iconSize} />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { faSquare } from '@fortawesome/free-solid-svg-icons'
+import { faCube } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../ui/IconButton'
 import ColorPicker from './texttool/ColorPicker'
 import { useStyle } from '../../context/StyleContext'
@@ -26,11 +26,11 @@ export const ShadowControls = ({ isOpen, onToggle, onModification, pickerRef }) 
     return (
       <IconButton
         onClick={onToggle}
-        icon={faSquare}
+        icon={faCube}
         title="Ombre"
         className="bg-gray-500 hover:bg-gray-600"
-        size="w-12 h-12"
-        iconSize="text-xl"
+        size="w-8 h-8"
+        iconSize="text-sm"
       />
     )
   }
