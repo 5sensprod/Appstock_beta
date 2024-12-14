@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { faAdjust } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../ui/IconButton'
 import ColorPicker from './texttool/ColorPicker'
 import GradientSlider from './GradientSlider'
 import { GRADIENT_TYPES } from '../../hooks/useAppearanceManager'
-import { useCanvas } from '../../context/CanvasContext'
 import { useStyle } from '../../context/StyleContext'
 
 // AppearanceControls.jsx
 export const AppearanceControls = ({ isOpen, onToggle, pickerRef, onModification }) => {
-  const { canvas } = useCanvas()
   const {
     currentOpacity,
     currentGradientType,
