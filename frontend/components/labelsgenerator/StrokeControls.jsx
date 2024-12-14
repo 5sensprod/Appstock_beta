@@ -3,6 +3,7 @@ import React from 'react'
 import { faRuler } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../ui/IconButton'
 import ColorPicker from './texttool/ColorPicker'
+import LabelWithValue from '../ui/LabelWithValue'
 import { STROKE_PATTERN_TYPES } from '../../hooks/useStrokeManager'
 import { useStyle } from '../../context/StyleContext'
 
@@ -47,13 +48,10 @@ export const StrokeControls = ({ isOpen, onToggle, onStrokeChange, pickerRef }) 
 
   return (
     <div className="absolute top-full z-20 mt-2 rounded-lg bg-white p-4 shadow-xl" ref={pickerRef}>
-      <div className="space-y-2">
+      <div className="space-y-1">
         {/* Épaisseur de la bordure */}
         <div className="space-y-1">
-          <label className="flex w-full justify-between text-sm font-medium text-gray-700">
-            <span>Épaisseur</span>
-            <span className="text-sm text-gray-500">{currentStrokeWidth}px</span>
-          </label>
+          <LabelWithValue label="Épaisseur" value={`${currentStrokeWidth}px`} />
           <input
             type="range"
             min="0"
@@ -65,7 +63,7 @@ export const StrokeControls = ({ isOpen, onToggle, onStrokeChange, pickerRef }) 
         </div>
 
         {/* Style de la bordure */}
-        <div className="space-y-2">
+        <div className="space-y-1">
           <label className="text-sm font-medium text-gray-700">Style</label>
           <div className="grid grid-cols-3 gap-2">
             {Object.entries(STROKE_PATTERN_TYPES).map(([type, label]) => (
@@ -99,11 +97,11 @@ export const StrokeControls = ({ isOpen, onToggle, onStrokeChange, pickerRef }) 
 
         {/* Densité du motif */}
         {currentPatternType !== 'solid' && (
-          <div className="space-y-2">
-            <label className="flex w-full justify-between text-sm font-medium text-gray-700">
-              <span>Densité {currentPatternType === 'dotted' ? 'des points' : 'des traits'}</span>
-              <span className="text-sm text-gray-500">{currentPatternDensity}</span>
-            </label>
+          <div className="space-y-1">
+            <LabelWithValue
+              label={`Densité ${currentPatternType === 'dotted' ? 'des points' : 'des traits'}`}
+              value={currentPatternDensity}
+            />
             <input
               type="range"
               min="1"
@@ -115,8 +113,8 @@ export const StrokeControls = ({ isOpen, onToggle, onStrokeChange, pickerRef }) 
           </div>
         )}
         {/* Couleur de la bordure */}
-        <div className="space-y-0">
-          <label className="invisible text-sm font-medium text-gray-700">Couleur</label>
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-gray-700">Couleur</label>
           <ColorPicker color={currentStroke} setSelectedColor={handleStrokeColorChange} />
         </div>
       </div>
