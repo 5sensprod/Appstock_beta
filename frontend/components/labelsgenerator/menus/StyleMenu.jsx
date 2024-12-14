@@ -115,7 +115,7 @@ export default function StyleMenu({ onUpdateQrCode }) {
   }
 
   return (
-    <div className="relative flex flex-col space-y-2 rounded bg-white p-2 shadow-lg">
+    <div className="relative space-x-2 rounded bg-white p-2 shadow-lg">
       <StrokeControls
         isOpen={isStrokeControlOpen}
         onToggle={() => {

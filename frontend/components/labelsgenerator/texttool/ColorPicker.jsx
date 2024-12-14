@@ -46,7 +46,11 @@ const ColorPicker = ({ color, setSelectedColor }) => {
 
   return (
     <div className="textTool mb-2">
-      <HexColorPicker color={internalColor} onChange={handleColorChange} />
+      <HexColorPicker
+        color={internalColor}
+        onChange={handleColorChange}
+        style={{ width: '130px', height: '137px' }}
+      />
       {isEyeDropperSupported && (
         <IconButton
           onClick={handleEyeDropper}

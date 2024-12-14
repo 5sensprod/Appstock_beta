@@ -104,10 +104,7 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef, onModification
   }
 
   return (
-    <div
-      className="absolute left-0 top-2 z-50 mt-2 w-64 rounded-lg bg-white p-4 shadow-xl"
-      ref={pickerRef}
-    >
+    <div className="absolute top-full z-20 mt-2 rounded-lg bg-white p-4 shadow-xl" ref={pickerRef}>
       <div className="space-y-4">
         {/* ColorPicker principal */}
         <div className="space-y-2">

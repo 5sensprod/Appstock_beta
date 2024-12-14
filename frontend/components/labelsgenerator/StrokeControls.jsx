@@ -47,27 +47,20 @@ export const StrokeControls = ({ isOpen, onToggle, onStrokeChange, pickerRef }) 
 
   return (
     <div className="absolute top-full z-20 mt-2 rounded-lg bg-white p-4 shadow-xl" ref={pickerRef}>
-      <div className="space-y-4">
+      <div className="space-y-2">
         {/* Épaisseur de la bordure */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Épaisseur</label>
+        <div className="space-y-1">
+          <label className="flex w-full justify-between text-sm font-medium text-gray-700">
+            <span>Épaisseur</span>
+            <span className="text-sm text-gray-500">{currentStrokeWidth}px</span>
+          </label>
           <input
             type="range"
             min="0"
             max="20"
             value={currentStrokeWidth}
-            onChange={(e) => handleStrokeWidthChange(e.target.value)} // Utiliser handleStrokeWidthChange
+            onChange={(e) => handleStrokeWidthChange(e.target.value)}
             className="w-full"
-          />
-          <div className="text-right text-sm text-gray-500">{currentStrokeWidth}px</div>
-        </div>
-
-        {/* Couleur de la bordure */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Couleur</label>
-          <ColorPicker
-            color={currentStroke}
-            setSelectedColor={handleStrokeColorChange} // Utiliser handleStrokeColorChange
           />
         </div>
 
@@ -107,8 +100,9 @@ export const StrokeControls = ({ isOpen, onToggle, onStrokeChange, pickerRef }) 
         {/* Densité du motif */}
         {currentPatternType !== 'solid' && (
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">
-              Densité {currentPatternType === 'dotted' ? 'des points' : 'des traits'}
+            <label className="flex w-full justify-between text-sm font-medium text-gray-700">
+              <span>Densité {currentPatternType === 'dotted' ? 'des points' : 'des traits'}</span>
+              <span className="text-sm text-gray-500">{currentPatternDensity}</span>
             </label>
             <input
               type="range"
@@ -118,9 +112,13 @@ export const StrokeControls = ({ isOpen, onToggle, onStrokeChange, pickerRef }) 
               onChange={(e) => handleDensityChange(parseInt(e.target.value, 10))}
               className="w-full"
             />
-            <div className="text-right text-sm text-gray-500">{currentPatternDensity}</div>
           </div>
         )}
+        {/* Couleur de la bordure */}
+        <div className="space-y-0">
+          <label className="invisible text-sm font-medium text-gray-700">Couleur</label>
+          <ColorPicker color={currentStroke} setSelectedColor={handleStrokeColorChange} />
+        </div>
       </div>
     </div>
   )
