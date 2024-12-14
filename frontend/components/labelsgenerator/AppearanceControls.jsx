@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { faAdjust } from '@fortawesome/free-solid-svg-icons'
+import { faAdjust, faBan, faArrowRight, faCircle } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import IconButton from '../ui/IconButton'
 import ColorPicker from './texttool/ColorPicker'
 import GradientSlider from './GradientSlider'
 import { GRADIENT_TYPES } from '../../hooks/useAppearanceManager'
 import { useStyle } from '../../context/StyleContext'
+import LabelWithValue from '../ui/LabelWithValue'
 
 // AppearanceControls.jsx
 export const AppearanceControls = ({ isOpen, onToggle, pickerRef, onModification }) => {
@@ -105,9 +107,9 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef, onModification
 
   return (
     <div className="absolute top-full z-20 mt-2 rounded-lg bg-white p-4 shadow-xl" ref={pickerRef}>
-      <div className="space-y-4">
+      <div className="space-y-1">
         {/* ColorPicker principal */}
-        <div className="space-y-2">
+        <div className="mb-4 space-y-1">
           <label className="text-sm font-medium text-gray-700">
             {currentGradientType === 'none'
               ? 'Couleur'
@@ -122,8 +124,8 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef, onModification
         </div>
 
         {/* Opacité */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Opacité</label>
+        <div className="space-y-1">
+          <LabelWithValue label="Opacité" value={`${Math.round(currentOpacity * 100)}%`} />
           <input
             type="range"
             min="0"
@@ -133,26 +135,25 @@ export const AppearanceControls = ({ isOpen, onToggle, pickerRef, onModification
             onChange={(e) => handleOpacityChange(e.target.value)}
             className="w-full"
           />
-          <div className="text-right text-sm text-gray-500">
-            {Math.round(currentOpacity * 100)}%
-          </div>
         </div>
 
         {/* Type de dégradé */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Type de dégradé</label>
+        <div className="space-y-1">
+          <LabelWithValue label="Type de dégradé" value="" />
           <div className="grid grid-cols-3 gap-2">
             {Object.entries(GRADIENT_TYPES).map(([type, label]) => (
               <button
                 key={type}
                 onClick={() => handleGradientChange(type)}
-                className={`rounded border px-3 py-1 text-sm ${
+                className={`flex items-center justify-center rounded border px-3 py-2 text-sm ${
                   currentGradientType === type
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-300 hover:border-gray-400'
                 }`}
               >
-                {label === 'none' ? 'Aucun' : label === 'linear' ? 'Linéaire' : 'Radial'}
+                {label === 'none' && <FontAwesomeIcon icon={faBan} size="lg" />}
+                {label === 'linear' && <FontAwesomeIcon icon={faArrowRight} size="lg" />}
+                {label === 'radial' && <FontAwesomeIcon icon={faCircle} size="lg" />}
               </button>
             ))}
           </div>

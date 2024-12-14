@@ -3,6 +3,7 @@ import { faCube } from '@fortawesome/free-solid-svg-icons'
 import IconButton from '../ui/IconButton'
 import ColorPicker from './texttool/ColorPicker'
 import { useStyle } from '../../context/StyleContext'
+import LabelWithValue from '../ui/LabelWithValue'
 
 export const ShadowControls = ({ isOpen, onToggle, onModification, pickerRef }) => {
   const { currentShadow, handleShadowChange } = useStyle()
@@ -37,9 +38,9 @@ export const ShadowControls = ({ isOpen, onToggle, onModification, pickerRef }) 
 
   return (
     <div className="absolute top-full z-20 mt-2 rounded-lg bg-white p-4 shadow-xl" ref={pickerRef}>
-      <div className="space-y-4">
+      <div className="space-y-1">
         {/* Couleur de l'ombre */}
-        <div className="space-y-2">
+        <div className="mb-4 space-y-1">
           <label className="text-sm font-medium text-gray-700">Couleur</label>
           <ColorPicker
             color={currentShadow.color}
@@ -51,8 +52,8 @@ export const ShadowControls = ({ isOpen, onToggle, onModification, pickerRef }) 
         </div>
 
         {/* Flou */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Flou</label>
+        <div className="space-y-1">
+          <LabelWithValue label="Flou" value={`${currentShadow.blur}px`} />
           <input
             type="range"
             min="0"
@@ -64,12 +65,11 @@ export const ShadowControls = ({ isOpen, onToggle, onModification, pickerRef }) 
             }}
             className="w-full"
           />
-          <div className="text-right text-sm text-gray-500">{currentShadow.blur}px</div>
         </div>
 
-        {/* Offset X */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Décalage X</label>
+        {/* Décalage X */}
+        <div className="space-y-1">
+          <LabelWithValue label="Décalage X" value={`${currentShadow.offsetX}px`} />
           <input
             type="range"
             min="-50"
@@ -81,12 +81,11 @@ export const ShadowControls = ({ isOpen, onToggle, onModification, pickerRef }) 
             }}
             className="w-full"
           />
-          <div className="text-right text-sm text-gray-500">{currentShadow.offsetX}px</div>
         </div>
 
-        {/* Offset Y */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Décalage Y</label>
+        {/* Décalage Y */}
+        <div className="space-y-1">
+          <LabelWithValue label="Décalage Y" value={`${currentShadow.offsetY}px`} />
           <input
             type="range"
             min="-50"
@@ -98,12 +97,11 @@ export const ShadowControls = ({ isOpen, onToggle, onModification, pickerRef }) 
             }}
             className="w-full"
           />
-          <div className="text-right text-sm text-gray-500">{currentShadow.offsetY}px</div>
         </div>
 
         {/* Opacité */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Opacité</label>
+        <div className="space-y-1">
+          <LabelWithValue label="Opacité" value={`${Math.round(localOpacity * 100)}%`} />
           <input
             type="range"
             min="0"
@@ -113,7 +111,6 @@ export const ShadowControls = ({ isOpen, onToggle, onModification, pickerRef }) 
             onChange={handleOpacityChange}
             className="w-full"
           />
-          <div className="text-right text-sm text-gray-500">{Math.round(localOpacity * 100)}%</div>
         </div>
       </div>
     </div>
