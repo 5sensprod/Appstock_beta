@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import styles from '../FabricDesigner.module.css'
 import ShapeMenu from './ShapeMenu'
 
-export default function FloatingShapeMenu({ onAddCircle, onAddRectangle, onUpdateQrCode }) {
+export default function FloatingMenu({ onAddCircle, onAddRectangle, onUpdateQrCode }) {
   const [position, setPosition] = useState({ x: 100, y: 100 })
   const [isDragging, setIsDragging] = useState(false)
   const [startPos, setStartPos] = useState({ x: 0, y: 0 })
