@@ -10,17 +10,12 @@ export default function Home() {
     <ProductProvider>
       <div>
         <Header /> {/* Réintégration du Header */}
-        <h1 className="py-6 text-center text-4xl">
-          Bienvenue sur la page d'accueil
-        </h1>
-        <PrintManager />{' '}
-        {/* Réintégration du PrintManager */}
+        <h1 className="py-6 text-center text-4xl">Bienvenue Patrice</h1>
+        <PrintManager /> {/* Réintégration du PrintManager */}
         <main>
-          <ProductList />{' '}
-          {/* Réintégration du ProductList */}
+          <ProductList /> {/* Réintégration du ProductList */}
         </main>
-        <UpdateNotification />{' '}
-        {/* Réintégration du UpdateNotification */}
+        <UpdateNotification /> {/* Réintégration du UpdateNotification */}
       </div>
     </ProductProvider>
   )

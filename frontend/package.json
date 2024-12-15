@@ -1,6 +1,6 @@
 {
   "name": "appstock_beta",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "main": "main.js",
   "private": true,
   "homepage": "/",
@@ -29,7 +29,7 @@
     "start-next": "next dev",
     "start-flask": "node ../backend/start_flask.js",
     "start-electron": "cross-env NODE_ENV=development electron .",
-    "build": "npm run build-next && npm run build-pyinstaller && npm run clean-pyinstaller && npm run build-electron",
+    "build": "npm run build-next && npm run build-pyinstaller && npm run clean-pyinstaller && npm run build-electron && electron-builder --publish onTag",
     "build-next": "next build",
     "build-pyinstaller": "call ../backend/.venv/Scripts/activate && cd ../backend && pyinstaller --noconfirm --clean --onefile --noconsole app.py && cd ../frontend",
     "clean-pyinstaller": "rimraf ../backend/build ../backend/__pycache__ ../backend/utils/__pycache__ ../backend/routes/__pycache__",
