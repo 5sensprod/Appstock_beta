@@ -9,13 +9,13 @@ export default function ImageMenu({ onAddImage }) {
   }
 
   return (
-    <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
+    <div className="relative mt-2 flex w-auto space-x-2 rounded bg-white shadow-lg">
       {/* Champ de fichier pour uploader une image */}
       <input
         type="file"
         accept="image/*"
         onChange={handleFileChange} // Lorsque le fichier est sélectionné
-        className="w-64 rounded border p-2"
+        className="w-64 rounded border p-1"
       />
     </div>
   )

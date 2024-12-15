@@ -32,20 +32,20 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode }) {
   }
 
   return (
-    <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
+    <div className="p-.5 relative flex w-auto space-x-2 rounded bg-white shadow-lg">
       <input
         type="text"
         placeholder="Entrez votre texte ou URL"
         value={qrText}
         onChange={handleTextChange}
-        className="w-64 rounded border p-2"
+        className="w-40 rounded border p-2"
       />
       <IconButton
         onClick={handleValidate}
         icon={faQrcode}
         title="Ajouter QR Code"
         className="bg-blue-500 text-white hover:bg-blue-600"
-        size="w-9 h-12"
+        size="w-9 h-9"
         iconSize="text-xl"
       />
       {selectedObject?.qrText && isModified && (
@@ -54,7 +54,7 @@ export default function QrMenu({ onAddQrCode, onUpdateQrCode }) {
           icon={faSync}
           title="Mettre à jour le QR Code"
           className="bg-green-500 text-white hover:bg-green-600"
-          size="w-9 h-12"
+          size="w-9 h-9"
           iconSize="text-xl"
         />
       )}

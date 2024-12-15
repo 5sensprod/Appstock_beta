@@ -28,13 +28,13 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
   }, [canvas])
 
   return (
-    <div className="relative flex w-auto space-x-2 rounded bg-white p-2 shadow-lg">
+    <div className="relative flex h-12 w-auto items-center space-x-2 rounded bg-white p-1.5 shadow-lg">
       <IconButton
         onClick={onAddCircle}
         icon={faCircle}
         title="Ajouter un cercle"
         className="bg-blue-500 hover:bg-blue-600"
-        size="w-12 h-12"
+        size="w-9 h-9"
         iconSize="text-xl"
       />
       <IconButton
@@ -42,7 +42,7 @@ export default function ShapeMenu({ onAddCircle, onAddRectangle }) {
         icon={faSquare}
         title="Ajouter un rectangle"
         className="bg-blue-500 hover:bg-blue-600"
-        size="w-12 h-12"
+        size="w-9 h-9"
         iconSize="text-xl"
       />
     </div>

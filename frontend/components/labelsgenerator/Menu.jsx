@@ -21,10 +21,10 @@ const Menu = () => {
   const [selectedQrText, setSelectedQrText] = useState('')
 
   // Largeurs fixes pour chaque sous-menu
-  const shapeMenuWidth = 105
+  const shapeMenuWidth = 89
   const textMenuWidth = 200
-  const imageMenuWidth = 305
-  const qrMenuWidth = 320
+  const imageMenuWidth = 280
+  const qrMenuWidth = 225
   const importMenuWidth = 300
 
   const {
@@ -71,7 +71,7 @@ const Menu = () => {
   }
 
   return (
-    <div className="relative flex items-start gap-4 p-4">
+    <div className="relative flex items-center gap-4 p-4">
       {/* Bouton et menu pour les formes */}
       <div className="relative">
         <IconButton
@@ -79,7 +79,7 @@ const Menu = () => {
           icon={faShapes}
           title="Afficher les formes"
           className={`${activeMenu === 'shapes' ? 'bg-blue-300' : 'bg-blue-500'}`}
-          size="w-16 h-16"
+          size="w-12 h-12"
           iconSize="text-3xl"
         />
         {activeMenu === 'shapes' && (
@@ -106,7 +106,7 @@ const Menu = () => {
           icon={faTextHeight}
           title="Afficher le texte"
           className={`${activeMenu === 'text' ? 'bg-blue-300' : 'bg-blue-500'}`}
-          size="w-16 h-16"
+          size="w-12 h-12"
           iconSize="text-3xl"
         />
         {activeMenu === 'text' && (
@@ -129,7 +129,7 @@ const Menu = () => {
           icon={faImage}
           title="Afficher les images"
           className={`${activeMenu === 'images' ? 'bg-blue-300' : 'bg-blue-500'}`}
-          size="w-16 h-16"
+          size="w-12 h-12"
           iconSize="text-3xl"
         />
         {activeMenu === 'images' && (
@@ -152,7 +152,7 @@ const Menu = () => {
           icon={faQrcode}
           title="Ajouter un QR Code"
           className={`${activeMenu === 'qrcode' ? 'bg-blue-300' : 'bg-blue-500'}`}
-          size="w-16 h-16"
+          size="w-12 h-12"
           iconSize="text-3xl"
         />
         {activeMenu === 'qrcode' && (
@@ -179,7 +179,7 @@ const Menu = () => {
           icon={faFileCsv}
           title="Importer CSV"
           className={`${activeMenu === 'import' ? 'bg-blue-300' : 'bg-blue-500'}`}
-          size="w-16 h-16"
+          size="w-12 h-12"
           iconSize="text-3xl"
         />
         {activeMenu === 'import' && (
