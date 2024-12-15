@@ -99,7 +99,6 @@ export const importCsvData = (state, rows) => {
     strokeWidth: 0,
     strokeDashArray: [],
     strokeUniform: true,
-    // Ajout des propriétés de gradient par défaut
     gradientType: 'none',
     gradientColors: [],
     gradientDirection: 0,
@@ -109,16 +108,39 @@ export const importCsvData = (state, rows) => {
 
   const newCells = rows.reduce((acc, row, index) => {
     const cellId = `${Math.floor((cellCount + index) / cellsPerPage)}-${cellCount + index}`
-    acc[cellId] = Object.entries(row).map(([key, value], idx) => ({
-      id: `${key}-${idx}`,
-      linkedByCsv: true,
-      left: 10 + idx * 50,
-      top: 10,
-      ...defaultProperties, // Utilisation des propriétés par défaut complètes
-      ...(key.includes('shape')
-        ? { type: 'rect', width: 50, height: 30, fill: '#FFD700' }
-        : { type: 'i-text', text: value, fontSize: 14, fill: '#333' })
-    }))
+    acc[cellId] = Object.entries(row).map(([key, value], idx) => {
+      // Vérifier si la clé commence par 'prixVente'
+      const isPrixVente = key.startsWith('prixVente')
+
+      // Configuration de base pour l'élément
+      const baseConfig = {
+        id: `${key}-${idx}`,
+        linkedByCsv: true,
+        left: 10 + idx * 50,
+        top: 10,
+        ...defaultProperties
+      }
+
+      if (key.includes('shape')) {
+        return {
+          ...baseConfig,
+          type: 'rect',
+          width: 50,
+          height: 30,
+          fill: '#FFD700'
+        }
+      } else {
+        // Pour les éléments de type texte
+        return {
+          ...baseConfig,
+          type: 'i-text',
+          // Ajouter '#' à la fin du texte si c'est un prixVente
+          text: isPrixVente ? `${value} €` : value,
+          fontSize: 14,
+          fill: '#333'
+        }
+      }
+    })
     return acc
   }, {})
 
