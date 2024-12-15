@@ -136,7 +136,7 @@ export function gridReducer(state, action) {
             const layoutItem = layout[item.id]
             if (!layoutItem) return item
 
-            if (item.id.startsWith('Gencode-')) {
+            if (item.id.startsWith('gencode-')) {
               // Gestion spécifique des QR codes
               const newItem = {
                 ...item,

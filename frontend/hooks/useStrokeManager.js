@@ -26,7 +26,7 @@ const generatePattern = (type, density = 5, visualStrokeWidth = 1) => {
 const getStrokeWidthFactor = (object) => {
   if (!object) return 1
 
-  if (object.type === 'image' || object.id?.startsWith('Gencode-')) {
+  if (object.type === 'image' || object.id?.startsWith('gencode-')) {
     return 1.2
   }
 

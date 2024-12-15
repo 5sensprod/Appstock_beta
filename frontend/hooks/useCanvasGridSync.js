@@ -20,7 +20,7 @@ const useCanvasGridSync = (canvas) => {
     const { type, isQRCode = false, qrText = '', ...fabricOptions } = obj
 
     // Gestion des QR codes
-    if (isQRCode || obj.id?.startsWith('Gencode-')) {
+    if (isQRCode || obj.id?.startsWith('gencode-')) {
       if (obj.src) {
         // Réutiliser un QR code existant avec sa source
         return new Promise((resolve) => {
@@ -199,12 +199,12 @@ const useCanvasGridSync = (canvas) => {
       for (const [cellId, content] of Object.entries(cellContents)) {
         if (!content || !Array.isArray(content)) continue
 
-        const hasQRCode = content.some((obj) => obj.id?.startsWith('Gencode-'))
+        const hasQRCode = content.some((obj) => obj.id?.startsWith('gencode-'))
         if (!hasQRCode) continue
 
         const updatedContent = await Promise.all(
           content.map(async (obj) => {
-            if (!obj.id?.startsWith('Gencode-')) return obj
+            if (!obj.id?.startsWith('gencode-')) return obj
 
             // Générer l'URL du QR code si elle n'existe pas
             if (!obj.src) {

@@ -39,7 +39,7 @@ export const loadCanvasDesign = async (
       }
 
       if (hasStroke) {
-        const isImage = obj.type === 'image' || obj.id?.startsWith('Gencode-')
+        const isImage = obj.type === 'image' || obj.id?.startsWith('gencode-')
 
         if (isImage) {
           // Pour les images, on applique juste le scaleFactor
