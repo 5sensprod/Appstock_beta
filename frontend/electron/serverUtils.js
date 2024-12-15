@@ -4,7 +4,7 @@ const axios = require('axios')
 // Fonction pour vérifier si le serveur Flask est prêt
 const checkServerReady = async () => {
   try {
-    await axios.get('http://localhost:5000/get_local_ip')
+    await axios.get('http://localhost:5001/get_local_ip')
     return true
   } catch (error) {
     return false
