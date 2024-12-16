@@ -1,37 +1,33 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { useTheme } from '../context/ThemeContext' // Utiliser le contexte du thème
-import {
-  SunIcon,
-  MoonIcon
-} from '@heroicons/react/24/solid' // Importer les icônes de Heroicons v2
+import { SunIcon, MoonIcon } from '@heroicons/react/24/solid' // Importer les icônes de Heroicons v2
 import WelcomeMessage from './WelcomeMessage'
-import { UserContext } from '../context/UserContext'
-import Link from 'next/link' // Importer le composant Link de Next.js
+// import { UserContext } from '../context/UserContext'
+// import Link from 'next/link' // Importer le composant Link de Next.js
 
 const Navbar = () => {
-  const { isDarkMode, toggleDarkMode } =
-    useTheme() // Utilisation du contexte global du thème
-  const { isAuthenticated, handleLogout } =
-    useContext(UserContext)
+  const { isDarkMode, toggleDarkMode } = useTheme() // Utilisation du contexte global du thème
+  // const { isAuthenticated, handleLogout } =
+  //   useContext(UserContext)
 
-  const onLogout = async () => {
-    await handleLogout()
-  }
+  // const onLogout = async () => {
+  //   await handleLogout()
+  // }
 
   return (
     <nav className="flex w-full items-center justify-between p-4 text-light-text dark:text-dark-text">
-      <WelcomeMessage />
-      {isAuthenticated && (
+      {/* <WelcomeMessage /> */}
+      {/* {isAuthenticated && (
         <button
           onClick={onLogout}
           className="rounded bg-red-500 px-3 py-1 text-white"
         >
           Déconnexion
         </button>
-      )}
+      )} */}
 
       {/* Lien vers la page Labels */}
-      <Link
+      {/* <Link
         href="/labels"
         className="text-blue-500 hover:underline"
       >
@@ -42,7 +38,7 @@ const Navbar = () => {
         className="text-blue-500 hover:underline"
       >
         Maison
-      </Link>
+      </Link> */}
 
       <div className="flex items-center">
         <label className="relative inline-flex cursor-pointer items-center">
