@@ -77,7 +77,7 @@ function stopFlask() {
 // Fonction pour récupérer dynamiquement l'adresse IP locale du serveur Flask
 async function fetchLocalIp() {
   try {
-    const response = await axios.get('http://127.0.0.1:5001get_local_ip')
+    const response = await axios.get('http://127.0.0.1:5001/get_local_ip')
     flaskIpAddress = response.data.local_ip
     console.log(`IP locale du serveur Flask récupérée : ${flaskIpAddress}`)
   } catch (error) {
